@@ -1,0 +1,229 @@
+/* XCommunityForm.css */
+
+.x-community-form {
+    width: 100%;
+    max-width: 36rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    background-color: #131313;
+    color: #fff;
+    transition: all 0.2s ease;
+    border: 3px solid #646464; /* Added clean border */
+  }
+    
+    .form-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-header h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #fff;
+    }
+    
+    .form-header p {
+      color: #9ca3af;
+    }
+    
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    
+    .form-group:last-of-type {
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      color: #e5e7eb;
+    }
+    
+    .input-with-icon {
+      position: relative;
+    }
+    
+    .input-icon {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      padding-left: 0.75rem;
+      display: flex;
+      align-items: center;
+      pointer-events: none;
+    }
+    
+    .input-icon svg {
+      width: 1.25rem;
+      height: 1.25rem;
+      color: #9ca3af;
+    }
+    
+    input[type="url"],
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 0.375rem;
+      border: 1px solid #4b5563;
+      background-color: #1f2937;
+      color: #f9fafb;
+      transition: all 0.2s ease;
+    }
+    
+    input[type="url"]:focus,
+    input[type="text"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #6b7280;
+      box-shadow: 0 0 0 2px rgba(75, 85, 99, 0.3);
+    }
+    
+    .input-with-icon input {
+      padding-left: 2.5rem;
+    }
+    
+    .input-help {
+      margin-top: 0.25rem;
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+    
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      border-radius: 0.375rem;
+      min-height: 0;
+      transition: all 0.2s ease;
+    }
+    
+    .tags-container.has-tags {
+      padding: 0.5rem;
+      background-color: #1f2937;
+    }
+    
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      background-color: #4b5563;
+      color: #e5e7eb;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    .tag-remove {
+      margin-left: 0.25rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #e5e7eb;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .tag-remove-icon {
+      width: 1rem;
+      height: 1rem;
+    }
+    
+    .form-submit {
+      display: flex;
+      justify-content: flex-end;
+    }
+    
+    button[type="submit"] {
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      color: #fff;
+      background-color: #1f2937;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    
+    button[type="submit"]:hover {
+      background-color: #374151;
+    }
+    
+    button[type="submit"]:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(75, 85, 99, 0.5);
+    }
+    
+    button[type="submit"].submitting {
+      background-color: #4b5563;
+      cursor: not-allowed;
+    }
+    
+    .submit-loading {
+      display: flex;
+      align-items: center;
+    }
+    
+    .loading-spinner {
+      animation: spin 1s linear infinite;
+      margin-right: 0.5rem;
+      margin-left: -0.25rem;
+      height: 1rem;
+      width: 1rem;
+    }
+    
+    .spinner-track {
+      opacity: 0.25;
+    }
+    
+    .spinner-path {
+      opacity: 0.75;
+    }
+    
+    .submit-result {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      border-radius: 0.375rem;
+    }
+    
+    .submit-result.success {
+      background-color: rgba(6, 78, 59, 0.8);
+      color: #d1fae5;
+    }
+    
+    .submit-result.error {
+      background-color: rgba(127, 29, 29, 0.8);
+      color: #fee2e2;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }

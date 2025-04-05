@@ -1,0 +1,291 @@
+/* Global styles for community cards */
+.server-list, 
+.communities-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-content: center;
+  gap: 32px;
+  padding: 48px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.server-card {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  position: relative;
+  width: 100%;
+  border-radius: 16px; /* Softer rounded corners */
+  overflow: hidden;
+  background: linear-gradient(to bottom, #1b2023, #1b2023);
+  box-shadow: 
+    0 15px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.server-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 
+    0 25px 35px -5px rgba(0, 0, 0, 0.15),
+    0 15px 15px -5px rgba(0, 0, 0, 0.08);
+}
+
+/* Image styling */
+.image-container {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.community-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.server-card:hover .community-image {
+  transform: scale(1.05);
+}
+
+/* Card content */
+.server-card h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  padding: 20px 24px 8px 24px;
+  margin-top: auto;
+  color: #f0f0f0;
+}
+
+.server-card p {
+  font-size: 0.875rem;
+  color: rgba(229, 231, 235, 0.75);
+  line-height: 1.6;
+  padding: 0 24px;
+  margin-bottom: 16px;
+  
+}
+
+/* Tags styling */
+.server-card .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 24px 16px 24px;
+}
+
+.server-card .tag {
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Join/Action button */
+.server-card .join-link,
+.server-card .delete-btn {
+  display: block;
+  width: calc(100% - 48px);
+  margin: 16px 24px 24px 24px;
+  padding: 12px 0;
+  border-radius: 30px;
+  text-align: center;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.server-card .join-link {
+  background-color: white;
+  color: #121212;
+  border: none;
+}
+
+.server-card .join-link:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+}
+
+.server-card .delete-btn {
+  background-color: rgba(255, 59, 48, 0.1);
+  color: rgba(255, 59, 48, 0.9);
+  border: 1px solid rgba(255, 59, 48, 0.3);
+}
+
+.server-card .delete-btn:hover {
+  background-color: rgba(255, 59, 48, 0.2);
+}
+
+.edit-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.edit-modal {
+  background-color: #1b2023;
+  border-radius: 16px;
+  padding: 24px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 
+    0 15px 25px -5px rgba(0, 0, 0, 0.2),
+    0 10px 10px -5px rgba(0, 0, 0, 0.05);
+  color: #fff;
+}
+
+.edit-modal h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.edit-modal .form-group {
+  margin-bottom: 16px;
+}
+
+.edit-modal textarea {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  background-color: #2a2f32;
+  color: #fff;
+  border: 1px solid #444;
+}
+
+.edit-modal .tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.edit-modal .tag-pill {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.edit-modal .tag-remove {
+  background: none;
+  border: none;
+  color: #fff;
+  margin-left: 4px;
+  cursor: pointer;
+}
+
+.edit-modal input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  background-color: #2a2f32;
+  color: #fff;
+  border: 1px solid #444;
+}
+
+.delete-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.delete-modal {
+  background: #1b2023;
+  border-radius: 12px;
+  padding: 24px;
+  width: 350px;
+  max-width: 90%;
+  color: #fff;
+  text-align: center;
+  box-shadow:
+    0 15px 25px -5px rgba(0, 0, 0, 0.2),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.delete-modal h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.delete-modal p {
+  margin-bottom: 24px;
+  color: rgba(229, 231, 235, 0.75);
+}
+
+.delete-modal-buttons {
+  display: flex;
+  justify-content: space-around;
+}
+
+.confirm-btn {
+  background-color: rgba(255, 59, 48, 0.1);
+  color: rgba(255, 59, 48, 0.9);
+  border: 1px solid rgba(255, 59, 48, 0.3);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.confirm-btn:hover {
+  background-color: rgba(255, 59, 48, 0.2);
+}
+
+.cancel-btn {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+
+
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .server-list, 
+  .communities-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .server-list, 
+  .communities-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 24px;
+  }
+}

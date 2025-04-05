@@ -1,0 +1,111 @@
+.cuisine-container {
+    min-height: 30vh;
+    background-color: black;
+    padding: 1.5rem;
+    padding-top: 4rem;
+  }
+  
+  .cuisine-title {
+    color: white;
+    font-size: 1.875rem;
+    font-weight: 600;
+    margin-bottom: 3rem;
+    text-align: center;
+  }
+  
+  .cuisine-grid {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .cuisine-container h2 {
+    text-align: center;
+    width: 100%;
+  }
+  
+  
+  .cuisine-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem; /* This adds space between items */
+  }
+  
+  .cuisine-chip {
+    margin: 0.375rem; /* Adds space around each individual chip */
+  }
+  
+  .cuisine-chip {
+    display: inline-flex;
+    align-items: center;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-radius: 9999px; /* This ensures the pill shape */
+    font-size: 1.25rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    border: 1px solid;
+    background-color: rgba(39, 39, 42, 0.5);
+    transition: background-color 0.1s;
+    cursor: pointer;
+  }
+  
+  .cuisine-chip:hover {
+    background-color: rgba(39, 39, 42, 0.8);
+  }
+  
+  .cuisine-chip:active {
+    background-color: rgba(39, 39, 42, 0.9);
+  }
+  
+  .cuisine-chip-unselected {
+    color: rgb(161, 161, 170);
+    border-color: hsla(0, 0%, 100%, 0.06);
+  }
+  
+  .cuisine-chip-selected {
+    color: #ff9066;
+    border-color: hsla(0, 0%, 100%, 0.12);
+    background-color: #2a1711;
+  }
+  
+  .cuisine-chip-selected:hover {
+    background-color: #2a1711;
+  }
+  
+  .cuisine-chip-selected:active {
+    background-color: #1f1209;
+  }
+  
+  .cuisine-chip-content {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .cuisine-check-icon {
+    position: absolute;
+    right: 0;
+  }
+  
+  .cuisine-check-circle {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background-color: #ff9066;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .cuisine-check-svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    color: #2a1711;
+    stroke-width: 1.5;
+  }
+  
+  
