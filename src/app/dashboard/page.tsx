@@ -424,7 +424,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!authLoading && user === null) {
-      router.push("/login");
+      router.push("/");
     }
     if (user) {
       fetchUserDetails();
