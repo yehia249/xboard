@@ -58,7 +58,7 @@ const XCommunityForm: React.FC<{
   // Helper to fetch community data
   const fetchCommunityData = async (url: string) => {
     try {
-      const res = await fetch("/api/scrape-image", {
+      const res = await fetch("https://xboardscrape-production.up.railway.app/scrape", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ communityURL: url }),
