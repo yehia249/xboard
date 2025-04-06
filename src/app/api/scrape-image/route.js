@@ -17,7 +17,7 @@ export async function POST(req) {
             await page.goto(communityURL, { waitUntil: "domcontentloaded", timeout: 30000 });
 
             // Wait for community name to appear
-            await page.waitForSelector('h2', { timeout: 15000 });
+            await page.waitForSelector('h2', { timeout: 200000 });
 
             // Extract both image and community name
             const scrapedData = await page.evaluate(() => {

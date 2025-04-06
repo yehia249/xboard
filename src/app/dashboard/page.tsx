@@ -480,7 +480,6 @@ export default function DashboardPage() {
 
       <div style={{ textAlign: "center", margin: "20px 0" }}>
         <h2 style={{ display: "inline-block", borderBottom: "3px solid #0070f3", paddingBottom: "5px" }}>Dashboard</h2>
-        <p>Welcome, {userName} 🎉</p>
       </div>
       <div className="dashboard-buttons">
         <Link href="/" className="homeBtn" passHref>
