@@ -1,3 +1,4 @@
+//login page
 "use client";
 import { useState } from "react";
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
