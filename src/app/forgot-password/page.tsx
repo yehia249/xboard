@@ -3,9 +3,8 @@ import { useState } from "react";
 import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase"; // Ensure the path is correct for your project
 import Link from "next/link";
-import "@/app/all.css";
-import "@/app/community.css";
-import "@/app/form.css";
+import "../loginform.css"; // Import your CSS file
+
 
 
 export default function ForgotPassword() {
