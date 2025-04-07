@@ -5,6 +5,7 @@ import { auth } from "@/lib/firebase";
 import { supabase } from "@/lib/supabase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import "@/app/loginform.css";
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
