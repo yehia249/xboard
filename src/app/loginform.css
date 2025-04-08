@@ -59,19 +59,19 @@ html, body {
   }
   
   
-  .input {
-    margin-left: 10px;
-    border-radius: 10px;
-    border: none;
-    width: 100%;
-    height: 100%;
-    background-color: transparent;
-    flex-grow: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: #151717; /* Set your desired text color */
-  }
-  
+.input {
+  margin-left: 10px;
+  border-radius: 10px;
+  border: none;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #151717; /* Set your desired text color */
+}
+
   
   .input:focus {
     outline: none;
@@ -235,7 +235,7 @@ html, body {
   }
   
   .bg-black {
-    background-color: #272727;
+    background-color: #0e0e0e;
   }
   
   .flex {
