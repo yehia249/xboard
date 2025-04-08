@@ -1,233 +1,480 @@
 .postabutton {
+  position: relative;
+  text-decoration: none;
+  color: #fff;
+  background: linear-gradient(45deg, #FF416C, #FF4B2B); /* More vibrant gradient */
+  padding: 15px 28px; /* Slightly larger padding */
+  border-radius: 12px; /* Slightly larger border radius */
+  font-size: 1.3rem; /* Slightly larger font */
+  font-weight: 600; /* Make text bolder */
+  cursor: pointer;
+  width: auto; /* Adjust based on your layout needs */
+  display: inline-block;
+  box-shadow: 0 6px 12px rgba(255, 65, 108, 0.3); /* Add distinctive shadow */
+  transform: translateY(0); /* For hover animation */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  z-index: 10; /* Higher z-index to stand out */
+}
+
+.postabutton:hover {
+  transform: translateY(-3px); /* Slight lift effect on hover */
+  box-shadow: 0 8px 15px rgba(255, 65, 108, 0.4); /* Enhanced shadow on hover */
+}
+
+.postabutton span {
+  position: relative;
+  z-index: 1;
+}
+
+.postabutton::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  background: #1a1a1a;
+  border-radius: 11px; /* Adjust to match the outer radius */
+  transition: 0.5s;
+}
+
+.postabutton:hover::before {
+  opacity: 0.5; /* More dramatic hover effect */
+}
+
+.postabutton::after {
+  content: "";
+  position: absolute;
+  inset: 0px;
+  background: linear-gradient(45deg, #FF416C, #FF4B2B);
+  border-radius: 11px;
+  transition: 0.5s;
+  opacity: 0;
+  filter: blur(20px); /* Stronger glow effect */
+}
+
+.postabutton:hover:after {
+  opacity: 1; /* More dramatic hover effect */
+}
+
+/* You could also add a subtle animation */
+@keyframes pulse {
+  0% { box-shadow: 0 6px 12px rgba(255, 65, 108, 0.3); }
+  50% { box-shadow: 0 6px 15px rgba(255, 65, 108, 0.5); }
+  100% { box-shadow: 0 6px 12px rgba(255, 65, 108, 0.3); }
+}
+
+.postabutton {
+  /* Add this to the existing postabutton class */
+  animation: pulse 2s infinite;
+}
+
+.logabutton {
+  position: relative;
+  text-decoration: none;
+  color: #fff;
+  background: linear-gradient(45deg, #b1b1b1, #b1b1b1);
+  padding: 10px 25px;
+  border-radius: 10px;
+  left: -10px;
+  font-size: 1.25em;
+  cursor: pointer;
+  display: inline-block;
+  box-shadow: 0 4px 10px rgba(46, 49, 146, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logabutton span {
+  position: relative;
+  z-index: 1;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.logabutton::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  background: #1f1f1f;
+  border-radius: 9px;
+  transition: 0.3s;
+}
+
+.logabutton:hover::before {
+  opacity: 0.7;
+  background: linear-gradient(to bottom, #1f1f1f, #252525);
+}
+
+
+
+.signabutton {
+  position: relative;
+  text-decoration: none;
+  color: #000;
+  background: linear-gradient(45deg, #f5f7fa, #e6e9f0);
+  padding: 10px 40px;
+  border-radius: 10px;
+  font-size: 1.25em;
+  cursor: pointer;
+  display: inline-block;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.signabutton span {
+  position: relative;
+  z-index: 1;
+  font-weight: 500;
+  background: linear-gradient(45deg, #333, #555);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.signabutton::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  background: #ffffff;
+  border-radius: 9px;
+}
+
+.signabutton::after {
+  content: "";
+  position: absolute;
+  inset: 0px;
+  background: linear-gradient(45deg, #f5f7fa, #e6e9f0);
+  border-radius: 9px;
+  opacity: 0;
+  filter: blur(10px);
+}
+
+/* Additional classes for different sizes - use these classes alongside the main button classes */
+.button-small {
+  padding: 8px 16px;
+  font-size: 0.9em;
+}
+
+.button-medium {
+  padding: 12px 22px;
+  font-size: 1.1em;
+}
+
+.button-large {
+  padding: 16px 32px;
+  font-size: 1.4em;
+}
+
+.logoutbuttonD {
+  position: relative;
+  text-decoration: none;
+  color: #fff;
+  background: linear-gradient(45deg, #780f0f, #780f0f);
+  padding: 10px 15px;            /* Match signabutton padding */
+  border-radius: 10px;
+  left: -10px;           /* Match signabutton border-radius */
+  font-size: 1.25em;             /* Match signabutton font-size */
+  cursor: pointer;
+  display: inline-block;
+  box-shadow: 0 4px 10px rgba(46, 49, 146, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logoutbuttonD span {
+  position: relative;
+  z-index: 1;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.logoutbuttonD::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  background: #1f1f1f;
+  border-radius: 9px;
+  transition: 0.3s;
+}
+
+.logoutbuttonD:hover::before {
+  opacity: 0.7;
+  background: linear-gradient(to bottom, #1f1f1f, #252525);
+}
+
+.logoutbuttonD::after {
+  content: "";
+  position: absolute;
+  inset: 0px;
+  background: linear-gradient(45deg, #cc4c25, #e66c09);
+  border-radius: 9px;
+  transition: 0.3s;
+  opacity: 0;
+  filter: blur(8px);
+}
+
+/* Media queries that match signabutton */
+@media (max-width: 550px) {
+  .logoutbuttonD {
+    font-size: 1.2rem;
+    padding: 10px 14px;
+    white-space: nowrap;
+    line-height: 1.2;
     position: relative;
-    text-decoration: none;
-    color: #fff;
-    background: linear-gradient(45deg, #FF416C, #FF4B2B); /* More vibrant gradient */
-    padding: 15px 28px; /* Slightly larger padding */
-    border-radius: 12px; /* Slightly larger border radius */
-    font-size: 1.3rem; /* Slightly larger font */
-    font-weight: 600; /* Make text bolder */
-    cursor: pointer;
-    width: auto; /* Adjust based on your layout needs */
-    display: inline-block;
-    box-shadow: 0 6px 12px rgba(255, 65, 108, 0.3); /* Add distinctive shadow */
-    transform: translateY(0); /* For hover animation */
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    z-index: 10; /* Higher z-index to stand out */
+    left: -20px;
+    right: auto;
   }
-  
-  .postabutton:hover {
-    transform: translateY(-3px); /* Slight lift effect on hover */
-    box-shadow: 0 8px 15px rgba(255, 65, 108, 0.4); /* Enhanced shadow on hover */
-  }
-  
-  .postabutton span {
+}
+
+@media (max-width: 500px) {
+  .logoutbuttonD {
+    font-size: 1.2rem;
+    padding: 10px 10px;
+    white-space: nowrap;
+    line-height: 1.2;
     position: relative;
-    z-index: 1;
+    left: -20px;
+    right: auto;
   }
-  
-  .postabutton::before {
-    content: "";
-    position: absolute;
-    inset: 1px;
-    background: #1a1a1a;
-    border-radius: 11px; /* Adjust to match the outer radius */
-    transition: 0.5s;
+}
+
+@media (max-width: 470px) {
+  .logoutbuttonD {
+    font-size: 1.2rem;
+    padding: 10px 10px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;
+    left: -10px;
+    right: auto;
   }
-  
-  .postabutton:hover::before {
-    opacity: 0.5; /* More dramatic hover effect */
+}
+
+
+.logabuttonD {
+  position: relative;
+  text-decoration: none;
+  color: #fff;
+  background: linear-gradient(45deg, #929292, #929292);
+  padding: 10px 24px;            /* Match signabutton padding */
+  border-radius: 10px;
+  left: -10px;           /* Match signabutton border-radius */
+  font-size: 1.25em;             /* Match signabutton font-size */
+  cursor: pointer;
+  display: inline-block;
+  box-shadow: 0 4px 10px rgba(46, 49, 146, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logabuttonD span {
+  position: relative;
+  z-index: 1;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.logabuttonD::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  background: #1f1f1f;
+  border-radius: 9px;
+  transition: 0.3s;
+}
+
+.logabuttonD:hover::before {
+  opacity: 0.7;
+  background: linear-gradient(to bottom, #1f1f1f, #252525);
+}
+
+.logabuttonD::after {
+  content: "";
+  position: absolute;
+  inset: 0px;
+  background: linear-gradient(45deg, #cc4c25, #e66c09);
+  border-radius: 9px;
+  transition: 0.3s;
+  opacity: 0;
+  filter: blur(8px);
+}
+
+/* Media queries that match signabutton */
+@media (max-width: 550px) {
+  .logabuttonD {
+    font-size: 1.2rem;
+    padding: 10px 20px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;
+    left: -20px;
+    right: auto;
   }
-  
-  .postabutton::after {
-    content: "";
-    position: absolute;
-    inset: 0px;
-    background: linear-gradient(45deg, #FF416C, #FF4B2B);
-    border-radius: 11px;
-    transition: 0.5s;
-    opacity: 0;
-    filter: blur(20px); /* Stronger glow effect */
+}
+
+@media (max-width: 500px) {
+  .logabuttonD {
+    font-size: 1.2rem;
+    padding: 10px 21px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;
+    left: -20px;
+    right: auto;
   }
-  
-  .postabutton:hover:after {
-    opacity: 1; /* More dramatic hover effect */
+}
+
+@media (max-width: 470px) {
+  .logabuttonD {
+    font-size: 1.2rem;
+    padding: 10px 24px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;
+    left: -10px;
+    right: auto;
   }
-  
-  /* You could also add a subtle animation */
-  @keyframes pulse {
-    0% { box-shadow: 0 6px 12px rgba(255, 65, 108, 0.3); }
-    50% { box-shadow: 0 6px 15px rgba(255, 65, 108, 0.5); }
-    100% { box-shadow: 0 6px 12px rgba(255, 65, 108, 0.3); }
-  }
-  
+}
+
+.logabutton span {
+  position: relative;
+  z-index: 1;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.logabutton::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  background: #1f1f1f;
+  border-radius: 9px;
+  transition: 0.3s;
+}
+
+.logabutton:hover::before {
+  opacity: 0.7;
+  background: linear-gradient(to bottom, #1f1f1f, #252525);
+}
+
+.logabutton::after {
+  content: "";
+  position: absolute;
+  inset: 0px;
+  background: linear-gradient(45deg, #cc4c25, #e66c09);
+  border-radius: 9px;
+  transition: 0.3s;
+  opacity: 0;
+  filter: blur(8px);
+}
+
+@media (max-width: 550px) {
   .postabutton {
-    /* Add this to the existing postabutton class */
-    animation: pulse 2s infinite;
+    font-size: 1.3rem;
+    padding: 15px 25px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: 0;                 /* Position from left edge */
+    right: auto;             /* Reset right positioning */
   }
-  
+}
+
+@media (max-width: 550px) {
   .logabutton {
-    position: relative;
-    text-decoration: none;
-    color: #fff;
-    background: linear-gradient(45deg, #9e2f1c, #a3301c);
-    padding: 14px 25px;
-    border-radius: 10px;
-    font-size: 1.25em;
-    cursor: pointer;
-    display: inline-block;
-    box-shadow: 0 4px 10px rgba(46, 49, 146, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 1.2rem;
+    padding: 10px 25px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: -20;              /* Reset left positioning */
+    right: 0;                /* Position from right edge */
   }
-  
-  .logabutton span {
-    position: relative;
-    z-index: 1;
-    font-weight: 500;
-    letter-spacing: 0.03em;
-  }
-  
-  .logabutton::before {
-    content: "";
-    position: absolute;
-    inset: 1px;
-    background: #1f1f1f;
-    border-radius: 9px;
-    transition: 0.3s;
-  }
-  
-  .logabutton:hover::before {
-    opacity: 0.7;
-    background: linear-gradient(to bottom, #1f1f1f, #252525);
-  }
-  
-  .logabutton::after {
-    content: "";
-    position: absolute;
-    inset: 0px;
-    background: linear-gradient(45deg, #cc4c25, #e66c09);
-    border-radius: 9px;
-    transition: 0.3s;
-    opacity: 0;
-    filter: blur(8px);
-  }
-  
-  .logabutton:hover:after {
-    opacity: 0.7;
-  }
-  
+}
+
+@media (max-width: 550px) {
   .signabutton {
-    position: relative;
-    text-decoration: none;
-    color: #000;
-    background: linear-gradient(45deg, #f5f7fa, #e6e9f0);
-    padding: 14px 40px;
-    border-radius: 10px;
-    font-size: 1.25em;
-    cursor: pointer;
-    display: inline-block;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.7);
+    font-size: 1.2rem;
+    padding: 10px 27px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: -23;                 /* Position from left edge */
+    right: auto;             /* Reset right positioning */
   }
-  
-  .signabutton span {
-    position: relative;
-    z-index: 1;
-    font-weight: 500;
-    background: linear-gradient(45deg, #333, #555);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+}
+
+@media (max-width: 500px) {
+  .postabutton {
+    font-size: 1.3rem;
+    padding: 15px 25px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: 0;                 /* Position from left edge */
+    right: auto;             /* Reset right positioning */
   }
-  
-  .signabutton::before {
-    content: "";
-    position: absolute;
-    inset: 1px;
-    background: #ffffff;
-    border-radius: 9px;
+}
+
+@media (max-width: 500px) {
+  .logabutton {
+    font-size: 1.2rem;
+    padding: 10px 25px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: -13;              /* Reset left positioning */
+    right: 0;                /* Position from right edge */
   }
-  
-  .signabutton::after {
-    content: "";
-    position: absolute;
-    inset: 0px;
-    background: linear-gradient(45deg, #f5f7fa, #e6e9f0);
-    border-radius: 9px;
-    opacity: 0;
-    filter: blur(10px);
+}
+
+@media (max-width: 500px) {
+  .signabutton {
+    font-size: 1.2rem;
+    padding: 10px 29px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: -10;                 /* Position from left edge */
+    right: auto;             /* Reset right positioning */
   }
-  
-  /* Additional classes for different sizes - use these classes alongside the main button classes */
-  .button-small {
-    padding: 8px 16px;
-    font-size: 0.9em;
-  }
-  
-  .button-medium {
-    padding: 12px 22px;
-    font-size: 1.1em;
-  }
-  
-  .button-large {
-    padding: 16px 32px;
-    font-size: 1.4em;
-  }
+}
 
 
-  .logabuttonD   {
-    position: relative;
-    text-decoration: none;
-    color: #fff;
-    background: linear-gradient(45deg, #9e2f1c, #a3301c);
-    padding: 14px 25px;
-    border-radius: 10px;
-    font-size: 1.25em;
-    cursor: pointer;
-    display: inline-block;
-    box-shadow: 0 4px 10px rgba(46, 49, 146, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+@media (max-width: 470px) {
+  .postabutton {
+    font-size: 1.3rem;
+    padding: 15px 25px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: 0;                 /* Position from left edge */
+    right: auto;             /* Reset right positioning */
   }
-  
-  .logabutton span {
-    position: relative;
-    z-index: 1;
-    font-weight: 500;
-    letter-spacing: 0.03em;
-  }
-  
-  .logabutton::before {
-    content: "";
-    position: absolute;
-    inset: 1px;
-    background: #1f1f1f;
-    border-radius: 9px;
-    transition: 0.3s;
-  }
-  
-  .logabutton:hover::before {
-    opacity: 0.7;
-    background: linear-gradient(to bottom, #1f1f1f, #252525);
-  }
-  
-  .logabutton::after {
-    content: "";
-    position: absolute;
-    inset: 0px;
-    background: linear-gradient(45deg, #cc4c25, #e66c09);
-    border-radius: 9px;
-    transition: 0.3s;
-    opacity: 0;
-    filter: blur(8px);
-  }
+}
 
-  @media (max-width: 550px) {
-    .postabutton {
-      font-size: 1rem;         /* from 1.3rem down to 1rem (or whatever works best) */
-      padding: 15px 35px;      /* reduce horizontal & vertical padding */
-      white-space: nowrap;     /* prevent text from wrapping */
-      /* optionally, you can reduce line-height a bit if still too tall */
-      line-height: 1.2; 
-    }
+@media (max-width: 470px) {
+  .logabutton {
+    font-size: 1.2rem;
+    padding: 10px 22px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: -10;              /* Reset left positioning */
+    right: 0;                /* Position from right edge */
   }
-  
+}
+
+@media (max-width: 470px) {
+  .signabutton {
+    font-size: 1.2rem;
+    padding: 10px 26px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: -10;                 /* Position from left edge */
+    right: auto;             /* Reset right positioning */
+  }
+}
+
+@media (max-width: 487px) {
+  #postabutton {
+    margin-left: 0.7rem;
+    margin-right: 0.5rem; /* or however much space you want */
+  }
+}
