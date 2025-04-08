@@ -751,7 +751,7 @@ input:focus, textarea:focus, select:focus {
 
 
 /* Responsive Typography */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 500px) {
     html {
         font-size: 14px;
     }
@@ -767,3 +767,26 @@ input:focus, textarea:focus, select:focus {
 .text-muted { color: var(--color-text-secondary); }
 .mb-sm { margin-bottom: var(--spacing-sm); }
 .mt-sm { margin-top: var(--spacing-sm); }
+
+/* community.css (or all.css) */
+
+/* Anything up to 600px wide is considered "phone" */
+@media (max-width: 600px) {
+  /* Let .x-header wrap its contents */
+  .x-header {
+    flex-wrap: wrap;
+  }
+
+  /* Scale down the big text */
+  .x-header span {
+    font-size: 2rem;    /* was 3rem, now 2rem on phone */
+    margin: 0rem 1 ;  /* some breathing space above/below */
+    text-align: center;
+  }
+
+  /* Scale down the SVG in .x-header */
+  .x-header svg {
+    width: 2rem;
+    height: 2rem;
+  }
+}

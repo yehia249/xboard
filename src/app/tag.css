@@ -108,4 +108,15 @@
     stroke-width: 1.5;
   }
   
+  @media (max-width: 768px) {
+  .cuisine-chip {
+    font-size: 1rem;             /* reduced from 1.25rem */
+    padding-left: 0.75rem;        /* slightly smaller horizontal padding */
+    padding-right: 0.75rem;
+    padding-top: 0.4rem;          /* slightly smaller vertical padding */
+    padding-bottom: 0.4rem;
+    margin: 0.25rem;             /* optional: reduce surrounding margin */
+  }
+}
+
   

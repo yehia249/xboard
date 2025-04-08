@@ -220,3 +220,14 @@
     opacity: 0;
     filter: blur(8px);
   }
+
+  @media (max-width: 550px) {
+    .postabutton {
+      font-size: 1rem;         /* from 1.3rem down to 1rem (or whatever works best) */
+      padding: 15px 35px;      /* reduce horizontal & vertical padding */
+      white-space: nowrap;     /* prevent text from wrapping */
+      /* optionally, you can reduce line-height a bit if still too tall */
+      line-height: 1.2; 
+    }
+  }
+  
