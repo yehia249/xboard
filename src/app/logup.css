@@ -474,7 +474,7 @@
 
 
 
-@media (max-width: 435px) {
+@media (max-width: 431px) {
   .postabutton {
     font-size: 1.1rem;
     padding: 15px 12px;
@@ -483,14 +483,14 @@
   }
 }
 
-@media (max-width: 435px) {
+@media (max-width: 431px) {
   #postabutton {
     margin-left: 1.6rem;
     margin-right: 0.5rem; /* or however much space you want */
   }
 }
 
-@media (max-width: 435px) {
+@media (max-width: 431px) {
   .logoutbuttonD {
     font-size: .9rem;
     padding: 10px 10px;
@@ -499,7 +499,7 @@
   }
 }
 
-@media (max-width: 435px) {
+@media (max-width: 431px) {
   .logabuttonD {
     font-size: .9rem;
     padding: 10px 15px;
