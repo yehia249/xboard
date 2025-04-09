@@ -472,9 +472,206 @@
   }
 }
 
-@media (max-width: 487px) {
+
+
+@media (max-width: 435px) {
+  .postabutton {
+    font-size: 1.2rem;
+    padding: 15px 12px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: -10;                 /* Position from left edge */
+    right: auto;             /* Reset right positioning */
+  }
+}
+
+@media (max-width: 435px) {
   #postabutton {
-    margin-left: 0.7rem;
+    margin-left: 1.6rem;
     margin-right: 0.5rem; /* or however much space you want */
+  }
+}
+
+@media (max-width: 435px) {
+  .logoutbuttonD {
+    font-size: 1rem;
+    padding: 10px 10px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;
+    left: -7px;
+    right: auto;
+  }
+}
+
+@media (max-width: 435px) {
+  .logabuttonD {
+    font-size: 1rem;
+    padding: 10px 18px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;
+    left: -5px;
+    right: auto;
+  }
+}
+
+@media (max-width: 435px) {
+  .logabutton {
+    font-size: 1rem;
+    padding: 10px 18px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: -12;              /* Reset left positioning */
+    right: 0;                /* Position from right edge */
+  }
+}
+
+@media (max-width: 435px) {
+  .signabutton {
+    font-size: 1rem;
+    padding: 10px 24px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: -10;                 /* Position from left edge */
+    right: auto;             /* Reset right positioning */
+  }
+}
+
+@media (max-width: 415px) {
+  .postabutton {
+    font-size: 1.1rem;
+    padding: 15px 10px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: -10;                 /* Position from left edge */
+    right: auto;             /* Reset right positioning */
+  }
+}
+
+@media (max-width: 415px) {
+  #postabutton {
+    margin-left: 1.6rem;
+    margin-right: 0.5rem; /* or however much space you want */
+  }
+}
+
+@media (max-width: 415px) {
+  .logoutbuttonD {
+    font-size: .9rem;
+    padding: 10px 8px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;
+    left: -8px;
+    right: auto;
+  }
+}
+
+@media (max-width: 415px) {
+  .logabuttonD {
+    font-size: .9rem;
+    padding: 10px 17px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;
+    left: -4px;
+    right: auto;
+  }
+}
+
+@media (max-width: 415px) {
+  .logabutton {
+    font-size: .9rem;
+    padding: 10px 18px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: -7;              /* Reset left positioning */
+    right: 0;                /* Position from right edge */
+  }
+}
+
+@media (max-width: 415px) {
+  .signabutton {
+    font-size: .9rem;
+    padding: 10px 24px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: 1;                 /* Position from left edge */
+    right: auto;             /* Reset right positioning */
+  }
+}
+
+
+@media (max-width: 392px) {
+  .postabutton {
+    font-size: 1.1rem;
+    padding: 15px 10px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: -10;                 /* Position from left edge */
+    right: auto;             /* Reset right positioning */
+  }
+}
+
+@media (max-width: 392px) {
+  #postabutton {
+    margin-left: 1.6rem;
+    margin-right: 0.5rem; /* or however much space you want */
+  }
+}
+
+@media (max-width: 392px) {
+  .logoutbuttonD {
+    font-size: .9rem;
+    padding: 10px 8px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;
+    left: -8px;
+    right: auto;
+  }
+}
+
+@media (max-width: 392px) {
+  .logabuttonD {
+    font-size: .9rem;
+    padding: 10px 17px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;
+    left: -4px;
+    right: auto;
+  }
+}
+
+@media (max-width: 392px) {
+  .logabutton {
+    font-size: .9rem;
+    padding: 10px 18px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: -7;              /* Reset left positioning */
+    right: 0;                /* Position from right edge */
+  }
+}
+
+@media (max-width: 392px) {
+  .signabutton {
+    font-size: .9rem;
+    padding: 10px 24px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: 1;                 /* Position from left edge */
+    right: auto;             /* Reset right positioning */
   }
 }
