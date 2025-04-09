@@ -51,7 +51,6 @@ export default function Signup() {
       const userData = {
         firebase_uid: firebaseUser.uid,
         email: email,
-        name: email.split('@')[0], // Default name based on email
         created_at: new Date().toISOString(),
         auth_provider: "email",
       };
