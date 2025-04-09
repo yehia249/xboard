@@ -532,6 +532,12 @@
   }
 }
 
+@media (max-width: 431px) {
+  .x-header {
+    padding: -1rem;
+  }
+}
+
 @media (max-width: 415px) {
   .postabutton {
     font-size: 1.1rem;
@@ -589,6 +595,12 @@
     white-space: nowrap;
     line-height: 1.2;
     position: relative;      /* Add positioning context */
+  }
+}
+
+@media (max-width: 415px) {
+  .x-header {
+    padding: -1rem;
   }
 }
 
@@ -652,6 +664,12 @@
   }
 }
 
+@media (max-width: 392px) {
+  .x-header {
+    padding: -1rem;
+  }
+}
+
 
 @media (max-width: 361px) {
   .postabutton {
@@ -709,5 +727,11 @@
     padding: 10px 15px;
     white-space: nowrap;
     line-height: 1.2;
+  }
+}
+
+@media (max-width: 361px) {
+  .x-header {
+    padding: -1rem;
   }
 }

@@ -35,9 +35,6 @@ const cuisines: Cuisine[] = [
   "German",
   "British",
   "Irish",
-  "Swedish",
-  "Danish",
-  "Polish",
 ];
 
 export default function CommunityPage() {
