@@ -74,6 +74,8 @@ const XCommunityForm: React.FC<{
     }
   };
 
+
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name === "description" && value.length > 160) {
@@ -160,7 +162,25 @@ const XCommunityForm: React.FC<{
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newCommunity),
       });
-      if (!res.ok) throw new Error("Failed to add community");
+      if (!res.ok) {
+        const errorData = await res.json();
+        if (res.status === 409) {
+          onShowToast(
+            "error",
+            "Duplicate Community",
+            "This X community is already listed. Please check before posting again."
+          );
+        } else {
+          onShowToast(
+            "error",
+            "Please try again",
+            errorData.error || "There was an error submitting your information."
+          );
+        }
+        setIsSubmitting(false);
+        return;
+      }
+      
       onShowToast("success", "Posted Successfully", "Community information submitted successfully!");
       setFormData({ communityURL: "", tags: [], description: "" });
       router.refresh();

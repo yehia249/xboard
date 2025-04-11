@@ -30,7 +30,6 @@ export async function GET(req) {
     return NextResponse.json({ error: "Database error" }, { status: 500 });
   }
 }
-
 export async function POST(req) {
   try {
     const {
@@ -47,6 +46,18 @@ export async function POST(req) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    // 1. Check if invite_link already exists
+    const { data: existing, error: existingError } = await supabase
+      .from("servers")
+      .select("id")
+      .eq("invite_link", communityURL)
+      .maybeSingle();
+
+    if (existing) {
+      return NextResponse.json({ error: "This community already exists." }, { status: 409 }); // conflict
+    }
+
+    // 2. Proceed with insert
     const { data: insertData, error: insertError } = await supabase
       .from("servers")
       .insert([
@@ -89,6 +100,6 @@ export async function POST(req) {
     return NextResponse.json({ message: "Community added successfully!", id: serverId });
   } catch (error) {
     console.error("❌ Error creating community:", error);
-    return NextResponse.json({ error: "Database error" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Database error" }, { status: 500 });
   }
 }
