@@ -3,6 +3,7 @@ import { useState } from "react";
 import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
+import React, { useLayoutEffect } from 'react';
 import Link from "next/link";
 import "../loginform.css";
 
@@ -22,6 +23,15 @@ export default function Signup() {
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  useLayoutEffect(() => {
+    const key = "refreshed-login-page";
+    if (!sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, "true");
+      window.location.replace(window.location.href);
+    }
+    return () => sessionStorage.removeItem(key);
+  }, []);
 
   const handleSignup = async (event: React.FormEvent) => {
     event.preventDefault();

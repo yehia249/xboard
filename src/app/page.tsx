@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check } from "lucide-react";
 import { useCommunities } from "./hooks/usecommunities";
+import React, { useLayoutEffect } from 'react';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./hooks/AuthContext";
@@ -53,6 +54,15 @@ export default function CommunityPage() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const serversPerPage = 24;
+
+  useLayoutEffect(() => {
+    const key = "refreshed-login-page";
+    if (!sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, "true");
+      window.location.replace(window.location.href);
+    }
+    return () => sessionStorage.removeItem(key);
+  }, []);
 
   useEffect(() => {
     setMounted(true);

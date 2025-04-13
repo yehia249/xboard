@@ -3,6 +3,7 @@ import { useState } from "react";
 import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase"; // Ensure the path is correct for your project
 import Link from "next/link";
+import React, { useLayoutEffect } from 'react';
 import "../loginform.css"; // Import your CSS file
 
 
@@ -12,6 +13,15 @@ export default function ForgotPassword() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useLayoutEffect(() => {
+    const key = "refreshed-login-page";
+    if (!sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, "true");
+      window.location.replace(window.location.href);
+    }
+    return () => sessionStorage.removeItem(key);
+  }, []);
 
   async function handleResetPassword(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

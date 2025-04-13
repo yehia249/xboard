@@ -7,6 +7,7 @@ import Link from "next/link";
 import { auth } from "@/lib/firebase";
 import { useCommunities, Community } from "../hooks/usecommunities";
 import { useAuth } from "../hooks/AuthContext";
+import { useLayoutEffect } from 'react';
 import "@/app/all.css";
 import "@/app/community.css";
 import "@/app/form.css";
@@ -339,6 +340,15 @@ export default function DashboardPage() {
   const showDeletePopup = (id: number) => {
     setDeleteCommunityId(id);
   };
+
+  useLayoutEffect(() => {
+    const key = "refreshed-login-page";
+    if (!sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, "true");
+      window.location.replace(window.location.href);
+    }
+    return () => sessionStorage.removeItem(key);
+  }, []);
 
   const handleDeleteConfirmed = async () => {
     if (!deleteCommunityId || !user) return;
