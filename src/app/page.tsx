@@ -74,7 +74,8 @@ export default function CommunityPage() {
 
   // State for community promotions info: a mapping from community id to its last promotion time.
   const [communityPromotions, setCommunityPromotions] = useState<{ [key: number]: string }>({});
-
+  const buttonTop = 0;  // Change this value to move button up/down
+  const buttonRight = 0; // Change this value to move button left/right
   // A state to store the current time (to update our timers every second)
   const [now, setNow] = useState(Date.now());
 
@@ -150,52 +151,57 @@ export default function CommunityPage() {
     return { hours, minutes, seconds };
   };
 
-  // Handle promote button clicks.
-  const handlePromote = async (community_id: number) => {
-    try {
-      const auth = getAuth();
-      const token = await auth.currentUser?.getIdToken();
-      if (!token) {
-        alert("You must be logged in to promote.");
+// …
+
+// Handle promote button clicks.
+const handlePromote = async (community_id: number) => {
+  try {
+    const auth = getAuth();
+    const token = await auth.currentUser?.getIdToken();
+    if (!token) {
+      // no alert here
+      return;
+    }
+
+    // optional 6‑hour check...
+    if (userPromoInfo.userLastPromotion) {
+      const userCooldown = getCountdown(userPromoInfo.userLastPromotion, 6 * 60 * 60 * 1000);
+      if (userCooldown) {
+        // silently bail out
         return;
       }
-
-      // Optionally check the user’s 6‑hour cooldown before sending the request.
-      if (userPromoInfo.userLastPromotion) {
-        const userCooldown = getCountdown(userPromoInfo.userLastPromotion, 6 * 60 * 60 * 1000);
-        if (userCooldown) {
-          alert("You are on cooldown. Please wait until your 6‑hour cooldown expires.");
-          return;
-        }
-      }
-
-      const res = await fetch("/api/promote", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ community_id }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        alert(`❌ Error: ${data.error}`);
-      } else {
-        alert("✅ Community promoted!");
-        // Update the promoted time for this community.
-        const nowISO = new Date().toISOString();
-        setCommunityPromotions((prev) => ({ ...prev, [community_id]: nowISO }));
-        // Also update the user promotion info (which tracks the 6‑hour cooldown and daily limit).
-        setUserPromoInfo((prev) => ({
-          userLastPromotion: nowISO,
-          dailyPromotionCount: prev.dailyPromotionCount + 1,
-        }));
-      }
-    } catch (err) {
-      console.error("Error promoting:", err);
-      alert("Something went wrong.");
     }
-  };
+
+    const res = await fetch("/api/promote", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ community_id }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      // you could set an inline error state here instead of alert()
+      console.error("Promotion error:", data.error);
+      return;
+    }
+
+    // on success, update your UI state without any alert
+    const nowISO = new Date().toISOString();
+    setCommunityPromotions((prev) => ({ ...prev, [community_id]: nowISO }));
+    setUserPromoInfo((prev) => ({
+      userLastPromotion: nowISO,
+      dailyPromotionCount: prev.dailyPromotionCount + 1,
+    }));
+
+  } catch (err) {
+    console.error("Unexpected error promoting:", err);
+    // no alert here either
+  }
+};
+
 
   // A useLayoutEffect to force a one-time page refresh on the first load.
   useLayoutEffect(() => {
@@ -684,114 +690,248 @@ export default function CommunityPage() {
           </div>
         </div>
 
-        {/* Community Server List */}
-        <div className="server-list">
-          {loading ? (
-            <p>Loading...</p>
-          ) : error ? (
-            <p>Error: {error}</p>
-          ) : filteredCommunities.length === 0 ? (
-            <p>No communities found.</p>
-          ) : (
-            currentServers.map((server) => {
-              // If the community was promoted recently, calculate its 24‑hour cooldown
-              const communityCooldown = communityPromotions[server.id]
-                ? getCountdown(communityPromotions[server.id], 24 * 60 * 60 * 1000)
-                : null;
-              // Disable the Promote button if either:
-              // • The community is still on a 24‑hour cooldown, or
-              // • The user is on the 6‑hour cooldown
-              const isPromoted = communityCooldown !== null;
-              const disableButton =
-  isPromoted ||
-  (userPromoInfo.userLastPromotion
-    ? getCountdown(userPromoInfo.userLastPromotion, 6 * 60 * 60 * 1000) !== null
-    : false);
-              return (
-                <div
-                  key={server.id}
-                  className="server-card"
-                  onClick={() => router.push(`/community/${server.id}`)}
-                >
-                  {/* Boost Button */}
-                  <button
-                    className="promote-button"
-                    style={{
-                      position: "absolute",
-                      top: "8px",
-                      right: "8px",
-                      zIndex: 2,
-                      padding: "0.5rem 1rem",
-                      background: "#ffca28",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: disableButton ? "not-allowed" : "pointer",
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!disableButton) {
-                        handlePromote(server.id);
-                      }
-                    }}
-                    disabled={disableButton}
-                  >
-                    {isPromoted ? (
-                      <>
-                        Promoted{" "}
-                        {communityCooldown && (
-                          <span>
-                            (
-                            {`${communityCooldown.hours
-                              .toString()
-                              .padStart(2, "0")}:${communityCooldown.minutes
-                              .toString()
-                              .padStart(2, "0")}:${communityCooldown.seconds
-                              .toString()
-                              .padStart(2, "0")}`}
-                            )
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      "Promote"
-                    )}
-                  </button>
 
-                  <div
-                    className="card-bg-blur"
-                    style={{ backgroundImage: `url(${server.image_url})` }}
-                  ></div>
-                  <div className="image-container">
-                    <img
-                      src={server.image_url}
-                      alt={server.name}
-                      className="community-image fade-bottom"
-                    />
-                    <div className="image-gradient"></div>
-                  </div>
-                  <h3>{server.name}</h3>
-                  <p>{server.description}</p>
-                  <div className="tags">
-                    {server.tags.map((tag, index) => (
-                      <span key={index} className="tag">
-                        {tag}
+{/* Community Server List */}
+
+<div className="server-list">
+  {loading ? (
+    <p>Loading...</p>
+  ) : error ? (
+    <p>Error: {error}</p>
+  ) : filteredCommunities.length === 0 ? (
+    <p>No communities found.</p>
+  ) : (
+    currentServers.map((server) => {
+      // If the community was promoted recently, calculate its 24‑hour cooldown
+      const communityCooldown = communityPromotions[server.id]
+        ? getCountdown(communityPromotions[server.id], 24 * 60 * 60 * 1000)
+        : null;
+      // Disable the Promote button if either:
+      // • The community is still on a 24‑hour cooldown, or
+      // • The user is on the 6‑hour cooldown
+      const isPromoted = communityCooldown !== null;
+      const disableButton =
+        isPromoted ||
+        (userPromoInfo.userLastPromotion
+          ? getCountdown(userPromoInfo.userLastPromotion, 6 * 60 * 60 * 1000) !== null
+          : false);
+      
+      // Format countdown timer for tooltip
+      const formattedCountdown = communityCooldown ? 
+        `${communityCooldown.hours.toString().padStart(2, "0")}:${communityCooldown.minutes.toString().padStart(2, "0")}:${communityCooldown.seconds.toString().padStart(2, "0")}` : 
+        "";
+      
+      return (
+        <div
+          key={server.id}
+          className="server-card"
+          onClick={() => router.push(`/community/${server.id}`)}
+          style={{ position: "relative", display: "flex", flexDirection: "column" }}
+        >
+          <div
+            className="card-bg-blur"
+            style={{ backgroundImage: `url(${server.image_url})` }}
+          ></div>
+          <div className="image-container">
+            <img
+              src={server.image_url}
+              alt={server.name}
+              className="community-image fade-bottom"
+            />
+            <div className="image-gradient"></div>
+          </div>
+          
+          {/* Container for title with promote button */}
+          <div style={{ position: "relative", paddingRight: "110px", marginBottom: "8px" }}>
+            {/* Title with enough right padding to make room for button */}
+            <h3 style={{ 
+              margin: 0, 
+              wordWrap: "break-word"
+            }}>{server.name}</h3>
+            
+            {/* Boost Button with Adjustable Position */}
+            <div
+              style={{
+                position: "absolute",
+                top: buttonTop,
+                right: buttonRight,
+              }}
+            >
+              <div className="promote-button-container" style={{ position: "relative" }}>
+                <button
+                  className={`promote-button ${isPromoted ? 'promoted' : ''}`}
+                  style={{
+                    padding: "0.5rem 1rem",
+                    background: isPromoted ? "#333" : "white",
+                    border: isPromoted ? "1px solid rgba(180, 180, 180, 0.6)" : "none",
+                    borderRadius: "999px",
+                    cursor: disableButton ? "not-allowed" : "pointer",
+                    fontSize: "0.9rem",
+                    fontWeight: "500",
+                    width: isPromoted ? "120px" : "100px",
+                    textAlign: "center",
+                    color: isPromoted ? "white" : "black",
+                    boxShadow: isPromoted 
+                      ? "0 0 8px rgba(120, 255, 150, 0.4)" 
+                      : "0px 2px 4px rgba(0, 0, 0, 0.1)",
+                    position: "relative",
+                    transition: "all 0.3s ease, width 0.4s ease-in-out, background-color 0.3s, color 0.3s, box-shadow 0.4s",
+                    overflow: "hidden",
+                    marginBottom: isPromoted ? "20px" : "0px"
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!disableButton) {
+                      handlePromote(server.id);
+                    }
+                  }}
+                  disabled={disableButton}
+                  title={isPromoted ? `Cooldown: ${formattedCountdown}` : "Boost this community"}
+                >
+                  {isPromoted ? (
+                    <>
+                      <span className="promoted-text" style={{
+                        position: "relative",
+                        zIndex: 2,
+                        textShadow: "0 0 5px rgba(120, 255, 150, 0.4)"
+                      }}>
+                        Promoted
                       </span>
-                    ))}
+                      <div className="glow-effect" style={{
+                        position: "absolute",
+                        top: 0,
+                        left: "-100%",
+                        width: "50%",
+                        height: "100%",
+                        background: "linear-gradient(90deg, transparent, rgba(120, 255, 150, 0.2), transparent)",
+                        animation: "shine 3s infinite",
+                        zIndex: 1
+                      }}></div>
+                    </>
+                  ) : (
+                    "Promote"
+                  )}
+                </button>
+                
+                {/* Timer that appears when promoted */}
+                {isPromoted && (
+                  <div className="timer-badge" style={{
+                    position: "absolute",
+                    bottom: "1px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    fontSize: "0.7rem",
+                    background: "rgba(0, 0, 0, 0.7)",
+                    color: "white",
+                    padding: "1px 8px",
+                    borderRadius: "10px",
+                    whiteSpace: "nowrap",
+                    boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.3)",
+                    width: "auto",
+                    minWidth: "80px",
+                    textAlign: "center",
+                    fontWeight: "500",
+                    animation: "popIn 0.3s forwards"
+                  }}>
+                    {formattedCountdown}
                   </div>
-                  <a
-                    href={server.invite_link || server.image_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="join-link"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Join
-                  </a>
-                </div>
-              );
-            })
-          )}
+                )}
+              </div>
+            </div>
+          </div>
+
+          <p>{server.description}</p>
+          <div className="tags">
+            {server.tags.map((tag, index) => (
+              <span key={index} className="tag">
+                {tag}
+              </span>
+            ))}
+          </div>
+
+          {/* Container to push the Join button to the bottom */}
+          <div style={{ flex: "1" }}></div>
+
+          {/* Centered Join Button Container */}
+          <div style={{ display: "flex", justifyContent: "center", margin: "8px 0 -5px" }}>
+            <a
+              href={server.invite_link || server.image_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="join-link"
+              onClick={(e) => e.stopPropagation()}
+              style={{ 
+                textDecoration: "none",
+                display: "block",
+                textAlign: "center",
+                padding: "12px",
+                width: "100%",
+                maxWidth: "90%",
+                borderRadius: "999px",
+                background: "white",
+                color: "black",
+                fontWeight: "500"
+              }}
+            >
+              Join
+            </a>
+          </div>
         </div>
+      );
+    })
+  )}
+</div>
+
+{/* Add the necessary CSS animations */}
+<style jsx>{`
+  @keyframes shine {
+    0% {
+      left: -100%;
+    }
+    20% {
+      left: 150%;
+    }
+    100% {
+      left: 150%;
+    }
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 8px rgba(120, 255, 150, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 15px rgba(120, 255, 150, 0.7);
+    }
+    100% {
+      box-shadow: 0 0 8px rgba(120, 255, 150, 0.4);
+    }
+  }
+  
+  @keyframes popIn {
+    0% {
+      opacity: 0;
+      transform: translateX(-50%) translateY(10px) scale(0.8);
+    }
+    70% {
+      transform: translateX(-50%) translateY(-2px) scale(1.05);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+  }
+  
+  .promoted {
+    animation: pulse 2s infinite ease-in-out;
+  }
+  
+  .promote-button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+`}</style>
         {/* Pagination UI */}
         {totalPages > 1 && (
           <div

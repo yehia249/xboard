@@ -23,21 +23,21 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    // 3) Fetch the user’s most recent promotion
     const { data: lastPromotion, error: lastError } = await supabase
-      .from("promotions")
-      .select("promoted_at")
-      .eq("user_id", user_id)
-      .order("promoted_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (lastError) {
-      throw new Error(`Error fetching last promotion: ${lastError.message}`);
-    }
-
-    // 4) Convert that to a string or null
-    const userLastPromotion = lastPromotion ? lastPromotion.promoted_at : null;
+    .from("promotions")
+    .select("promoted_at")
+    .eq("user_id", user_id)
+    .order("promoted_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  
+  if (lastError) {
+    throw new Error(`Error fetching last promotion: ${lastError.message}`);
+  }
+  
+  // lastPromotion===null means “no prior boosts,” which is fine
+  const userLastPromotion = lastPromotion?.promoted_at ?? null;
+  
 
     // 5) Calculate how many promotions the user has done today
     //    This is the same daily logic you do in your "promote" route:
