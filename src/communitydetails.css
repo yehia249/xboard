@@ -1,0 +1,146 @@
+/* src/app/community/[id]/CommunityDetails.module.css */
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    background-color: #121212;
+    min-height: 100vh;
+    color: #fff;
+  }
+  
+  .card {
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  .bannerContainer {
+    position: relative;
+    width: 100%;
+    height: 240px;
+  }
+  
+  .bannerImage {
+    object-fit: cover;
+  }
+  
+  .contentContainer {
+    padding: 2rem;
+  }
+  
+  .title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 1rem;
+    color: #fff;
+  }
+  
+  .ownerInfo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .ownerLabel {
+    color: #a0a0a0;
+    font-size: 0.9rem;
+  }
+  
+  .ownerName {
+    color: #fff;
+    font-weight: 500;
+  }
+  
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .tag {
+    background-color: rgba(130, 87, 229, 0.2);
+    color: #8257e5;
+    padding: 0.35rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  
+  .description {
+    color: #d4d4d4;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    font-size: 1rem;
+  }
+  
+  .statsContainer {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 1.5rem;
+  }
+  
+  .statItem {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .statValue {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+  }
+  
+  .statLabel {
+    font-size: 0.9rem;
+    color: #a0a0a0;
+  }
+  
+  .joinButton {
+    display: block;
+    width: 100%;
+    background-color: #8257e5;
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem;
+    border-radius: 8px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
+  }
+  
+  .joinButton:hover {
+    background-color: #6f46c7;
+  }
+  
+  .loadingContainer, 
+  .errorContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 1.2rem;
+    color: #d4d4d4;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .title {
+      font-size: 2rem;
+    }
+    
+    .contentContainer {
+      padding: 1.5rem;
+    }
+    
+    .statsContainer {
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+  }

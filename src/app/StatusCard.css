@@ -1,0 +1,60 @@
+/* StatusCard.css */
+.status-card {
+    position: fixed;
+    right: 16px;
+    bottom: 0;
+    width: 260px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    z-index: 1000;
+    /* so pointer events get through when hidden except toggle: */
+    pointer-events: auto;
+    overflow: hidden;
+  }
+  
+  .status-card.hidden {
+    /* shift down so only the 24px toggle remains visible */
+    transform: translateY(calc(100% - 24px));
+    opacity: 0.85;
+  }
+  
+  .status-card__toggle {
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+  }
+  
+  .status-card__content {
+    padding: 32px 16px 16px;
+    text-align: center;
+  }
+  
+  .status-card__line {
+    margin: 8px 0;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .status-card__reset {
+    margin-top: 12px;
+    font-size: 0.8rem;
+    opacity: 0.75;
+  }
+  
+  /* Keep it always on top of other hover states */
+  .status-card {
+    pointer-events: auto;
+  }
+  

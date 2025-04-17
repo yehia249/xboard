@@ -21,7 +21,8 @@ export async function GET(req) {
     const communities = data.map(server => ({
       ...server,
       tags: server.server_tags.map(st => st.tags.name),
-      image_url: server.image_url || null
+      image_url: server.image_url || null,
+      long_description: server.long_description || "" // Include long_description
     }));
 
     return NextResponse.json(communities);
@@ -30,11 +31,13 @@ export async function GET(req) {
     return NextResponse.json({ error: "Database error" }, { status: 500 });
   }
 }
+
 export async function POST(req) {
   try {
     const {
       name,
       description,
+      long_description, // ✅ NEW: long description
       communityURL,
       tags,
       imageUrl,
@@ -64,6 +67,7 @@ export async function POST(req) {
         {
           name,
           description,
+          long_description: long_description || null, // ✅ Add it here
           invite_link: communityURL,
           image_url: imageUrl,
           owner_id: userId,

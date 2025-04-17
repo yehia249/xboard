@@ -7,7 +7,7 @@ import Link from "next/link";
 import { auth } from "@/lib/firebase";
 import { useCommunities, Community } from "../hooks/usecommunities";
 import { useAuth } from "../hooks/AuthContext";
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect } from "react";
 import "@/app/all.css";
 import "@/app/community.css";
 import "@/app/form.css";
@@ -38,22 +38,26 @@ const isValidXCommunityURL = (url: string): boolean => {
 
 const MAX_TAGS = 5;
 
-// XCommunityForm component with toast integration
+// XCommunityForm component with toast integration and new two-step form
 const XCommunityForm: React.FC<{
   onShowToast: (type: "success" | "error", title: string, description: string) => void;
 }> = ({ onShowToast }) => {
   const { user } = useAuth();
   const router = useRouter();
+  // add new field "long_description" to state
   const [formData, setFormData] = useState({
     communityURL: "",
     tags: [] as string[],
     description: "",
+    long_description: "",
   });
   const [tagInput, setTagInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formStep, setFormStep] = useState(1);
   const tagInputRef = useRef<HTMLInputElement>(null);
 
   const remainingChars = 160 - formData.description.length;
+  const remainingLongDescChars = 1800 - formData.long_description.length;
   const remainingTags = MAX_TAGS - formData.tags.length;
 
   // Helper to fetch community data
@@ -75,11 +79,15 @@ const XCommunityForm: React.FC<{
     }
   };
 
-
   
+
+  // Handle changes for both description and long_description with their respective limits
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name === "description" && value.length > 160) {
+      return;
+    }
+    if (name === "long_description" && value.length > 1800) {
       return;
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -150,9 +158,12 @@ const XCommunityForm: React.FC<{
         setIsSubmitting(false);
         return;
       }
+      // if long_description is empty, default it to description
+      const newLongDesc = formData.long_description.trim() ? formData.long_description : formData.description;
       const newCommunity = {
         name: communityName,
         description: formData.description,
+        long_description: newLongDesc,
         communityURL: formData.communityURL,
         tags: formData.tags,
         imageUrl,
@@ -183,7 +194,14 @@ const XCommunityForm: React.FC<{
       }
       
       onShowToast("success", "Posted Successfully", "Community information submitted successfully!");
-      setFormData({ communityURL: "", tags: [], description: "" });
+      // reset the form and go back to step 1
+      setFormData({
+        communityURL: "",
+        tags: [],
+        description: "",
+        long_description: "",
+      });
+      setFormStep(1);
       router.refresh();
     } catch (error) {
       console.error("Submission error:", error);
@@ -194,116 +212,149 @@ const XCommunityForm: React.FC<{
   };
 
   return (
-    <div className="x-community-form">
+    <div className="x-community-form dark-mode">
       <div className="form-header">
         <div>
           <h2>Share your X community with others</h2>
         </div>
       </div>
       <form onSubmit={handleSubmit}>
-        {/* Community URL */}
-        <div className="form-group">
-          <label htmlFor="communityURL">Community URL</label>
-          <div className="input-with-icon">
-            <div className="input-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-              </svg>
-            </div>
-            <input
-              type="url"
-              id="communityURL"
-              name="communityURL"
-              value={formData.communityURL}
-              onChange={handleChange}
-              placeholder="https://x.com/i/communities/123456789"
-              required
-            />
-          </div>
-          <p className="input-help">Enter the full URL to your X community page</p>
-        </div>
+        <div className="form-step-container slide-animation">
+          {formStep === 1 && (
+            <div className="form-step active">
+              {/* Community URL */}
+              <div className="form-group">
+                <label htmlFor="communityURL">Community URL</label>
+                <div className="input-with-icon">
+                  <div className="input-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="url"
+                    id="communityURL"
+                    name="communityURL"
+                    value={formData.communityURL}
+                    onChange={handleChange}
+                    placeholder="https://x.com/i/communities/123456789"
+                    required
+                  />
+                </div>
+                <p className="input-help">Enter the full URL to your X community page</p>
+              </div>
 
-        {/* Tags */}
-        <div className="form-group">
-          <label htmlFor="tagInput">
-            Tags <span className="tag-counter">{remainingTags} of {MAX_TAGS} tags remaining</span>
-          </label>
-          <div className={`tags-container ${formData.tags.length > 0 ? "has-tags" : ""}`}>
-            {formData.tags.map((tag, index) => (
-              <span key={index} className="tag-pill">
-                {tag}
-                <button type="button" onClick={() => removeTag(tag)} className="tag-remove">
-                  <svg className="tag-remove-icon" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+              {/* Tags */}
+              <div className="form-group">
+                <label htmlFor="tagInput">
+                  Tags <span className="tag-counter">{remainingTags} of {MAX_TAGS} tags remaining</span>
+                </label>
+                <div className={`tags-container ${formData.tags.length > 0 ? "has-tags" : ""}`}>
+                  {formData.tags.map((tag, index) => (
+                    <span key={index} className="tag-pill">
+                      {tag}
+                      <button type="button" onClick={() => removeTag(tag)} className="tag-remove">
+                        <svg className="tag-remove-icon" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  id="tagInput"
+                  ref={tagInputRef}
+                  value={tagInput}
+                  onChange={handleTagInputChange}
+                  onKeyDown={handleTagInputKeyDown}
+                  onBlur={handleTagInputBlur}
+                  placeholder="Type tags and press Enter, comma, or space to add"
+                  disabled={formData.tags.length >= MAX_TAGS}
+                />
+                <p className="input-help">
+                  Add up to {MAX_TAGS} tags and press Enter, comma, or space to confirm each one
+                </p>
+              </div>
+
+              <div className="form-submit">
+                <button type="button" onClick={() => setFormStep(2)}>
+                  Next
                 </button>
-              </span>
-            ))}
-          </div>
-          <input
-            type="text"
-            id="tagInput"
-            ref={tagInputRef}
-            value={tagInput}
-            onChange={handleTagInputChange}
-            onKeyDown={handleTagInputKeyDown}
-            onBlur={handleTagInputBlur}
-            placeholder="Type tags and press Enter, comma, or space to add"
-            disabled={formData.tags.length >= MAX_TAGS}
-          />
-          <p className="input-help">
-            Add up to {MAX_TAGS} tags and press Enter, comma, or space to confirm each one
-          </p>
-        </div>
+              </div>
+            </div>
+          )}
+          
+          {formStep === 2 && (
+            <div className="form-step active">
+              {/* Description */}
+              <div className="form-group">
+                <label htmlFor="description">
+                  Card Description <span className="char-counter">{remainingChars} characters remaining</span>
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows={4}
+                  maxLength={160}
+                  placeholder="Tell us what your community is about..."
+                  required
+                ></textarea>
+                <p className="input-help">Briefly describe your community in 160 characters or less</p>
+              </div>
 
-        {/* Description */}
-        <div className="form-group">
-          <label htmlFor="description">
-            Description <span className="char-counter">{remainingChars} characters remaining</span>
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            rows={4}
-            maxLength={160}
-            placeholder="Tell us what your community is about..."
-            required
-          ></textarea>
-          <p className="input-help">Briefly describe your community in 160 characters or less</p>
-        </div>
+              {/* Long Description */}
+              <div className="form-group">
+                <label htmlFor="long_description">
+                  Long Description (Optional)   <span className="char-counter">{remainingLongDescChars} characters remaining</span>
+                </label>
+                <textarea
+                  id="long_description"
+                  name="long_description"
+                  value={formData.long_description}
+                  onChange={handleChange}
+                  rows={8}
+                  maxLength={1800}
+                  placeholder="Enter a more detailed description.  (Optional)"
+                ></textarea>
+                <p className="input-help">You may leave this empty if you want, The card description will be used.</p>
+              </div>
 
-        {/* Submit Button */}
-        <div className="form-submit">
-          <button type="submit" disabled={isSubmitting} className={isSubmitting ? "submitting" : ""}>
-            {isSubmitting ? (
-              <span className="submit-loading">
-                <svg className="loading-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle
-                    className="spinner-track"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="spinner-path"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Processing...
-              </span>
-            ) : (
-              "Submit Community"
-            )}
-          </button>
+              <div className="form-submit">
+                <button type="button" onClick={() => setFormStep(1)}>Back</button>
+                <button type="submit" disabled={isSubmitting} className={isSubmitting ? "submitting" : ""}>
+                  {isSubmitting ? (
+                    <span className="submit-loading">
+                      <svg className="loading-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle
+                          className="spinner-track"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="spinner-path"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Processing...
+                    </span>
+                  ) : (
+                    "Submit Community"
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </form>
     </div>
@@ -320,9 +371,11 @@ export default function DashboardPage() {
   // EDIT FORM STATE
   const [editCommunityId, setEditCommunityId] = useState<number | null>(null);
   const [editDescription, setEditDescription] = useState("");
+  const [editLongDescription, setEditLongDescription] = useState("");
   const [editTags, setEditTags] = useState<string[]>([]);
   const [editTagInput, setEditTagInput] = useState("");
   const [isEditSubmitting, setIsEditSubmitting] = useState(false);
+  const [editFormStep, setEditFormStep] = useState(1);
 
   // DELETE POPUP STATE
   const [deleteCommunityId, setDeleteCommunityId] = useState<number | null>(null);
@@ -374,8 +427,10 @@ export default function DashboardPage() {
   const openEditModal = (server: Community) => {
     setEditCommunityId(server.id);
     setEditDescription(server.description);
+    setEditLongDescription(server.long_description || "");
     setEditTags(server.tags || []);
     setEditTagInput("");
+    setEditFormStep(1);
   };
 
   const handleEditTagInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -416,6 +471,7 @@ export default function DashboardPage() {
 
   const editRemainingTags = MAX_TAGS - editTags.length;
   const editRemainingChars = 160 - editDescription.length;
+  const editRemainingLongDescChars = 1800 - editLongDescription.length;
 
   const handleEditDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { value } = e.target;
@@ -424,16 +480,26 @@ export default function DashboardPage() {
     }
   };
 
+  const handleEditLongDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const { value } = e.target;
+    if (value.length <= 1800) {
+      setEditLongDescription(value);
+    }
+  };
+
   const handleEditCommunitySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editCommunityId || !user) return;
     setIsEditSubmitting(true);
     try {
+      // if long description is empty, default to card description
+      const updatedLongDescription = editLongDescription.trim() ? editLongDescription : editDescription;
       const res = await fetch(`/api/communities/${editCommunityId}?userId=${user.uid}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           description: editDescription,
+          long_description: updatedLongDescription,
           tags: editTags,
         }),
       });
@@ -575,63 +641,90 @@ export default function DashboardPage() {
       {/* EDIT FORM MODAL */}
       {editCommunityId && (
         <div className="edit-modal-overlay">
-          <div className="edit-modal">
+          <div className="edit-modal dark-mode slide-animation">
             <h2>Edit Community</h2>
             <form onSubmit={handleEditCommunitySubmit}>
-              <div className="form-group">
-                <label htmlFor="editDescription">
-                  Description <span className="char-counter">{editRemainingChars} characters remaining</span>
-                </label>
-                <textarea
-                  id="editDescription"
-                  value={editDescription}
-                  onChange={handleEditDescriptionChange}
-                  maxLength={160}
-                  rows={4}
-                  required
-                />
-                <p className="input-help">Briefly describe your community in 160 characters or less</p>
-              </div>
-              <div className="form-group">
-                <label htmlFor="editTagInput">
-                  Tags <span className="tag-counter">{editRemainingTags} of {MAX_TAGS} tags remaining</span>
-                </label>
-                <div className="tags-container">
-                  {editTags.map((tag, index) => (
-                    <span key={index} className="tag-pill">
-                      {tag}
-                      <button type="button" onClick={() => removeEditTag(tag)} className="tag-remove">
-                        <svg className="tag-remove-icon" fill="currentColor" viewBox="0 0 20 20">
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </button>
-                    </span>
-                  ))}
+              {editFormStep === 1 && (
+                <div className="form-step active">
+                  <div className="form-group">
+                    <label htmlFor="editDescription">
+                      Card Description <span className="char-counter">{editRemainingChars} characters remaining</span>
+                    </label>
+                    <textarea
+                      id="editDescription"
+                      value={editDescription}
+                      onChange={handleEditDescriptionChange}
+                      maxLength={160}
+                      rows={4}
+                      required
+                    />
+                    <p className="input-help">Briefly describe your community in 160 characters or less</p>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="editTagInput">
+                      Tags <span className="tag-counter">{editRemainingTags} of {MAX_TAGS} tags remaining</span>
+                    </label>
+                    <div className="tags-container">
+                      {editTags.map((tag, index) => (
+                        <span key={index} className="tag-pill">
+                          {tag}
+                          <button type="button" onClick={() => removeEditTag(tag)} className="tag-remove">
+                            <svg className="tag-remove-icon" fill="currentColor" viewBox="0 0 20 20">
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <input
+                      type="text"
+                      id="editTagInput"
+                      value={editTagInput}
+                      onChange={handleEditTagInputChange}
+                      onKeyDown={handleEditTagKeyDown}
+                      onBlur={handleEditTagBlur}
+                      placeholder="Type tags and press Enter, comma, or space to add"
+                      disabled={editTags.length >= MAX_TAGS}
+                    />
+                    <p className="input-help">Add up to {MAX_TAGS} tags per community</p>
+                  </div>
+                  <div className="form-submit">
+                    <button type="button" onClick={() => setEditFormStep(2)}>Next</button>
+                    <button type="button" className="delete-btn" onClick={() => setEditCommunityId(null)}>
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-                <input
-                  type="text"
-                  id="editTagInput"
-                  value={editTagInput}
-                  onChange={handleEditTagInputChange}
-                  onKeyDown={handleEditTagKeyDown}
-                  onBlur={handleEditTagBlur}
-                  placeholder="Type tags and press Enter, comma, or space to add"
-                  disabled={editTags.length >= MAX_TAGS}
-                />
-                <p className="input-help">Add up to {MAX_TAGS} tags per community</p>
-              </div>
-              <div style={{ marginTop: "16px", display: "flex", gap: "8px" }}>
-                <button type="submit" className="join-link" disabled={isEditSubmitting}>
-                  {isEditSubmitting ? "Saving..." : "Save Changes"}
-                </button>
-                <button type="button" className="delete-btn" onClick={() => setEditCommunityId(null)}>
-                  Cancel
-                </button>
-              </div>
+              )}
+
+              {editFormStep === 2 && (
+                <div className="form-step active">
+                  <div className="form-group">
+                    <label htmlFor="editLongDescription">
+                      Long Description (Optional) <span className="char-counter">{editRemainingLongDescChars} characters remaining</span>
+                    </label>
+                    <textarea
+                      id="editLongDescription"
+                      value={editLongDescription}
+                      onChange={handleEditLongDescriptionChange}
+                      rows={8}
+                      maxLength={1800}
+                      placeholder="Enter a more detailed description (up to 1800 characters). If left blank, the card description will be used."
+                    />
+                    <p className="input-help">You may leave this empty if you want the card description to be used.</p>
+                  </div>
+                  <div className="form-submit">
+                    <button type="button" onClick={() => setEditFormStep(1)}>Back</button>
+                    <button type="submit" disabled={isEditSubmitting} className={isEditSubmitting ? "submitting" : ""}>
+                      {isEditSubmitting ? "Saving..." : "Save Changes"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </form>
           </div>
         </div>

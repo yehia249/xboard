@@ -24,14 +24,7 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  useLayoutEffect(() => {
-    const key = "refreshed-login-page";
-    if (!sessionStorage.getItem(key)) {
-      sessionStorage.setItem(key, "true");
-      window.location.replace(window.location.href);
-    }
-    return () => sessionStorage.removeItem(key);
-  }, []);
+
 
   const handleSignup = async (event: React.FormEvent) => {
     event.preventDefault();

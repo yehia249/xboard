@@ -1,50 +1,77 @@
-/* XCommunityForm.css */
+/* XCommunityForm.css - Enhanced Modern Style */
 
 .x-community-form {
   width: 100%;
   max-width: 36rem;
   margin: 0 auto;
-  padding: 1rem;
-  border-radius: 1rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  background-color: #131313;
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(145deg, #161616, #131313);
   color: #fff;
-  transition: all 0.2s ease;
-  border: 3px solid #646464;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid rgba(100, 100, 100, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.x-community-form::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #005fcd, #7a29ff);
+  z-index: 1;
 }
 
 .form-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .form-header h2 {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 0.25rem;
   color: #fff;
+  background: linear-gradient(90deg, #fff, #bbb);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .form-header p {
   color: #9ca3af;
+  font-size: 0.95rem;
 }
 
 .form-group {
-  margin-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+  transition: transform 0.2s ease;
+}
+
+.form-group:hover {
+  transform: translateX(3px);
 }
 
 .form-group:last-of-type {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-group label {
   display: block;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   font-weight: 500;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
   color: #e5e7eb;
+  letter-spacing: 0.5px;
 }
 
 .input-with-icon {
@@ -60,28 +87,37 @@
   display: flex;
   align-items: center;
   pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.input-with-icon:focus-within .input-icon svg {
+  color: #005fcd;
+  transform: scale(1.1);
 }
 
 .input-icon svg {
   width: 1.25rem;
   height: 1.25rem;
   color: #9ca3af;
+  transition: all 0.2s ease;
 }
 
 input[type="url"],
 input[type="text"],
 textarea {
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.5rem;
   border: 1px solid #4b5563;
-  background-color: #1f2937;
+  background-color: rgba(31, 41, 55, 0.8);
   color: #f9fafb;
   transition: all 0.2s ease;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 0.95rem;
 }
 
 textarea {
-  min-height: 3rem;
+  min-height: 4rem;
   resize: vertical;
 }
 
@@ -89,18 +125,24 @@ input[type="url"]:focus,
 input[type="text"]:focus,
 textarea:focus {
   outline: none;
-  border-color: #6b7280;
-  box-shadow: 0 0 0 2px rgba(75, 85, 99, 0.3);
+  border-color: #005fcd;
+  box-shadow: 0 0 0 2px rgba(0, 95, 205, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  background-color: rgba(31, 41, 55, 0.95);
 }
 
 .input-with-icon input {
-  padding-left: 2.5rem;
+  padding-left: 2.75rem;
 }
 
 .input-help {
-  margin-top: 0.125rem;
-  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
   color: #9ca3af;
+  transition: color 0.2s ease;
+}
+
+.form-group:hover .input-help {
+  color: #ccc;
 }
 
 .tags-container {
@@ -108,29 +150,38 @@ textarea:focus {
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
   min-height: 0;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .tags-container.has-tags {
-  padding: 0.25rem;
-  background-color: #1f2937;
+  padding: 0.5rem;
+  background-color: rgba(31, 41, 55, 0.5);
+  border: 1px solid rgba(75, 85, 99, 0.4);
 }
 
 .tag-pill {
   display: inline-flex;
   align-items: center;
-  padding: 0.125rem 0.5rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 9999px;
-  font-size: 0.75rem;
-  background-color: #4b5563;
+  font-size: 0.8rem;
+  background: linear-gradient(135deg, #4b5563, #374151);
   color: #e5e7eb;
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tag-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .tag-remove {
-  margin-left: 0.25rem;
+  margin-left: 0.375rem;
   background: none;
   border: none;
   cursor: pointer;
@@ -139,6 +190,11 @@ textarea:focus {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.tag-remove:hover {
+  color: #ef4444;
 }
 
 .tag-remove-icon {
@@ -149,31 +205,56 @@ textarea:focus {
 .form-submit {
   display: flex;
   justify-content: flex-end;
+  gap: 12px;
+  margin-top: 1.5rem;
 }
 
 button[type="submit"] {
-  padding: 0.375rem 0.875rem;
-  border-radius: 0.375rem;
-  font-weight: 500;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
   color: #fff;
-  background-color: #1f2937;
+  background: linear-gradient(135deg, #005fcd, #0052b3);
   border: none;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+button[type="submit"]::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 button[type="submit"]:hover {
-  background-color: #374151;
+  background: linear-gradient(135deg, #0069e0, #005fcd);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+button[type="submit"]:hover::after {
+  opacity: 1;
 }
 
 button[type="submit"]:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(75, 85, 99, 0.5);
+  box-shadow: 0 0 0 3px rgba(0, 95, 205, 0.4), 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 button[type="submit"].submitting {
-  background-color: #4b5563;
+  background: linear-gradient(135deg, #4b5563, #374151);
   cursor: not-allowed;
+  transform: none;
 }
 
 .submit-loading {
@@ -182,84 +263,86 @@ button[type="submit"].submitting {
 }
 
 .loading-spinner {
-  animation: spin 1s linear infinite;
+  animation: spin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   margin-right: 0.5rem;
   margin-left: -0.25rem;
-  height: 1rem;
-  width: 1rem;
+  height: 1.25rem;
+  width: 1.25rem;
 }
 
 .spinner-track {
-  opacity: 0.25;
+  opacity: 0.3;
 }
 
 .spinner-path {
-  opacity: 0.75;
+  opacity: 0.85;
 }
 
 .submit-result {
-  margin-top: 0.75rem;
-  padding: 0.5rem;
-  border-radius: 0.375rem;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  animation: fadeIn 0.4s ease;
 }
 
 .submit-result.success {
-  background-color: rgba(6, 78, 59, 0.8);
+  background: linear-gradient(135deg, rgba(6, 95, 70, 0.9), rgba(6, 78, 59, 0.8));
   color: #d1fae5;
+  border-left: 3px solid #10b981;
 }
 
 .submit-result.error {
-  background-color: rgba(127, 29, 29, 0.8);
+  background: linear-gradient(135deg, rgba(153, 27, 27, 0.9), rgba(127, 29, 29, 0.8));
   color: #fee2e2;
+  border-left: 3px solid #ef4444;
 }
 
 /* Responsive Styles */
 @media (max-width: 415px) {
   .x-community-form {
-    padding: 0.875rem;
-    border-radius: 0.75rem;
-    border-width: 2px;
+    padding: 1.25rem;
+    border-radius: 1rem;
   }
 
   .form-header {
-    margin-bottom: 0.75rem;
+    margin-bottom: 1.25rem;
   }
 
   .form-header h2 {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
   }
 
   .form-group {
-    margin-bottom: 0.625rem;
+    margin-bottom: 1rem;
   }
 
   input[type="url"],
   input[type="text"],
   textarea {
-    padding: 0.375rem 0.625rem;
+    padding: 0.625rem 0.75rem;
   }
 
   textarea {
-    min-height: 2.5rem;
+    min-height: 3rem;
   }
 
   .input-icon {
-    padding-left: 0.625rem;
+    padding-left: 0.75rem;
   }
 
   .input-icon svg {
-    width: 1rem;
-    height: 1rem;
+    width: 1.125rem;
+    height: 1.125rem;
   }
 
   .input-with-icon input {
-    padding-left: 2rem;
+    padding-left: 2.5rem;
   }
 }
 
 @media (max-width: 392px) {
   .x-community-form {
-    padding: 0.75rem;
+    padding: 1rem;
   }
 
   .form-header {
@@ -268,21 +351,21 @@ button[type="submit"].submitting {
   }
 
   .form-header h2 {
-    font-size: 1.125rem;
-    margin-bottom: 0.125rem;
+    font-size: 1.375rem;
+    margin-bottom: 0.25rem;
   }
 
   .form-header p {
-    font-size: 0.75rem;
+    font-size: 0.875rem;
   }
 
   .form-group label {
-    font-size: 0.75rem;
+    font-size: 0.875rem;
   }
 
   .tag-pill {
-    padding: 0.125rem 0.375rem;
-    font-size: 0.675rem;
+    padding: 0.185rem 0.5rem;
+    font-size: 0.75rem;
   }
 
   .tag-remove-icon {
@@ -291,7 +374,7 @@ button[type="submit"].submitting {
   }
 
   button[type="submit"] {
-    padding: 0.3125rem 0.75rem;
+    padding: 0.625rem 1rem;
     font-size: 0.875rem;
   }
 
@@ -302,58 +385,57 @@ button[type="submit"].submitting {
 
 @media (max-width: 300px) {
   .x-community-form {
-    padding: 0.625rem;
-    border-radius: 0.625rem;
-    border-width: 1px;
+    padding: 0.875rem;
+    border-radius: 0.75rem;
   }
 
   .form-group {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
   }
 
   .form-group:last-of-type {
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
   }
 
   input[type="url"],
   input[type="text"],
   textarea {
-    padding: 0.3125rem 0.5rem;
-    border-radius: 0.25rem;
+    padding: 0.5rem 0.625rem;
+    border-radius: 0.375rem;
   }
 
   textarea {
-    min-height: 2rem;
+    min-height: 2.5rem;
   }
 
   .input-help {
-    font-size: 0.625rem;
+    font-size: 0.75rem;
   }
 
   .tags-container.has-tags {
-    padding: 0.125rem;
+    padding: 0.25rem;
   }
 
   .tag-pill {
-    padding: 0.0625rem 0.3125rem;
-    font-size: 0.625rem;
+    padding: 0.125rem 0.4375rem;
+    font-size: 0.75rem;
   }
 
   .submit-result {
-    margin-top: 0.5rem;
-    padding: 0.375rem;
-    font-size: 0.75rem;
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    font-size: 0.8125rem;
   }
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: translateY(5px);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 
@@ -364,4 +446,63 @@ button[type="submit"].submitting {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* --- Enhanced styling for Next and Back buttons --- */
+
+/* Enhance the .form-submit container */
+.form-submit {
+  gap: 12px;
+  margin-top: 1.5rem;
+}
+
+/* Place the first button (typically the "Back" button) on the left */
+.form-submit button:first-child {
+  margin-right: auto;
+}
+
+/* Style Next and Back buttons */
+.form-submit button[type="button"] {
+  background: linear-gradient(135deg, #374151, #1f2937);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Add highlight effect on hover */
+.form-submit button[type="button"]::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Hover effect for Next and Back buttons */
+.form-submit button[type="button"]:hover {
+  background: linear-gradient(135deg, #4b5563, #374151);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.form-submit button[type="button"]:hover::after {
+  opacity: 1;
+}
+
+/* Focus effect for buttons */
+.form-submit button[type="button"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(75, 85, 99, 0.4), 0 4px 6px rgba(0, 0, 0, 0.1);
 }
