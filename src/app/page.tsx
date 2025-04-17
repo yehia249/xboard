@@ -759,7 +759,7 @@ const handlePromote = async (community_id: number) => {
             >
               <div className="promote-button-container" style={{ position: "relative" }}>
                 <button
-                  className={`promote-button ${isPromoted ? 'promoted' : ''}`}
+                  className={`promote-button ${isPromoted ? 'promote-button-promoted' : ''}`}
                   style={{
                     padding: "0.5rem 1rem",
                     background: isPromoted ? "#333" : "white",
@@ -797,14 +797,14 @@ const handlePromote = async (community_id: number) => {
                       }}>
                         Promoted
                       </span>
-                      <div className="glow-effect" style={{
+                      <div className="promote-button-glow-effect" style={{
                         position: "absolute",
                         top: 0,
                         left: "-100%",
                         width: "50%",
                         height: "100%",
                         background: "linear-gradient(90deg, transparent, rgba(120, 255, 150, 0.2), transparent)",
-                        animation: "shine 3s infinite",
+                        animation: "promote-button-shine 3s infinite",
                         zIndex: 1
                       }}></div>
                     </>
@@ -815,9 +815,9 @@ const handlePromote = async (community_id: number) => {
                 
                 {/* Timer that appears when promoted */}
                 {isPromoted && (
-                  <div className="timer-badge" style={{
+                  <div className="promote-timer-badge" style={{
                     position: "absolute",
-                    bottom: "1px",
+                    bottom: "-5px",
                     left: "50%",
                     transform: "translateX(-50%)",
                     fontSize: "0.7rem",
@@ -831,7 +831,7 @@ const handlePromote = async (community_id: number) => {
                     minWidth: "80px",
                     textAlign: "center",
                     fontWeight: "500",
-                    animation: "popIn 0.3s forwards"
+                    animation: "promote-timer-popIn 0.3s forwards"
                   }}>
                     {formattedCountdown}
                   </div>
@@ -882,9 +882,9 @@ const handlePromote = async (community_id: number) => {
   )}
 </div>
 
-{/* Add the necessary CSS animations */}
+{/* Add the necessary CSS animations with scoped names */}
 <style jsx>{`
-  @keyframes shine {
+  @keyframes promote-button-shine {
     0% {
       left: -100%;
     }
@@ -896,7 +896,7 @@ const handlePromote = async (community_id: number) => {
     }
   }
   
-  @keyframes pulse {
+  @keyframes promote-button-pulse {
     0% {
       box-shadow: 0 0 8px rgba(120, 255, 150, 0.4);
     }
@@ -908,7 +908,7 @@ const handlePromote = async (community_id: number) => {
     }
   }
   
-  @keyframes popIn {
+  @keyframes promote-timer-popIn {
     0% {
       opacity: 0;
       transform: translateX(-50%) translateY(10px) scale(0.8);
@@ -922,8 +922,8 @@ const handlePromote = async (community_id: number) => {
     }
   }
   
-  .promoted {
-    animation: pulse 2s infinite ease-in-out;
+  .promote-button-promoted {
+    animation: promote-button-pulse 2.5s infinite ease-in-out;
   }
   
   .promote-button-container {
