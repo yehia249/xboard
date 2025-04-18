@@ -277,7 +277,7 @@ const handlePromote = async (community_id: number) => {
   if (!mounted) {
     return null;
   }
-
+  
   // Calculate the user’s 6‑hour cooldown and the number of promotions left today.
   const userCooldown = userPromoInfo.userLastPromotion
     ? getCountdown(userPromoInfo.userLastPromotion, 6 * 60 * 60 * 1000)
@@ -433,7 +433,7 @@ const handlePromote = async (community_id: number) => {
     onClick={() => setShowPromoCard(true)}
     style={{
       position: "fixed",
-      bottom: "1.5rem",
+      bottom: "40px",
       right: "1.5rem",
       zIndex: 9998,
       background: "rgba(30,30,30,0.85)",
@@ -470,28 +470,7 @@ const handlePromote = async (community_id: number) => {
     </div>
   </button>
 )}
-{/* Peeking Tab to Unhide Card */}
-{user && !showPromoCard && (
-  <div
-    onClick={() => setShowPromoCard(true)}
-    style={{
-      position: "fixed",
-      bottom: "0",
-      right: "1rem",
-      zIndex: 9998,
-      background: "rgba(30,30,30,0.85)",
-      color: "white",
-      padding: "0.3rem 1rem",
-      borderTopLeftRadius: "10px",
-      borderTopRightRadius: "10px",
-      fontSize: "0.8rem",
-      cursor: "pointer",
-      pointerEvents: "auto",
-    }}
-  >
-    Show Boosts
-  </div>
-)}
+
 
 
 {/* Peeking Tab to Unhide Card */}
@@ -508,7 +487,7 @@ const handlePromote = async (community_id: number) => {
       padding: "0.3rem 1rem",
       borderTopLeftRadius: "10px",
       borderTopRightRadius: "10px",
-      fontSize: "0.8rem",
+      fontSize: "1.3rem",
       cursor: "pointer",
       pointerEvents: "auto",
     }}
@@ -517,28 +496,6 @@ const handlePromote = async (community_id: number) => {
   </div>
 )}
 
-
-{/* Peeking Tab to Unhide Card */}
-{user && !showPromoCard && (
-  <div
-    onClick={() => setShowPromoCard(true)}
-    style={{
-      position: "fixed",
-      bottom: "0",
-      right: "1rem",
-      zIndex: 9998,
-      background: "rgba(30,30,30,0.85)",
-      color: "white",
-      padding: "0.3rem 1rem",
-      borderTopLeftRadius: "10px",
-      borderTopRightRadius: "10px",
-      fontSize: "0.8rem",
-      cursor: "pointer",
-    }}
-  >
-    Show Boosts
-  </div>
-)}
 
       {/* Navigation Container */}
       <div
@@ -766,7 +723,7 @@ const handlePromote = async (community_id: number) => {
                     border: isPromoted ? "1px solid rgba(180, 180, 180, 0.6)" : "none",
                     borderRadius: "999px",
                     cursor: disableButton ? "not-allowed" : "pointer",
-                    fontSize: "0.9rem",
+                    fontSize: "1rem",
                     fontWeight: "500",
                     width: isPromoted ? "120px" : "100px",
                     textAlign: "center",
