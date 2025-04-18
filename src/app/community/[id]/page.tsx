@@ -460,7 +460,6 @@ export default function CommunityDetails() {
                 e.stopPropagation();
                 handlePromote(Number(id));
               }}
-              title={isPromoted ? `Cooldown: ${formattedCountdown}` : !user ? "Login to boost" : "Promote this community"}
             >
               {isPromoted ? (
                 <>

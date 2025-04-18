@@ -742,9 +742,7 @@ const handlePromote = async (community_id: number) => {
                       handlePromote(server.id);
                     }
                   }}
-                  disabled={disableButton}
-                  title={isPromoted ? `Cooldown: ${formattedCountdown}` : "Boost this community"}
-                >
+                  disabled={disableButton}                >
                   {isPromoted ? (
                     <>
                       <span className="promoted-text" style={{
