@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, AlertCircle, X } from "lucide-react";
 import { useCommunities } from "./hooks/usecommunities";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,6 +15,16 @@ import "./logup.css";
 
 // Define a type for cuisine strings
 type Cuisine = string;
+
+// Define toast types
+type ToastType = 'success' | 'error' | 'info' | 'warning';
+
+// Define toast message structure
+interface ToastMessage {
+  id: number;
+  type: ToastType;
+  message: string;
+}
 
 const cuisines: Cuisine[] = [
   "Mexican",
@@ -64,7 +74,33 @@ export default function CommunityPage() {
     </svg>
   );
   
+  // Toast notifications state
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const toastIdCounter = useRef(0);
 
+  // State for button shake animation
+  const [shakingButtons, setShakingButtons] = useState<{[key: number]: boolean}>({});
+
+  // Function to add a toast notification
+  const addToast = (type: ToastType, message: string) => {
+    const id = toastIdCounter.current++;
+    setToasts(prev => [...prev, { id, type, message }]);
+    
+    // Auto-remove toast after 3 seconds
+    setTimeout(() => {
+      setToasts(prev => prev.filter(toast => toast.id !== id));
+    }, 3000);
+  };
+
+  // Function to shake a button
+  const shakeButton = (communityId: number) => {
+    setShakingButtons(prev => ({ ...prev, [communityId]: true }));
+    
+    // Stop shaking after animation completes
+    setTimeout(() => {
+      setShakingButtons(prev => ({ ...prev, [communityId]: false }));
+    }, 500);
+  };
 
   // State for user promotion info: last promotion time and how many boosts used today.
   const [userPromoInfo, setUserPromoInfo] = useState<{
@@ -151,56 +187,77 @@ export default function CommunityPage() {
     return { hours, minutes, seconds };
   };
 
-// …
-
-// Handle promote button clicks.
-const handlePromote = async (community_id: number) => {
-  try {
-    const auth = getAuth();
-    const token = await auth.currentUser?.getIdToken();
-    if (!token) {
-      // no alert here
-      return;
-    }
-
-    // optional 6‑hour check...
-    if (userPromoInfo.userLastPromotion) {
-      const userCooldown = getCountdown(userPromoInfo.userLastPromotion, 6 * 60 * 60 * 1000);
-      if (userCooldown) {
-        // silently bail out
+  // Handle promote button clicks.
+  const handlePromote = async (community_id: number) => {
+    try {
+      const auth = getAuth();
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        addToast('error', 'Please login to promote communities');
+        shakeButton(community_id);
         return;
       }
+
+      // Check for user cooldown
+      if (userPromoInfo.userLastPromotion) {
+        const userCooldown = getCountdown(userPromoInfo.userLastPromotion, 6 * 60 * 60 * 1000);
+        if (userCooldown) {
+          addToast('warning', `Wait ${userCooldown.hours}h ${userCooldown.minutes}m before promoting again`);
+          shakeButton(community_id);
+          return;
+        }
+      }
+
+      // Check if community is on cooldown
+      if (communityPromotions[community_id]) {
+        const communityCooldown = getCountdown(communityPromotions[community_id], 24 * 60 * 60 * 1000);
+        if (communityCooldown) {
+          addToast('info', 'This community was already promoted in the last 24h');
+          shakeButton(community_id);
+          return;
+        }
+      }
+
+      // Check if daily limit reached
+      if (userPromoInfo.dailyPromotionCount >= 4) {
+        addToast('warning', 'You\'ve used all your daily boosts');
+        shakeButton(community_id);
+        return;
+      }
+
+      const res = await fetch("/api/promote", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ community_id }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error("Promotion error:", data.error);
+        addToast('error', data.error || 'Failed to promote community');
+        shakeButton(community_id);
+        return;
+      }
+
+      // on success, update your UI state
+      const nowISO = new Date().toISOString();
+      setCommunityPromotions((prev) => ({ ...prev, [community_id]: nowISO }));
+      setUserPromoInfo((prev) => ({
+        userLastPromotion: nowISO,
+        dailyPromotionCount: prev.dailyPromotionCount + 1,
+      }));
+      
+      addToast('success', 'Community successfully promoted!');
+
+    } catch (err) {
+      console.error("Unexpected error promoting:", err);
+      addToast('error', 'An unexpected error occurred');
+      shakeButton(community_id);
     }
-
-    const res = await fetch("/api/promote", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ community_id }),
-    });
-    const data = await res.json();
-
-    if (!res.ok) {
-      // you could set an inline error state here instead of alert()
-      console.error("Promotion error:", data.error);
-      return;
-    }
-
-    // on success, update your UI state without any alert
-    const nowISO = new Date().toISOString();
-    setCommunityPromotions((prev) => ({ ...prev, [community_id]: nowISO }));
-    setUserPromoInfo((prev) => ({
-      userLastPromotion: nowISO,
-      dailyPromotionCount: prev.dailyPromotionCount + 1,
-    }));
-
-  } catch (err) {
-    console.error("Unexpected error promoting:", err);
-    // no alert here either
-  }
-};
+  };
 
 
   // A useLayoutEffect to force a one-time page refresh on the first load.
@@ -278,7 +335,7 @@ const handlePromote = async (community_id: number) => {
     return null;
   }
   
-  // Calculate the user’s 6‑hour cooldown and the number of promotions left today.
+  // Calculate the user's 6‑hour cooldown and the number of promotions left today.
   const userCooldown = userPromoInfo.userLastPromotion
     ? getCountdown(userPromoInfo.userLastPromotion, 6 * 60 * 60 * 1000)
     : null;
@@ -289,6 +346,63 @@ const handlePromote = async (community_id: number) => {
       className="community-page"
       style={{ position: "relative", width: "100%", margin: 0, padding: 0 }}
     >
+{/* Toast Container */}
+<div style={{
+  position: "fixed",
+  top: "1rem",
+  left: "50%",
+  transform: "translateX(-50%)",
+  zIndex: 9999,
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.5rem",
+  maxWidth: "90vw",
+  width: "320px",
+  alignItems: "center"
+}}>
+  <AnimatePresence>
+    {toasts.map(toast => (
+      <motion.div
+        key={toast.id}
+        initial={{ opacity: 0, y: -20, scale: 0.8 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+        style={{
+          padding: "0.75rem 1rem",
+          borderRadius: "8px",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+          background: toast.type === 'success' ? "rgba(34, 197, 94, 0.9)" : 
+                    toast.type === 'error' ? "rgba(239, 68, 68, 0.9)" :
+                    toast.type === 'warning' ? "rgba(245, 158, 11, 0.9)" : 
+                    "rgba(59, 130, 246, 0.9)",
+          color: "white",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontSize: "0.9rem",
+          fontWeight: "500",
+          width: "100%"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          {toast.type === 'success' && <Check size={18} />}
+          {toast.type === 'error' && <AlertCircle size={18} />}
+          {toast.type === 'warning' && <AlertCircle size={18} />}
+          {toast.type === 'info' && <Check size={18} />}
+          {toast.message}
+        </div>
+        <button 
+          onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "white" }}
+        >
+          <X size={16} />
+        </button>
+      </motion.div>
+    ))}
+  </AnimatePresence>
+</div>
       {/* Sticky Header */}
       <header
         style={{
@@ -334,51 +448,53 @@ const handlePromote = async (community_id: number) => {
           <span>Post your Community</span>
         </button>
       </header>
-{/* Floating Promo Status Card */}
-{user && (
-  <div
-    style={{
-      position: "fixed",
-      bottom: showPromoCard ? "1.5rem" : "-5rem",
-      right: "1.5rem",
-      zIndex: 9999,
-      backdropFilter: "blur(12px)",
-      WebkitBackdropFilter: "blur(12px)",
-      background: "rgba(30,30,30,0.85)",
-      borderRadius: "16px",
-      padding: "1.2rem 1.5rem",
-      boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-      color: "white",
-      transition: "all 0.5s ease",
-      opacity: showPromoCard ? 1 : 0,
-      maxWidth: "90vw",
-      width: "320px",
-      fontSize: "0.95rem",
-      border: "1px solid rgba(255, 255, 255, 0.1)",
-    }}
-  >
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.7rem" }}>
-      <span style={{ fontWeight: "600", display: "flex", alignItems: "center", gap: "0.6rem" }}>
-        <FlameIcon /> 
-        <span>Boosts Left: <strong>{dailyPromosLeft}</strong> / 4</span>
-      </span>
-      <button
-        onClick={() => setShowPromoCard(false)}
-        style={{
-          background: "rgba(255, 255, 255, 0.1)",
-          border: "none",
-          color: "#eee",
-          fontSize: "0.8rem",
-          cursor: "pointer",
-          padding: "0.3rem 0.6rem",
-          borderRadius: "8px",
-          transition: "all 0.2s ease",
-        }}
-      >
-        Hide
-      </button>
-    </div>
 
+      {/* Floating Promo Status Card */}
+      {user && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: showPromoCard ? "1.5rem" : "-5rem",
+            right: "1.5rem",
+            zIndex: 9999,
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            background: "rgba(30,30,30,0.85)",
+            borderRadius: "16px",
+            padding: "1.2rem 1.5rem",
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+            color: "white",
+            transition: "all 0.5s ease",
+            opacity: showPromoCard ? 1 : 0,
+            maxWidth: "90vw",
+            width: "320px",
+            fontSize: "0.95rem",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.7rem" }}>
+            <span style={{ fontWeight: "600", display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              <FlameIcon /> 
+              <span>Boosts Left: <strong>{dailyPromosLeft}</strong> / 4</span>
+            </span>
+            <button
+              onClick={() => setShowPromoCard(false)}
+              style={{
+                background: "rgba(255, 255, 255, 0.1)",
+                border: "none",
+                color: "#eee",
+                fontSize: "0.8rem",
+                cursor: "pointer",
+                padding: "0.3rem 0.6rem",
+                borderRadius: "8px",
+                transition: "all 0.2s ease",
+              }}
+            >
+              Hide
+            </button>
+          </div>
+
+          
     {/* Progress bar */}
     <div style={{ 
       width: "100%", 
@@ -417,16 +533,19 @@ const handlePromote = async (community_id: number) => {
       </div>
     )}
 
-    <p style={{ 
-      fontSize: "0.8rem", 
-      color: "#bbb", 
-      marginTop: "0.8rem",
-    }}>
-      Boosts reset daily at midnight.
-    </p>
-  </div>
-)}
 
+
+          <p style={{ 
+            fontSize: "0.8rem", 
+            color: "#bbb", 
+            marginTop: "0.8rem",
+          }}>
+            Boosts reset daily at midnight.
+          </p>
+        </div>
+      )}
+
+      
 {/* Minimized indicator - shows when card is hidden */}
 {user && !showPromoCard && (
   <button
@@ -564,6 +683,7 @@ const handlePromote = async (community_id: number) => {
           <span style={{ fontSize: "3rem", fontWeight: "bold" }}> Communities</span>
         </div>
 
+
         {/* Search Input */}
         <div className="input-group">
           <input
@@ -648,228 +768,222 @@ const handlePromote = async (community_id: number) => {
         </div>
 
 
-{/* Community Server List */}
-
-<div className="server-list">
-  {loading ? (
-    <p>Loading...</p>
-  ) : error ? (
-    <p>Error: {error}</p>
-  ) : filteredCommunities.length === 0 ? (
-    <p>No communities found.</p>
-  ) : (
-    currentServers.map((server) => {
-      // If the community was promoted recently, calculate its 24‑hour cooldown
-      const communityCooldown = communityPromotions[server.id]
-        ? getCountdown(communityPromotions[server.id], 24 * 60 * 60 * 1000)
-        : null;
-      // Disable the Promote button if either:
-      // • The community is still on a 24‑hour cooldown, or
-      // • The user is on the 6‑hour cooldown
-      const isPromoted = communityCooldown !== null;
-      const disableButton =
-        isPromoted ||
-        (userPromoInfo.userLastPromotion
-          ? getCountdown(userPromoInfo.userLastPromotion, 6 * 60 * 60 * 1000) !== null
-          : false);
-      
-      // Format countdown timer for tooltip
-      const formattedCountdown = communityCooldown ? 
-        `${communityCooldown.hours.toString().padStart(2, "0")}:${communityCooldown.minutes.toString().padStart(2, "0")}:${communityCooldown.seconds.toString().padStart(2, "0")}` : 
-        "";
-      
-      return (
-        <div
-          key={server.id}
-          className="server-card"
-          onClick={() => router.push(`/community/${server.id}`)}
-          style={{ position: "relative", display: "flex", flexDirection: "column" }}
-        >
-          <div
-            className="card-bg-blur"
-            style={{ backgroundImage: `url(${server.image_url})` }}
-          ></div>
-          <div className="image-container">
-            <img
-              src={server.image_url}
-              alt={server.name}
-              className="community-image fade-bottom"
-            />
-            <div className="image-gradient"></div>
-          </div>
-          
-          {/* Container for title with promote button */}
-          <div style={{ position: "relative", paddingRight: "110px", marginBottom: "8px" }}>
-            {/* Title with enough right padding to make room for button */}
-            <h3 style={{ 
-              margin: 0, 
-              wordWrap: "break-word"
-            }}>{server.name}</h3>
-            
-            {/* Boost Button with Adjustable Position */}
-            <div
-              style={{
-                position: "absolute",
-                top: buttonTop,
-                right: buttonRight,
-              }}
-            >
-              <div className="promote-button-container" style={{ position: "relative" }}>
-                <button
-                  className={`promote-button ${isPromoted ? 'promote-button-promoted' : ''}`}
-                  style={{
-                    padding: "0.5rem 1rem",
-                    background: isPromoted ? "#333" : "white",
-                    border: isPromoted ? "1px solid rgba(180, 180, 180, 0.6)" : "none",
-                    borderRadius: "999px",
-                    cursor: disableButton ? "not-allowed" : "pointer",
-                    fontSize: "1rem",
-                    fontWeight: "500",
-                    width: isPromoted ? "120px" : "100px",
-                    textAlign: "center",
-                    color: isPromoted ? "white" : "black",
-                    boxShadow: isPromoted 
-                      ? "0 0 8px rgba(120, 255, 150, 0.4)" 
-                      : "0px 2px 4px rgba(0, 0, 0, 0.1)",
-                    position: "relative",
-                    transition: "all 0.3s ease, width 0.4s ease-in-out, background-color 0.3s, color 0.3s, box-shadow 0.4s",
-                    overflow: "hidden",
-                    marginBottom: isPromoted ? "20px" : "0px"
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!disableButton) {
-                      handlePromote(server.id);
-                    }
-                  }}
-                  disabled={disableButton}                >
-                  {isPromoted ? (
-                    <>
-                      <span className="promoted-text" style={{
-                        position: "relative",
-                        zIndex: 2,
-                        textShadow: "0 0 5px rgba(120, 255, 150, 0.4)"
-                      }}>
-                        Promoted
-                      </span>
-                      <div className="promote-button-glow-effect" style={{
-                        position: "absolute",
-                        top: 0,
-                        left: "-100%",
-                        width: "50%",
-                        height: "100%",
-                        background: "linear-gradient(90deg, transparent, rgba(120, 255, 150, 0.2), transparent)",
-                        animation: "promote-button-shine 3s infinite",
-                        zIndex: 1
-                      }}></div>
-                    </>
-                  ) : (
-                    "Promote"
-                  )}
-                </button>
-                
-                {/* Timer that appears when promoted */}
-                {isPromoted && (
-                  <div className="promote-timer-badge" style={{
-                    position: "absolute",
-                    bottom: "-5px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    fontSize: "0.7rem",
-                    background: "rgba(0, 0, 0, 0.7)",
-                    color: "white",
-                    padding: "1px 8px",
-                    borderRadius: "10px",
-                    whiteSpace: "nowrap",
-                    boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.3)",
-                    width: "auto",
-                    minWidth: "80px",
-                    textAlign: "center",
-                    fontWeight: "500",
-                    animation: "promote-timer-popIn 0.3s forwards"
-                  }}>
-                    {formattedCountdown}
+        {/* Community Server List */}
+        <div className="server-list">
+          {loading ? (
+            <p>Loading...</p>
+          ) : error ? (
+            <p>Error: {error}</p>
+          ) : filteredCommunities.length === 0 ? (
+            <p>No communities found.</p>
+          ) : (
+            currentServers.map((server) => {
+              // If the community was promoted recently, calculate its 24‑hour cooldown
+              const communityCooldown = communityPromotions[server.id]
+                ? getCountdown(communityPromotions[server.id], 24 * 60 * 60 * 1000)
+                : null;
+              // Check if promoted
+              const isPromoted = communityCooldown !== null;
+              
+              // Format countdown timer for tooltip
+              const formattedCountdown = communityCooldown ? 
+                `${communityCooldown.hours.toString().padStart(2, "0")}:${communityCooldown.minutes.toString().padStart(2, "0")}:${communityCooldown.seconds.toString().padStart(2, "0")}` : 
+                "";
+              
+              // Button is shaking?
+              const isShaking = shakingButtons[server.id] || false;
+              
+              return (
+                <div
+                  key={server.id}
+                  className="server-card"
+                  onClick={() => router.push(`/community/${server.id}`)}
+                  style={{ position: "relative", display: "flex", flexDirection: "column" }}
+                >
+                  <div
+                    className="card-bg-blur"
+                    style={{ backgroundImage: `url(${server.image_url})` }}
+                  ></div>
+                  <div className="image-container">
+                    <img
+                      src={server.image_url}
+                      alt={server.name}
+                      className="community-image fade-bottom"
+                    />
+                    <div className="image-gradient"></div>
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
+                  
+                  {/* Container for title with promote button */}
+                  <div style={{ position: "relative", paddingRight: "110px", marginBottom: "8px" }}>
+                    {/* Title with enough right padding to make room for button */}
+                    <h3 style={{ 
+                      margin: 0, 
+                      wordWrap: "break-word"
+                    }}>{server.name}</h3>
+                    
+                    {/* Boost Button with Adjustable Position */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: buttonTop,
+                        right: buttonRight,
+                      }}
+                    >
+                      <div className="promote-button-container" style={{ position: "relative" }}>
+                        <button
+                          // In your button's className, ensure the shake animation has highest priority
+                          className={`promote-button ${isShaking ? 'button-shake' : ''} ${isPromoted ? 'promote-button-promoted' : ''}`}
+                          style={{
+                            padding: "0.5rem 1rem",
+                            background: isPromoted ? "#333" : "white",
+                            border: isPromoted ? "1px solid rgba(180, 180, 180, 0.6)" : "none",
+                            borderRadius: "999px",
+                            cursor: "pointer", // Always show pointer cursor
+                            fontSize: "1rem",
+                            fontWeight: "500",
+                            width: isPromoted ? "120px" : "100px",
+                            textAlign: "center",
+                            color: isPromoted ? "white" : "black",
+                            boxShadow: isPromoted 
+                              ? "0 0 8px rgba(120, 255, 150, 0.4)" 
+                              : "0px 2px 4px rgba(0, 0, 0, 0.1)",
+                            position: "relative",
+                            transition: "all 0.3s ease, width 0.4s ease-in-out, background-color 0.3s, color 0.3s, box-shadow 0.4s",
+                            overflow: "hidden",
+                            marginBottom: isPromoted ? "20px" : "0px"
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePromote(server.id);
+                          }}
+                        >
+                          {isPromoted ? (
+                            <>
+                              <span className="promoted-text" style={{
+                                position: "relative",
+                                zIndex: 2,
+                                textShadow: "0 0 5px rgba(120, 255, 150, 0.4)"
+                              }}>
+                                Promoted
+                              </span>
+                              <div className="promote-button-glow-effect" style={{
+                                position: "absolute",
+                                top: 0,
+                                left: "-100%",
+                                width: "50%",
+                                height: "100%",
+                                background: "linear-gradient(90deg, transparent, rgba(120, 255, 150, 0.2), transparent)",
+                                animation: "promote-button-shine 3s infinite",
+                                zIndex: 1
+                              }}></div>
+                            </>
+                          ) : (
+                            "Promote"
+                          )}
+                        </button>
+                        
+                        {/* Timer that appears when promoted */}
+                        {isPromoted && (
+                          <div className="promote-timer-badge" style={{
+                            position: "absolute",
+                            bottom: "-5px",
+                            left: "50%",
+                            transform: "translateX(-50%)",
+                            fontSize: "0.7rem",
+                            background: "rgba(0, 0, 0, 0.7)",
+                            color: "white",
+                            padding: "1px 8px",
+                            borderRadius: "10px",
+                            whiteSpace: "nowrap",
+                            boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.3)",
+                            width: "auto",
+                            minWidth: "80px",
+                            textAlign: "center",
+                            fontWeight: "500",
+                            animation: "promote-timer-popIn 0.3s forwards"
+                          }}>
+                            {formattedCountdown}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
 
-          <p>{server.description}</p>
-          <div className="tags">
-            {server.tags.map((tag, index) => (
-              <span key={index} className="tag">
-                {tag}
-              </span>
-            ))}
-          </div>
+                  <p>{server.description}</p>
+                  <div className="tags">
+                    {server.tags.map((tag, index) => (
+                      <span key={index} className="tag">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
 
-          {/* Container to push the Join button to the bottom */}
-          <div style={{ flex: "1" }}></div>
+                  {/* Container to push the Join button to the bottom */}
+                  <div style={{ flex: "1" }}></div>
 
-          {/* Centered Join Button Container */}
-          <div style={{ display: "flex", justifyContent: "center", margin: "8px 0 -5px" }}>
-            <a
-              href={server.invite_link || server.image_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="join-link"
-              onClick={(e) => e.stopPropagation()}
-              style={{ 
-                textDecoration: "none",
-                display: "block",
-                textAlign: "center",
-                padding: "12px",
-                width: "100%",
-                maxWidth: "90%",
-                borderRadius: "999px",
-                background: "white",
-                color: "black",
-                fontWeight: "500"
-              }}
-            >
-              Join
-            </a>
-          </div>
+                  {/* Centered Join Button Container */}
+                  <div style={{ display: "flex", justifyContent: "center", margin: "8px 0 -5px" }}>
+                    <a
+                      href={server.invite_link || server.image_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="join-link"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ 
+                        textDecoration: "none",
+                        display: "block",
+                        textAlign: "center",
+                        padding: "12px",
+                        width: "100%",
+                        maxWidth: "90%",
+                        borderRadius: "999px",
+                        background: "white",
+                        color: "black",
+                        fontWeight: "500"
+                      }}
+                    >
+                      Join
+                    </a>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
-      );
-    })
-  )}
-</div>
 
-{/* Add the necessary CSS animations with scoped names */}
-<style jsx>{`
-  @keyframes promote-button-shine {
-    0% {
-      left: -100%;
-    }
-    20% {
-      left: 150%;
-    }
-    100% {
-      left: 150%;
-    }
-  }
-  
-  @keyframes promote-button-pulse {
-    0% {
-      box-shadow: 0 0 8px rgba(120, 255, 150, 0.4);
-    }
-    50% {
-      box-shadow: 0 0 15px rgba(120, 255, 150, 0.7);
-    }
-    100% {
-      box-shadow: 0 0 8px rgba(120, 255, 150, 0.4);
-    }
-  }
-  
-  @keyframes promote-timer-popIn {
-    0% {
-      opacity: 0;
-      transform: translateX(-50%) translateY(10px) scale(0.8);
-    }
-    70% {
-      transform: translateX(-50%) translateY(-2px) scale(1.05);
+        {/* Add the necessary CSS animations with scoped names */}
+        <style jsx>{`
+          @keyframes promote-button-shine {
+            0% {
+              left: -100%;
+            }
+            20% {
+              left: 150%;
+            }
+            100% {
+              left: 150%;
+            }
+          }
+          
+          @keyframes promote-button-pulse {
+            0% {
+              box-shadow: 0 0 8px rgba(120, 255, 150, 0.4);
+            }
+            50% {
+              box-shadow: 0 0 15px rgba(120, 255, 150, 0.7);
+            }
+            100% {
+              box-shadow: 0 0 8px rgba(120, 255, 150, 0.4);
+            }
+          }
+          
+          @keyframes promote-timer-popIn {
+            0% {
+              opacity: 0;
+              transform: translateX(-50%) translateY(10px) scale(0.8);
+            }
+            70% {
+              transform: translateX(-50%) translateY(-2px) scale(1.05);
     }
     100% {
       opacity: 1;
@@ -877,6 +991,25 @@ const handlePromote = async (community_id: number) => {
     }
   }
   
+        @keyframes button-shake {
+          0% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-5px); }
+          80% { transform: translateX(5px); }
+          100% { transform: translateX(0); }
+        }
+
+        @keyframes toast-fade-in {
+          0% { opacity: 0; transform: translate(-50%, -20px); }
+          100% { opacity: 1; transform: translate(-50%, 0); }
+        }
+        
+
+        .button-shake {
+          animation: button-shake 0.5s ease-in-out;
+        }
+
   .promote-button-promoted {
     animation: promote-button-pulse 2.5s infinite ease-in-out;
   }

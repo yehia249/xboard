@@ -5,7 +5,9 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import "@/app/communityPage.css";
 import { useAuth } from "@/app/hooks/AuthContext";
+import { motion, AnimatePresence } from "framer-motion";
 import { getAuth } from "firebase/auth";
+import { Check, AlertCircle, X } from "lucide-react"; // Import Lucide icons
 
 export default function CommunityDetails() {
   const { id } = useParams();
@@ -15,7 +17,14 @@ export default function CommunityDetails() {
   const [showPromoCard, setShowPromoCard] = useState(true);
   const [now, setNow] = useState(Date.now());
   const [buttonShaking, setButtonShaking] = useState(false);
-  const [toast, setToast] = useState<{ message: string, visible: boolean }>({ message: "", visible: false });
+  
+  // Updated toast state to support multiple toasts with types
+  const [toasts, setToasts] = useState<Array<{
+    id: string;
+    message: string;
+    type: 'success' | 'error' | 'warning' | 'info';
+    timeout?: NodeJS.Timeout;
+  }>>([]);
   
   // State for user promotion info: last promotion time and how many boosts used today.
   const [userPromoInfo, setUserPromoInfo] = useState<{
@@ -35,6 +44,15 @@ export default function CommunityDetails() {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Clean up toasts on unmount
+  useEffect(() => {
+    return () => {
+      toasts.forEach((toast) => {
+        if (toast.timeout) clearTimeout(toast.timeout);
+      });
+    };
+  }, [toasts]);
 
   // Fetch user promotion info if logged in.
   useEffect(() => {
@@ -95,12 +113,14 @@ export default function CommunityDetails() {
     return { hours, minutes, seconds };
   };
 
-  // Show toast notification
-  const showToast = (message: string) => {
-    setToast({ message, visible: true });
-    setTimeout(() => {
-      setToast(prev => ({ ...prev, visible: false }));
+  // Updated toast function to support multiple toasts with types
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+    const id = Date.now().toString();
+    const timeout = setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
     }, 3000);
+    
+    setToasts(prev => [...prev, { id, message, type, timeout }]);
   };
 
   // Handle button shake animation
@@ -118,7 +138,7 @@ export default function CommunityDetails() {
       const token = await auth.currentUser?.getIdToken();
       if (!token) {
         shakeButton();
-        showToast("Please log in to boost communities");
+        showToast("Please login to promote communities", "error");
         return;
       }
 
@@ -127,7 +147,7 @@ export default function CommunityDetails() {
         const userCooldown = getCountdown(userPromoInfo.userLastPromotion, 6 * 60 * 60 * 1000);
         if (userCooldown) {
           shakeButton();
-          showToast(`Wait ${userCooldown.hours}h ${userCooldown.minutes}m before promoting again`);
+          showToast(`Wait ${userCooldown.hours}h ${userCooldown.minutes}m before promoting again`, "warning");
           return;
         }
       }
@@ -135,7 +155,7 @@ export default function CommunityDetails() {
       // Check daily limit
       if (userPromoInfo.dailyPromotionCount >= 4) {
         shakeButton();
-        showToast("You've used all 4 daily boosts");
+        showToast("You've used all 4 daily boosts", "error");
         return;
       }
 
@@ -143,8 +163,7 @@ export default function CommunityDetails() {
       if (communityPromotions[Number(id)]) {
         const communityCooldown = getCountdown(communityPromotions[Number(id)], 24 * 60 * 60 * 1000);
         if (communityCooldown) {
-          shakeButton();
-          showToast("This community was already boosted in the last 24h");
+          showToast("This community was already promoted in the last 24h", "info");
           return;
         }
       }
@@ -162,7 +181,7 @@ export default function CommunityDetails() {
       if (!res.ok) {
         console.error("Promotion error:", data.error);
         shakeButton();
-        showToast(data.error || "Failed to boost community");
+        showToast(data.error || "Failed to promote community", "error");
         return;
       }
 
@@ -174,12 +193,12 @@ export default function CommunityDetails() {
         dailyPromotionCount: prev.dailyPromotionCount + 1,
       }));
       
-      showToast("Community Promoted! ");
+      showToast("Community successfully promoted!", "success");
 
     } catch (err) {
       console.error("Unexpected error promoting:", err);
       shakeButton();
-      showToast("Something went wrong. Please try again later.");
+      showToast("Something went wrong. Please try again later.", "error");
     }
   };
 
@@ -241,28 +260,63 @@ export default function CommunityDetails() {
 
   return (
     <div className="community-page">
-      {/* Toast notification */}
-      {toast.visible && (
-        <div className="toast-notification" style={{
-          position: "fixed",
-          top: "20px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          background: "rgba(30, 30, 30, 0.9)",
-          color: "white",
-          padding: "12px 20px",
-          borderRadius: "8px",
-          zIndex: 10000,
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          animation: "toast-fade-in 0.3s ease-out forwards",
-          maxWidth: "90%",
-          textAlign: "center",
-          fontSize: "0.95rem"
-        }}>
-          {toast.message}
-        </div>
-      )}
+      {/* Toast Container - New Implementation */}
+      <div style={{
+        position: "fixed",
+        top: "1rem",
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 9999,
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.5rem",
+        maxWidth: "90vw",
+        width: "320px",
+        alignItems: "center"
+      }}>
+        <AnimatePresence>
+          {toasts.map(toast => (
+            <motion.div
+              key={toast.id}
+              initial={{ opacity: 0, y: -20, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+              style={{
+                padding: "0.75rem 1rem",
+                borderRadius: "8px",
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
+                background: toast.type === 'success' ? "rgba(34, 197, 94, 0.9)" : 
+                          toast.type === 'error' ? "rgba(239, 68, 68, 0.9)" :
+                          toast.type === 'warning' ? "rgba(245, 158, 11, 0.9)" : 
+                          "rgba(59, 130, 246, 0.9)",
+                color: "white",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                fontSize: "0.9rem",
+                fontWeight: "500",
+                width: "100%"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                {toast.type === 'success' && <Check size={18} />}
+                {toast.type === 'error' && <AlertCircle size={18} />}
+                {toast.type === 'warning' && <AlertCircle size={18} />}
+                {toast.type === 'info' && <Check size={18} />}
+                {toast.message}
+              </div>
+              <button 
+                onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "white" }}
+              >
+                <X size={16} />
+              </button>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
 
       {/* Floating Promo Status Card - for logged in users only */}
       {user && (
@@ -572,11 +626,6 @@ export default function CommunityDetails() {
           60% { transform: translateX(-5px); }
           80% { transform: translateX(5px); }
           100% { transform: translateX(0); }
-        }
-        
-        @keyframes toast-fade-in {
-          0% { opacity: 0; transform: translate(-50%, -20px); }
-          100% { opacity: 1; transform: translate(-50%, 0); }
         }
         
         .promote-button-promoted {
