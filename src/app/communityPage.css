@@ -1,165 +1,185 @@
 /* Modern Community Page Styles */
 .community-page {
-    background-color: #0d0d0d;
-    color: #fff;
-    min-height: 100vh;
-    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-  }
-  
-  /* Hero Banner Section */
-  .image-banner {
-    position: relative;
-    height: 400px;
-    overflow: hidden;
-    border: 1px solid rgba(128, 128, 128, 0.3); /* Subtle grey outline like in the example */
-    border-radius: 8px;
-  }
-  
-  .image-banner img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    filter: brightness(0.9);
-    transition: transform 0.8s ease;
-  }
+  background-color: #0d0d0d;
+  color: #fff;
+  min-height: 100vh;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+}
 
+/* Hero Banner Section */
+.image-banner {
+  position: relative;
+  height: 400px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.image-banner::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent 60%, #0d0d0d);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.image-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.image-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.8s ease;
+  filter: blur(7px); /* Added blur to the banner image */
+}
+
+/* Community Info Section */
+.community-info {
+  max-width: 800px;
+  margin: -60px auto 0;
+  padding: 2.5rem 2rem;
+  position: relative;
+  z-index: 2;
+  background: rgba(18, 18, 20, 0.6);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(128, 128, 128, 0.3); /* Matching the subtle grey outline from the example */
+}
+
+.community-info h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+  background: linear-gradient(90deg, #fff, #ccc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-align: center;
+}
+
+/* Tags Styling */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.tag {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.tag:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Community Description */
+.long-description {
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.7;
+  margin-bottom: 2.5rem;
+  text-align: left;
+  padding: 0 1rem;
+}
+
+/* Join Button - Updated to match the yellow button in the image */
+.join-button {
+  display: inline-block;
+  background-color: #ffffff; /* Bright yellow like in the image */
+  color: #000; /* Black text for contrast on yellow */
+  padding: 14px 38px;
+  border-radius: 4px; /* Less rounded corners like in the image */
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease; /* Only change background color on hover */
+  width: 100%; /* Full width like in the image */
+  text-align: center;
+  border: none;
+}
+
+.join-button:hover {
+  background-color: #ffffff; /* Slightly darker yellow on hover */
+  text-decoration: none; /* Explicitly prevent underline on hover */
+  /* No transform or shadow changes, matching the subtle hover effect in the image */
+}
+
+/* Loading State */
+.community-page:has(> div:only-child) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .image-banner {
+    height: 280px;
+  }
   
-  /* Community Info Section */
   .community-info {
-    max-width: 800px;
-    margin: -60px auto 0;
-    padding: 2.5rem 2rem;
-    position: relative;
-    z-index: 2;
-    background: rgba(18, 18, 20, 0.6);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(128, 128, 128, 0.3); /* Matching the subtle grey outline from the example */
+    margin-top: -40px;
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
   }
   
   .community-info h1 {
-    font-size: 3rem;
-    font-weight: 700;
-    margin-bottom: 1.2rem;
-    background: linear-gradient(90deg, #fff, #ccc);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-align: center;
+    font-size: 2rem;
   }
   
-  /* Tags Styling */
-  .tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-    margin-bottom: 2rem;
+  .long-description {
+    font-size: 1rem;
+    padding: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .image-banner {
+    height: 220px;
+  }
+  
+  .community-info {
+    padding: 1.5rem 1rem;
+    margin-top: -30px;
+  }
+  
+  .community-info h1 {
+    font-size: 1.6rem;
   }
   
   .tag {
-    background: rgba(255, 255, 255, 0.08);
-    padding: 8px 16px;
-    border-radius: 30px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.3s ease;
+    padding: 6px 12px;
+    font-size: 0.75rem;
   }
   
-  .tag:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateY(-2px);
+  .join-button {
+    padding: 12px 28px;
+    font-size: 1rem;
   }
-  
-  /* Community Description */
-  .long-description {
-    font-size: 1.5rem;
-    color: rgba(255, 255, 255, 0.85);
-    line-height: 1.7;
-    margin-bottom: 2.5rem;
-    text-align: left;
-    padding: 0 1rem;
-  }
-  
-  /* Join Button - Updated to match the yellow button in the image */
-/* Join Button - Updated to match the yellow button in the image */
-.join-button {
-    display: inline-block;
-    background-color: #ffffff; /* Bright yellow like in the image */
-    color: #000; /* Black text for contrast on yellow */
-    padding: 14px 38px;
-    border-radius: 4px; /* Less rounded corners like in the image */
-    font-weight: 600;
-    font-size: 1.1rem;
-    text-decoration: none;
-    transition: background-color 0.2s ease; /* Only change background color on hover */
-    width: 100%; /* Full width like in the image */
-    text-align: center;
-    border: none;
-  }
-  
-  .join-button:hover {
-    background-color: #ffffff; /* Slightly darker yellow on hover */
-    text-decoration: none; /* Explicitly prevent underline on hover */
-    /* No transform or shadow changes, matching the subtle hover effect in the image */
-  }
-  
-  /* Loading State */
-  .community-page:has(> div:only-child) {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.2rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.7);
-  }
-  
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .image-banner {
-      height: 280px;
-    }
-    
-    .community-info {
-      margin-top: -40px;
-      padding: 2rem 1.5rem;
-      border-radius: 12px;
-    }
-    
-    .community-info h1 {
-      font-size: 2rem;
-    }
-    
-    .long-description {
-      font-size: 1rem;
-      padding: 0;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .image-banner {
-      height: 220px;
-    }
-    
-    .community-info {
-      padding: 1.5rem 1rem;
-      margin-top: -30px;
-    }
-    
-    .community-info h1 {
-      font-size: 1.6rem;
-    }
-    
-    .tag {
-      padding: 6px 12px;
-      font-size: 0.75rem;
-    }
-    
-    .join-button {
-      padding: 12px 28px;
-      font-size: 1rem;
-    }
-  }
+}
