@@ -566,103 +566,154 @@ export default function CommunityDetails() {
       <div className="image-banner">
         <img src={community.image_url} alt={community.name} />
       </div>
-      
       <div className="community-info">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h1>{community.name}</h1>
-          
-          {/* Promote button - visible to all users */}
-          <div className="promote-button-container" style={{ position: "relative" }}>
-            <button
-              className={`promote-button ${isPromoted ? 'promote-button-promoted' : ''} ${buttonShaking ? 'button-shake' : ''}`}
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: "20px",
+    }}
+  >
+    <h1>{community.name}</h1>
+
+    {/* Promote button - visible to all users */}
+    <div className="promote-button-container" style={{ position: "relative" }}>
+      {/* Added Promote count display above the button */}
+      <div
+        className="promote-count-badge"
+        style={{
+          fontSize: "1.2rem",
+          color: "white",
+          textAlign: "center",
+          position: "absolute", 
+          top: "85px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          padding: "3px 10px",
+          borderRadius: "10px",
+          minWidth: "70px",
+          boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.3)",
+        }}
+      >
+        <span style={{ fontWeight: "bold", fontSize: "1.9rem", display: "block" }}>
+          {community.promote_count || 0}
+        </span>
+        Promotions
+      </div>
+      
+      <button
+        className={`promote-button ${
+          isPromoted ? "promote-button-promoted" : ""
+        } ${buttonShaking ? "button-shake" : ""}`}
+        style={{
+          padding: "0.5rem 1rem",
+          background: isPromoted ? "#333" : "white",
+          border: isPromoted ? "1px solid rgba(180, 180, 180, 0.6)" : "none",
+          borderRadius: "999px",
+          cursor: "pointer", // Always show pointer cursor
+          fontSize: "1.15rem",
+          fontWeight: "500",
+          width: isPromoted ? "140px" : "120px",
+          height: isPromoted ? "50px" : "50px",
+          textAlign: "center",
+          color: isPromoted ? "white" : "black",
+          boxShadow: isPromoted
+            ? "0 0 8px rgba(120, 255, 150, 0.4)"
+            : "0px 2px 4px rgba(0, 0, 0, 0.1)",
+          position: "relative",
+          transition:
+            "all 0.3s ease, width 0.4s ease-in-out, background-color 0.3s, color 0.3s, box-shadow 0.4s",
+          overflow: "hidden",
+          marginBottom: isPromoted ? "20px" : "0px",
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          handlePromote(Number(id));
+        }}
+      >
+        {isPromoted ? (
+          <>
+            <span
+              className="promoted-text"
               style={{
-                padding: "0.5rem 1rem",
-                background: isPromoted ? "#333" : "white",
-                border: isPromoted ? "1px solid rgba(180, 180, 180, 0.6)" : "none",
-                borderRadius: "999px",
-                cursor: "pointer", // Always show pointer cursor
-                fontSize: "1.15rem",
-                fontWeight: "500",
-                width: isPromoted ? "140px" : "120px",
-                height: isPromoted ? "50px" : "50px",
-                textAlign: "center",
-                color: isPromoted ? "white" : "black",
-                boxShadow: isPromoted 
-                  ? "0 0 8px rgba(120, 255, 150, 0.4)" 
-                  : "0px 2px 4px rgba(0, 0, 0, 0.1)",
                 position: "relative",
-                transition: "all 0.3s ease, width 0.4s ease-in-out, background-color 0.3s, color 0.3s, box-shadow 0.4s",
-                overflow: "hidden",
-                marginBottom: isPromoted ? "20px" : "0px"
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePromote(Number(id));
+                zIndex: 2,
+                textShadow: "0 0 5px rgba(120, 255, 150, 0.4)",
               }}
             >
-              {isPromoted ? (
-                <>
-                  <span className="promoted-text" style={{
-                    position: "relative",
-                    zIndex: 2,
-                    textShadow: "0 0 5px rgba(120, 255, 150, 0.4)"
-                  }}>
-                    Promoted
-                  </span>
-                  <div className="promote-button-glow-effect" style={{
-                    position: "absolute",
-                    top: 0,
-                    left: "-100%",
-                    width: "50%",
-                    height: "100%",
-                    background: "linear-gradient(90deg, transparent, rgba(120, 255, 150, 0.2), transparent)",
-                    animation: "promote-button-shine 3s infinite",
-                    zIndex: 1
-                  }}></div>
-                </>
-              ) : (
-                "Promote"
-              )}
-            </button>
-            
-            {/* Timer that appears when promoted */}
-            {isPromoted && (
-              <div className="promote-timer-badge" style={{
+              Promoted
+            </span>
+            <div
+              className="promote-button-glow-effect"
+              style={{
                 position: "absolute",
-                bottom: "-5px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                fontSize: "0.7rem",
-                background: "rgba(0, 0, 0, 0.7)",
-                color: "white",
-                padding: "1px 8px",
-                borderRadius: "10px",
-                whiteSpace: "nowrap",
-                boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.3)",
-                width: "auto",
-                minWidth: "80px",
-                textAlign: "center",
-                fontWeight: "500",
-                animation: "promote-timer-popIn 0.3s forwards"
-              }}>
-                {formattedCountdown}
-              </div>
-            )}
-          </div>
+                top: 0,
+                left: "-100%",
+                width: "50%",
+                height: "100%",
+                background:
+                  "linear-gradient(90deg, transparent, rgba(120, 255, 150, 0.2), transparent)",
+                animation: "promote-button-shine 3s infinite",
+                zIndex: 1,
+              }}
+            ></div>
+          </>
+        ) : (
+          "Promote"
+        )}
+      </button>
+
+      {/* Timer that appears when promoted */}
+      {isPromoted && (
+        <div
+          className="promote-timer-badge"
+          style={{
+            position: "absolute",
+            bottom: "-5px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            fontSize: ".9rem",
+            background: "rgba(0, 0, 0, 0.7)",
+            color: "white",
+            padding: "1px 8px",
+            borderRadius: "10px",
+            whiteSpace: "nowrap",
+            boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.3)",
+            width: "auto",
+            minWidth: "80px",
+            textAlign: "center",
+            fontWeight: "500",
+            animation: "promote-timer-popIn 0.3s forwards",
+          }}
+        >
+          {formattedCountdown}
         </div>
-        
-        <div className="tags">
-          {community.tags.map((tag: string, index: number) => (
-            <span className="tag" key={index}>{tag}</span>
-          ))}
-        </div>
-        
-        <p className="long-description">{community.long_description || community.description}</p>
-        
-        <Link href={community.invite_link || "#"} target="_blank" className="join-button">
-          Join
-        </Link>
-      </div>
+      )}
+    </div>
+  </div>
+
+  <div className="tags">
+    {community.tags.map((tag: string, index: number) => (
+      <span className="tag" key={index}>
+        {tag}
+      </span>
+    ))}
+  </div>
+
+  <p className="long-description">
+    {community.long_description || community.description}
+  </p>
+
+  <Link
+    href={community.invite_link || "#"}
+    target="_blank"
+    className="join-button"
+  >
+    Join
+  </Link>
+</div>
+
       
       {/* CSS animations */}
       <style jsx>{`

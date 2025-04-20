@@ -993,10 +993,10 @@ export default function CommunityPage() {
   
         @keyframes button-shake {
           0% { transform: translateX(0); }
-          20% { transform: translateX(-8px); }
-          40% { transform: translateX(8px); }
-          60% { transform: translateX(-5px); }
-          80% { transform: translateX(5px); }
+          20% { transform: translateX(-5px); }
+          40% { transform: translateX(5px); }
+          60% { transform: translateX(-2px); }
+          80% { transform: translateX(2px); }
           100% { transform: translateX(0); }
         }
 

@@ -9,7 +9,7 @@ export async function GET(req, { params }) {
     // Get the community data
     const { data: server, error } = await supabase
       .from("servers")
-      .select("id, name, description, long_description, image_url, invite_link, owner_id")
+      .select("id, name, description, long_description, image_url, invite_link, owner_id, promote_count")
       .eq("id", id)
       .single();
 
