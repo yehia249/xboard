@@ -9,6 +9,7 @@ import { useAuth } from "@/app/hooks/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAuth } from "firebase/auth";
 import { Check, AlertCircle, X } from "lucide-react"; // Import Lucide icons
+import "@/app/all.css"
 
 export default function CommunityDetails() {
   const { id } = useParams();
