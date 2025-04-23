@@ -1020,44 +1020,109 @@ export default function CommunityPage() {
     align-items: center;
   }
 `}</style>
-        {/* Pagination UI */}
-        {totalPages > 1 && (
-          <div
-            className="pagination"
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginTop: "2rem",
-              gap: "0.5rem",
-            }}
-          >
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="pagination-arrow"
-            >
-              &laquo;
-            </button>
-            {Array.from({ length: totalPages }, (_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentPage(index + 1)}
-                className={`pagination-number ${currentPage === index + 1 ? "active" : ""}`}
-              >
-                {index + 1}
-              </button>
-            ))}
-            <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-              className="pagination-arrow"
-            >
-              &raquo;
-            </button>
-          </div>
-        )}
+      {/* Pagination UI */}
+{totalPages > 1 && (
+  <div
+    className="pagination"
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      marginTop: "0rem",
+      marginBottom: "2.5rem", /* Adding bottom margin to raise buttons from bottom edge */
+      position: "relative",
+    }}
+  >
+    {/* White oval background */}
+    <div
+      style={{
+        position: "absolute",
+        width: "100%",
+        height: "100%",
+        borderRadius: "20px",
+        zIndex: 0,
+      }}
+    ></div>
+    
+    {/* Pagination elements */}
+    <div style={{ display: "flex", padding: "0.25rem", alignItems: "center" }}>
+      {/* Left arrow button - hidden on first page */}
+      {currentPage > 1 && (
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          style={{
+            width: "40px",
+            height: "40px",
+            marginRight: "0.5rem",
+            border: "1px solid #444",
+            borderRadius: "4px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            cursor: "pointer",
+            background: "#111",
+            color: "white",
+            fontWeight: "bold",
+            zIndex: 1,
+            fontSize: "1.2rem",
+          }}
+        >
+          &lt;
+        </button>
+      )}
+      
+      {/* Page number buttons */}
+      {Array.from({ length: totalPages }, (_, index) => (
+        <button
+          key={index}
+          onClick={() => setCurrentPage(index + 1)}
+          style={{
+            width: "40px",
+            height: "40px",
+            margin: "0 0.25rem",
+            border: "1px solid #444",
+            borderRadius: "4px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            cursor: "pointer",
+            background: currentPage === index + 1 ? "white" : "#111",
+            color: currentPage === index + 1 ? "black" : "white",
+            fontWeight: "bold",
+            zIndex: 1,
+            fontSize: "1rem",
+          }}
+        >
+          {index + 1}
+        </button>
+      ))}
+      
+      {/* Right arrow button - hidden on last page */}
+      {currentPage < totalPages && (
+        <button
+          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+          style={{
+            width: "40px",
+            height: "40px",
+            marginLeft: "0.5rem",
+            border: "1px solid #444",
+            borderRadius: "4px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            cursor: "pointer",
+            background: "#111",
+            color: "white",
+            fontWeight: "bold",
+            zIndex: 1,
+            fontSize: "1.2rem",
+          }}
+        >
+          &gt;
+        </button>
+      )}
+    </div>
+  </div>
+)}
       </div>
     </div>
   );
