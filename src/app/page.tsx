@@ -7,6 +7,7 @@ import { useCommunities } from "./hooks/usecommunities";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./hooks/AuthContext";
+import Footer from '@/app/components/footer'; // Adjust path as needed
 import { getAuth } from "firebase/auth";
 import "./community.css";
 import "./all.css";
@@ -771,7 +772,7 @@ export default function CommunityPage() {
 
 
         {/* Community Server List */}
-        <div className="server-list">
+        <div className="server-list" style={{ cursor: "pointer" }}>
           {loading ? (
             <p>Loading...</p>
           ) : error ? (
@@ -1127,6 +1128,12 @@ export default function CommunityPage() {
     </div>
   </div>
 )}
+
+{/* Footer */}
+<Footer />
+
+
+
       </div>
     </div>
   );
