@@ -836,6 +836,8 @@ export default function CommunityPage() {
                           // In your button's className, ensure the shake animation has highest priority
                           className={`promote-button ${isShaking ? 'button-shake' : ''} ${isPromoted ? 'promote-button-promoted' : ''}`}
                           style={{
+                            marginTop: isPromoted ? "0.6rem" : "1rem",
+                            marginRight: ".8rem",
                             padding: "0.5rem 1rem",
                             background: isPromoted ? "#333" : "white",
                             border: isPromoted ? "1px solid rgba(180, 180, 180, 0.6)" : "none",
@@ -888,7 +890,7 @@ export default function CommunityPage() {
                         {isPromoted && (
                           <div className="promote-timer-badge" style={{
                             position: "absolute",
-                            bottom: "-5px",
+                            bottom: "5px",
                             left: "50%",
                             transform: "translateX(-50%)",
                             fontSize: "0.7rem",

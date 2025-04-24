@@ -552,7 +552,6 @@ export default function DashboardPage() {
             {/* Sticky Header */}
             <header
         style={{
-          position: "sticky",
           top: 0,
           zIndex: 1000,
           backgroundColor: "black",
