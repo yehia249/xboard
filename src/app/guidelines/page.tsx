@@ -90,20 +90,6 @@ export default function GuidelinesPage() {
           We want to promote and inspire X community building that is respectful, inclusive, and aligned with the values of the broader X (formerly Twitter) platform. To do this, we’ve created a few core guidelines that help shape what is allowed on XBoard.
         </p>
 
-        <p className="text-lg text-gray-300 mb-5">
-          If you see a community listed on XBoard that violates these guidelines, you can report it by using the report button on the community’s detail page.
-        </p>
-
-        <p className="text-lg text-gray-300 mb-10">
-          Want to help shape these guidelines?
-        </p>
-
-        <a
-          href="/contact"
-          className="text-sm font-medium text-blue-400 hover:underline mb-14 inline-block"
-        >
-          Let us know your feedback →
-        </a>
 
         <h2 className="text-2xl font-bold mb-4">Follow the X (Twitter) Community Guidelines</h2>
 

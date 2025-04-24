@@ -772,7 +772,7 @@ export default function CommunityPage() {
 
 
         {/* Community Server List */}
-        <div className="server-list" style={{ cursor: "pointer" }}>
+        <div className="server-list" >
           {loading ? (
             <p>Loading...</p>
           ) : error ? (
@@ -799,9 +799,9 @@ export default function CommunityPage() {
               return (
                 <div
                   key={server.id}
-                  className="server-card"
+                  className="server-card" 
                   onClick={() => router.push(`/community/${server.id}`)}
-                  style={{ position: "relative", display: "flex", flexDirection: "column" }}
+                  style={{ position: "relative", display: "flex", flexDirection: "column", cursor: "pointer"  }}
                 >
                   <div
                     className="card-bg-blur"
