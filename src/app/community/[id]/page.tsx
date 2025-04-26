@@ -271,7 +271,7 @@ export default function CommunityDetails() {
     : null;
   const dailyPromosLeft = 4 - (userPromoInfo.dailyPromotionCount || 0);
 
-  if (loading) return <div className="community-page">Loading...</div>;
+  if (loading) return null;
   if (!community) return <div className="community-page">Community not found.</div>;
 
   // Get community cooldown status from the promotions object  
@@ -295,6 +295,8 @@ export default function CommunityDetails() {
       .toString()
       .padStart(2, "0")}:${communityCooldown.seconds.toString().padStart(2, "0")}` : 
     "";
+
+    const isMobile = window.innerWidth < 768; // Add this near other state variables
 
   return (
     <div className="community-page">
@@ -405,8 +407,8 @@ export default function CommunityDetails() {
         </AnimatePresence>
       </div>
 
-      {/* Floating Promo Status Card - for logged in users only */}
-      {user && (
+{/* Floating Promo Status Card - for logged in users only */}
+{user && (
         <div
           style={{
             position: "fixed",
@@ -417,13 +419,13 @@ export default function CommunityDetails() {
             WebkitBackdropFilter: "blur(12px)",
             background: "rgba(30,30,30,0.85)",
             borderRadius: "16px",
-            padding: "1.2rem 1.5rem",
+            padding: isMobile ? "0.8rem 1rem" : "1.2rem 1.5rem",
             boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
             color: "white",
             transition: "all 0.5s ease",
             opacity: showPromoCard ? 1 : 0,
             maxWidth: "90vw",
-            width: "320px",
+            width: isMobile ? "280px" :"320px",
             fontSize: "0.95rem",
             border: "1px solid rgba(255, 255, 255, 0.1)",
           }}
@@ -598,7 +600,7 @@ export default function CommunityDetails() {
           boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.3)",
         }}
       >
-        <span style={{ fontWeight: "bold", fontSize: "1.9rem", display: "block" }}>
+        <span style={{ fontWeight: "bold", fontSize: "1.9rem", display: "block"  }}>
           {community.promote_count || 0}
         </span>
         Promotions
@@ -616,9 +618,12 @@ export default function CommunityDetails() {
           cursor: "pointer", // Always show pointer cursor
           fontSize: "1.15rem",
           fontWeight: "500",
-          width: isPromoted ? "140px" : "120px",
-          height: isPromoted ? "50px" : "50px",
-          textAlign: "center",
+          width: isMobile 
+          ? (isPromoted ? "120px" : "110px")  // Mobile sizes
+          : (isPromoted ? "140px" : "120px"), // Desktop sizes
+                  height: isMobile
+                  ? (isPromoted ? "45px" : "50px")  // Mobile sizes
+                  : (isPromoted ? "50px" : "50px"), // Desktop sizes          textAlign: "center",
           color: isPromoted ? "white" : "black",
           boxShadow: isPromoted
             ? "0 0 8px rgba(120, 255, 150, 0.4)"
@@ -695,7 +700,8 @@ export default function CommunityDetails() {
     </div>
   </div>
 
-  <div className="tags">
+  {/* Updated tags div with left alignment */}
+  <div className="tags" style={{ textAlign: "left", justifyContent: "flex-start" }}>
     {community.tags.map((tag: string, index: number) => (
       <span className="tag" key={index}>
         {tag}
@@ -703,19 +709,23 @@ export default function CommunityDetails() {
     ))}
   </div>
 
-  <p className="long-description">
-    {community.long_description || community.description}
-  </p>
-
   <Link
     href={community.invite_link || "#"}
     target="_blank"
-    className="join-button"
+    className="join-button"  style={{ marginTop: "2rem"}}
   >
     Join
   </Link>
+  
+  {/* Long description moved below the join button */}
+<div className="about " style={{ marginTop: "2rem" }}>
+ <h4> About this community:</h4>
 </div>
-
+  
+  <p className="long-description" >
+    {community.long_description || community.description}
+  </p>
+</div>
       
       {/* CSS animations */}
       <style jsx>{`

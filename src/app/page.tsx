@@ -774,11 +774,54 @@ export default function CommunityPage() {
         {/* Community Server List */}
         <div className="server-list" >
           {loading ? (
-            <p>Loading...</p>
+            <div
+  className="..."
+  style={{
+    background: "linear-gradient(135deg, #111, #222)", // soft gradient instead of plain black
+    padding: "40px",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    width: "88vw", // responsive width instead of fixed "160vh"
+     // added height to center better
+    borderRadius: "16px", // modern rounded corners
+    boxShadow: "0 8px 24px rgba(0,0,0,0.5)", // soft shadow
+    fontFamily: "Arial, sans-serif",
+  }}
+>
+  <p
+    style={{
+      textAlign: "center",
+      color: "#eee", // lighter white
+      fontSize: "22px", // slightly bigger for modern look
+      letterSpacing: "0.5px", // spaced out letters a bit
+      margin: 0,
+    }}
+  >
+    Loading communities...
+  </p>
+</div>
+
           ) : error ? (
             <p>Error: {error}</p>
           ) : filteredCommunities.length === 0 ? (
-            <p>No communities found.</p>
+<p
+  style={{
+    textAlign: "center",
+    color: "#ccc", // softer white
+    fontSize: "22px",
+    letterSpacing: "0.5px",
+    margin: 0,
+    padding: "20px",
+    borderRadius: "12px",
+    background: "linear-gradient(135deg, #111, #1c1c1c)", // subtle dark gradient
+    boxShadow: "0 6px 18px rgba(0, 0, 0, 0.4)", // soft floating shadow
+    width: "160vh",
+    marginInline: "auto", // center horizontally
+  }}
+>
+  No communities found.
+</p>
           ) : (
             currentServers.map((server) => {
               // If the community was promoted recently, calculate its 24‑hour cooldown
