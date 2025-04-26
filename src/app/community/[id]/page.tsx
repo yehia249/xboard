@@ -591,7 +591,7 @@ export default function CommunityDetails() {
           color: "white",
           textAlign: "center",
           position: "absolute", 
-          top: "79px",
+          top: isMobile? "74px" : "85px",
           left: "50%",
           transform: "translateX(-50%)",
           padding: "3px 10px",
