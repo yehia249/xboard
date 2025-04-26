@@ -591,7 +591,7 @@ export default function CommunityDetails() {
           color: "white",
           textAlign: "center",
           position: "absolute", 
-          top: isMobile? "67px" : "85px",
+          top:  isMobile? "70px" : "85px",
           left: "50%",
           transform: "translateX(-50%)",
           padding: "3px 10px",
@@ -703,7 +703,7 @@ export default function CommunityDetails() {
   {/* Updated tags div with left alignment */}
   <div className="tags" style={{ textAlign: "left", justifyContent: "flex-start" }}>
     {community.tags.map((tag: string, index: number) => (
-      <span className="tag" key={index}>
+      <span className="tag" style={{marginTop:  "1rem", fontSize: isMobile? "1rem" : "1.3rem" }} key={index}>
         {tag}
       </span>
     ))}
