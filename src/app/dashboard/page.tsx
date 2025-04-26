@@ -543,7 +543,7 @@ export default function DashboardPage() {
     }
   };
 
-  //if (authLoading || communitiesLoading) return <p>Loading...</p>;
+  if (authLoading || communitiesLoading) return null;
   if (!user) return null;
   if (communitiesError) return <p>Error: {communitiesError}</p>;
 
