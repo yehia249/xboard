@@ -24,8 +24,6 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-
-
   const handleSignup = async (event: React.FormEvent) => {
     event.preventDefault();
     setErrorMsg("");
@@ -132,6 +130,13 @@ export default function Signup() {
   return (
     <div className="min-h-screen w-full bg-black flex items-center justify-center">
       <form className="form" onSubmit={handleSignup}>
+        {/* Added Back to Home link at the top right */}
+        <div className="flex items-end justify-end w-full">
+          <Link href="/" className="text-sm font-medium text-blue-600 hover:text-blue-800">
+            Back to Home
+          </Link>
+        </div>
+        
         <div className="flex-column">
           <label>Email</label>
         </div>
