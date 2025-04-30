@@ -3,6 +3,7 @@
     background-color: black;
     padding: 1.5rem;
     padding-top: 4rem;
+    margin-left: 3.5rem;
   }
   
   .cuisine-title {
@@ -43,7 +44,7 @@
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
     border-radius: 9999px; /* This ensures the pill shape */
-    font-size: 1.25rem;
+    font-size: 1.42rem;
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
@@ -107,49 +108,62 @@
     color: #2a1711;
     stroke-width: 1.5;
   }
-  
   @media (max-width: 768px) {
-  .cuisine-chip {
-    font-size: 1rem;             /* reduced from 1.25rem */
-    padding-left: 0.75rem;        /* slightly smaller horizontal padding */
-    padding-right: 0.75rem;
-    padding-top: 0.4rem;          /* slightly smaller vertical padding */
-    padding-bottom: 0.4rem;
-    margin: 0.25rem;             /* optional: reduce surrounding margin */
+    .cuisine-chip {
+      font-size: 1rem;             /* reduced from 1.25rem */
+      padding-left: 0.75rem;        /* slightly smaller horizontal padding */
+      padding-right: 0.75rem;
+      padding-top: 0.4rem;          /* slightly smaller vertical padding */
+      padding-bottom: 0.4rem;
+      margin: 0.25rem;             /* optional: reduce surrounding margin */
+    }
+    .cuisine-container {
+      margin-left: 2rem;
+    }
   }
-}
-
-@media (max-width: 431px) {
-  .cuisine-chip {
-    font-size: .9rem;             /* reduced from 1.25rem */
-    padding-left: 0.75rem;        /* slightly smaller horizontal padding */
-    padding-right: 0.75rem;
-    padding-top: 0.4rem;          /* slightly smaller vertical padding */
-    padding-bottom: 0.4rem;
-    margin: 0.25rem;             /* optional: reduce surrounding margin */
-  }
-}
-
-@media (max-width: 416px) {
-  .cuisine-chip {
-    font-size: .8rem;             /* reduced from 1.25rem */
-    padding-left: 0.75rem;        /* slightly smaller horizontal padding */
-    padding-right: 0.75rem;
-    padding-top: 0.4rem;          /* slightly smaller vertical padding */
-    padding-bottom: 0.4rem;
-    margin: 0.25rem;             /* optional: reduce surrounding margin */
-  }
-}
-
-@media (max-width: 392px) {
-  .cuisine-chip {
-    font-size: .7rem;             /* reduced from 1.25rem */
-  }
-}
-
-@media (max-width: 361px) {
-  .cuisine-chip {
-    font-size: .6rem;             /* reduced from 1.25rem */
-  }
-}
   
+  @media (max-width: 431px) {
+    .cuisine-chip {
+      font-size: .9rem;             /* reduced from 1.25rem */
+      padding-left: 0.75rem;        /* slightly smaller horizontal padding */
+      padding-right: 0.75rem;
+      padding-top: 0.4rem;          /* slightly smaller vertical padding */
+      padding-bottom: 0.4rem;
+      margin: 0.25rem;             /* optional: reduce surrounding margin */
+    }
+    .cuisine-container {
+      margin-left: 0rem;
+    }
+  }
+  
+  @media (max-width: 416px) {
+    .cuisine-chip {
+      font-size: .8rem;             /* reduced from 1.25rem */
+      padding-left: 0.75rem;        /* slightly smaller horizontal padding */
+      padding-right: 0.75rem;
+      padding-top: 0.4rem;          /* slightly smaller vertical padding */
+      padding-bottom: 0.4rem;
+      margin: 0.25rem;             /* optional: reduce surrounding margin */
+    }
+    .cuisine-container {
+      margin-left: 0rem;
+    }
+  }
+  
+  @media (max-width: 392px) {
+    .cuisine-chip {
+      font-size: .7rem;             /* reduced from 1.25rem */
+    }
+    .cuisine-container {
+      margin-left: 0rem;
+    }
+  }
+  
+  @media (max-width: 361px) {
+    .cuisine-chip {
+      font-size: .6rem;             /* reduced from 1.25rem */
+    }
+    .cuisine-container {
+      margin-left: 0rem;
+    }
+  }
