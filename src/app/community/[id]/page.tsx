@@ -163,7 +163,7 @@ export default function CommunityDetails() {
     if (user) {
       router.push("/dashboard");
     } else {
-      router.push("/login?redirect=/dashboard");
+      router.push("/signup?redirect=/dashboard");
     }
   };
 
@@ -579,8 +579,11 @@ export default function CommunityDetails() {
       marginBottom: "20px",
     }}
   >
-    <h1>{community.name}</h1>
-
+<h1 style={{ 
+  fontSize: isMobile ? "2.6rem" : "3rem",
+}}>
+  {community.name}
+</h1>
     {/* Promote button - visible to all users */}
     <div className="promote-button-container" style={{ position: "relative" }}>
       {/* Added Promote count display above the button */}
@@ -700,14 +703,30 @@ export default function CommunityDetails() {
     </div>
   </div>
 
-  {/* Updated tags div with left alignment */}
-  <div className="tags" style={{ textAlign: "left", justifyContent: "flex-start" }}>
-    {community.tags.map((tag: string, index: number) => (
-      <span className="tag" style={{marginTop:  "1rem", fontSize: isMobile? "1rem" : "1.3rem" }} key={index}>
-        {tag}
-      </span>
-    ))}
-  </div>
+{/* Tags div with left padding/margin boundary */}
+<div 
+  className="tags" 
+  style={{ 
+    textAlign: "left", 
+    marginRight: "1rem",
+    justifyContent: "flex-start",
+    paddingRight: "100px", // Creates invisible space on the right
+    ...(isMobile ? { marginBottom: "1rem" } : {}) // Only apply marginBottom if isMobile is true
+  }}
+>
+  {community.tags.map((tag: string, index: number) => (
+    <span 
+      className="tag" 
+      style={{
+        marginTop: "1rem", 
+        fontSize: isMobile ? "1rem" : "1.3rem"
+      }} 
+      key={index}
+    >
+      {tag}
+    </span>
+  ))}
+</div>
 
   <Link
     href={community.invite_link || "#"}

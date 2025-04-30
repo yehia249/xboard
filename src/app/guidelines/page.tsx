@@ -18,7 +18,7 @@ export default function GuidelinesPage() {
     if (user) {
       router.push("/dashboard");
     } else {
-      router.push("/login?redirect=/dashboard");
+      router.push("/signup?redirect=/dashboard");
     }
   };
 

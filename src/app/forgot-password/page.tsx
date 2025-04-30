@@ -42,7 +42,6 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen w-full bg-black flex flex-col items-center justify-center">
-      <h2 className="text-white mb-4">Reset Password</h2>
       <form className="form" onSubmit={handleResetPassword}>
         <div className="flex-column">
           <label className="text-white">Email</label>

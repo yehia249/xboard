@@ -328,7 +328,7 @@ export default function CommunityPage() {
     if (user) {
       router.push("/dashboard");
     } else {
-      router.push("/login?redirect=/dashboard");
+      router.push("/signup?redirect=/dashboard");
     }
   };
 

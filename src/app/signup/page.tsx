@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, AuthError } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import React, { useLayoutEffect } from 'react';
@@ -24,17 +24,41 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSignup = async (event: React.FormEvent) => {
+  // Helper function to parse Firebase error codes into user-friendly messages
+  const getErrorMessage = (errorCode: string): string => {
+    switch (errorCode) {
+      case "auth/email-already-in-use":
+        return "This email address is already registered. Please sign in instead.";
+      case "auth/invalid-email":
+        return "Please enter a valid email address.";
+      case "auth/weak-password":
+        return "Your password is too weak. Please use at least 6 characters with a mix of letters, numbers, and symbols.";
+      case "auth/operation-not-allowed":
+        return "Account creation is currently disabled. Please try again later.";
+      case "auth/network-request-failed":
+        return "Network error. Please check your internet connection and try again.";
+      case "auth/popup-closed-by-user":
+        return "Sign-up popup was closed before completing the process. Please try again.";
+      case "auth/popup-blocked":
+        return "Sign-up popup was blocked by your browser. Please allow popups for this site and try again.";
+      case "auth/internal-error":
+        return "An internal error occurred. Please try again later.";
+      default:
+        return "Something went wrong. Please try again later.";
+    }
+  };
+
+  const handleSignup = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrorMsg("");
 
     if (password !== confirmPassword) {
-      setErrorMsg("Passwords do not match");
+      setErrorMsg("The passwords you entered don't match. Please try again.");
       return;
     }
 
     if (password.length < 6) {
-      setErrorMsg("Password must be at least 6 characters");
+      setErrorMsg("Your password must be at least 6 characters long.");
       return;
     }
 
@@ -57,30 +81,24 @@ export default function Signup() {
 
       if (supabaseError) {
         if (supabaseError.code === "23505") {
-          setErrorMsg("This account already exists. Try logging in instead.");
+          setErrorMsg("This account already exists. Please sign in instead.");
         } else {
-          setErrorMsg(`Database error: ${supabaseError.message || supabaseError.code}`);
+          setErrorMsg("We couldn't create your account in our database. Please try again later.");
         }
         return;
       }
 
       router.push("/dashboard");
-    } catch (error: any) {
-      if (error.code === "auth/email-already-in-use") {
-        setErrorMsg("This email is already registered. Try logging in instead.");
-      } else if (error.code === "auth/invalid-email") {
-        setErrorMsg("Please enter a valid email address.");
-      } else if (error.code === "auth/weak-password") {
-        setErrorMsg("Password is too weak. Please use a stronger password.");
-      } else {
-        setErrorMsg(error.message || "Failed to create account. Please try again.");
-      }
+    } catch (error) {
+      console.error("Signup error:", error);
+      const firebaseError = error as AuthError;
+      setErrorMsg(getErrorMessage(firebaseError.code));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleSignup = async () => {
+  const handleGoogleSignup = async (): Promise<void> => {
     setErrorMsg("");
     setLoading(true);
     try {
@@ -96,7 +114,7 @@ export default function Signup() {
         .maybeSingle();
 
       if (queryError) {
-        setErrorMsg(`Database query error: ${queryError.message}`);
+        setErrorMsg("We couldn't check if your account exists. Please try again.");
         return;
       }
 
@@ -104,6 +122,8 @@ export default function Signup() {
         const newUserData = {
           firebase_uid: firebaseUser.uid,
           email: email,
+          name: displayName || email?.split('@')[0],
+          avatar_url: photoURL || null,
           auth_provider: "google",
           created_at: new Date().toISOString(),
         };
@@ -114,14 +134,16 @@ export default function Signup() {
           .select();
 
         if (insertError) {
-          setErrorMsg(`Failed to create user record: ${insertError.message}`);
+          setErrorMsg("We couldn't create your account in our database. Please try again.");
           return;
         }
       }
 
       router.push("/dashboard");
-    } catch (error: any) {
-      setErrorMsg(error.message || "Failed to sign up with Google.");
+    } catch (error) {
+      console.error("Google signup error:", error);
+      const firebaseError = error as AuthError;
+      setErrorMsg(getErrorMessage(firebaseError.code));
     } finally {
       setLoading(false);
     }
@@ -227,7 +249,7 @@ export default function Signup() {
         </div>
 
         {errorMsg && (
-          <div style={{ color: "#ef4444", fontSize: "14px", marginTop: "8px" }}>
+          <div className="error-message" style={{ color: "#ef4444", fontSize: "14px", marginTop: "8px", padding: "10px", backgroundColor: "rgba(239, 68, 68, 0.1)", borderRadius: "4px", textAlign: "center" }}>
             {errorMsg}
           </div>
         )}
