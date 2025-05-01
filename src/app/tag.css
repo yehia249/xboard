@@ -152,6 +152,19 @@
     }
   }
 
+  @media (max-width: 408px) {
+    .cuisine-chip {
+      font-size: .8rem;             /* reduced from 1.25rem */
+      padding-left: 0.70rem;        /* slightly smaller horizontal padding */
+      padding-right: 0.70rem;
+      padding-top: 0.4rem;          /* slightly smaller vertical padding */
+      padding-bottom: 0.4rem;
+      margin: 0.25rem;             /* optional: reduce surrounding margin */
+    }
+    .cuisine-container {
+      margin-left: 1.2rem;
+    }
+  }
 
   @media (max-width: 397px) {
     .cuisine-chip {
