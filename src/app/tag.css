@@ -138,7 +138,7 @@
     }
   }
   
-  @media (max-width: 421px) {
+  @media (max-width: 418px) {
     .cuisine-chip {
       font-size: .8rem;             /* reduced from 1.25rem */
       padding-left: 0.75rem;        /* slightly smaller horizontal padding */
@@ -188,6 +188,21 @@
       margin-left: 1rem;
     }
   }
+
+
+  @media (max-width: 376px) {
+    .cuisine-chip {
+      font-size: .65rem;             /* reduced from 1.25rem */
+      padding-left: .8rem;        /* slightly smaller horizontal padding */
+      padding-right: 0.75rem;
+      padding-top: 0.4rem;          /* slightly smaller vertical padding */
+      padding-bottom: 0.4rem;
+    }
+    .cuisine-container {
+      margin-left: .5rem;
+    }
+  }
+  
 
   @media (max-width: 371px) {
     .cuisine-chip {
