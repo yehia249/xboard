@@ -138,7 +138,7 @@
     }
   }
   
-  @media (max-width: 418px) {
+  @media (max-width: 421px) {
     .cuisine-chip {
       font-size: .8rem;             /* reduced from 1.25rem */
       padding-left: 0.75rem;        /* slightly smaller horizontal padding */
