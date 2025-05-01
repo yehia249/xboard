@@ -137,7 +137,36 @@
       margin-left: 1rem;
     }
   }
+
+  @media (max-width: 423px) {
+    .cuisine-chip {
+      font-size: .9rem;             /* reduced from 1.25rem */
+      padding-left: 0.61rem;        /* slightly smaller horizontal padding */
+      padding-right: 0.75rem;
+      padding-top: 0.4rem;          /* slightly smaller vertical padding */
+      padding-bottom: 0.4rem;
+      margin: 0.25rem;             /* optional: reduce surrounding margin */
+    }
+    .cuisine-container {
+      margin-left: 1rem;
+    }
+  }
   
+  @media (max-width: 420px) {
+    .cuisine-chip {
+      font-size: .87rem;             /* reduced from 1.25rem */
+      padding-left: 0.61rem;        /* slightly smaller horizontal padding */
+      padding-right: 0.75rem;
+      padding-top: 0.4rem;          /* slightly smaller vertical padding */
+      padding-bottom: 0.4rem;
+      margin: 0.25rem;             /* optional: reduce surrounding margin */
+    }
+    .cuisine-container {
+      margin-left: 1rem;
+    }
+  }
+
+
   @media (max-width: 418px) {
     .cuisine-chip {
       font-size: .8rem;             /* reduced from 1.25rem */
