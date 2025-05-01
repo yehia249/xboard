@@ -3,6 +3,7 @@
     background-color: black;
     padding: 1.5rem;
     padding-top: 4rem;
+    margin-left: 2rem;
   }
   
   .cuisine-title {
@@ -107,6 +108,7 @@
     color: #2a1711;
     stroke-width: 1.5;
   }
+
   @media (max-width: 768px) {
     .cuisine-chip {
       font-size: 1rem;             /* reduced from 1.25rem */
@@ -115,6 +117,7 @@
       padding-top: 0.4rem;          /* slightly smaller vertical padding */
       padding-bottom: 0.4rem;
       margin: 0.25rem;             /* optional: reduce surrounding margin */
+      
     }
     .cuisine-container {
       margin-left: 2rem;
