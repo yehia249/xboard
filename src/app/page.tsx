@@ -453,170 +453,189 @@ export default function CommunityPage() {
         </button>
       </header>
 
-      {/* Floating Promo Status Card */}
+
       {user && (
-        <div
+  <>
+    {/* Floating Promo Card */}
+    <div
+      style={{
+        position: "fixed",
+        bottom: showPromoCard ? "1.5rem" : "-6rem",
+        right: "1.5rem",
+        zIndex: 10000,
+        backdropFilter: "blur(12px)",
+        backgroundColor: "rgba(24, 24, 27, 0.9)",
+        borderRadius: "1rem",
+        padding: "1.25rem",
+        width: "320px",
+        color: "#fff",
+        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.35)",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
+        transition: "all 0.4s ease",
+        opacity: showPromoCard ? 1 : 0,
+        fontFamily: "Inter, sans-serif",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 600 }}>
+          <FlameIcon />
+          Boosts Left: <strong>{dailyPromosLeft}</strong> / 4
+        </div>
+        <button
+          onClick={() => setShowPromoCard(false)}
           style={{
-            position: "fixed",
-            bottom: showPromoCard ? "1.5rem" : "-5rem",
-            right: "1.5rem",
-            zIndex: 9999,
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            background: "rgba(30,30,30,0.85)",
-            borderRadius: "16px",
-            padding: "1.2rem 1.5rem",
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-            color: "white",
-            transition: "all 0.5s ease",
-            opacity: showPromoCard ? 1 : 0,
-            maxWidth: "90vw",
-            width: "320px",
-            fontSize: "0.95rem",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
+            background: "transparent",
+            border: "1px solid rgba(255,255,255,0.2)",
+            color: "#fff",
+            fontSize: "0.75rem",
+            padding: "0.25rem 0.6rem",
+            borderRadius: "6px",
+            cursor: "pointer",
+            transition: "background 0.2s ease",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.7rem" }}>
-            <span style={{ fontWeight: "600", display: "flex", alignItems: "center", gap: "0.6rem" }}>
-              <FlameIcon /> 
-              <span>Boosts Left: <strong>{dailyPromosLeft}</strong> / 4</span>
-            </span>
-            <button
-              onClick={() => setShowPromoCard(false)}
-              style={{
-                background: "rgba(255, 255, 255, 0.1)",
-                border: "none",
-                color: "#eee",
-                fontSize: "0.8rem",
-                cursor: "pointer",
-                padding: "0.3rem 0.6rem",
-                borderRadius: "8px",
-                transition: "all 0.2s ease",
-              }}
-            >
-              Hide
-            </button>
-          </div>
-
-          
-    {/* Progress bar */}
-    <div style={{ 
-      width: "100%", 
-      height: "6px", 
-      background: "rgba(255, 255, 255, 0.1)", 
-      borderRadius: "3px",
-      marginBottom: "0.8rem",
-    }}>
-      <div style={{ 
-        width: `${(dailyPromosLeft / 4) * 100}%`, 
-        height: "100%", 
-        background: "linear-gradient(90deg, #FF6B6B, #FFB347)",
-        borderRadius: "3px",
-      }} />
-    </div>
-
-    {userCooldown && (
-      <div style={{ 
-        marginTop: "0.5rem", 
-        display: "flex", 
-        alignItems: "center", 
-        gap: "0.6rem",
-        background: "rgba(0, 0, 0, 0.2)",
-        padding: "0.6rem 0.8rem",
-        borderRadius: "10px"
-      }}>
-        <ClockIcon />
-        <div>
-          <span style={{ fontSize: "0.8rem", opacity: 0.8 }}>Next boost in:</span>
-          <span style={{ fontWeight: "bold", display: "block" }}>
-            {`${userCooldown.hours.toString().padStart(2, "0")}:${userCooldown.minutes
-              .toString()
-              .padStart(2, "0")}:${userCooldown.seconds.toString().padStart(2, "0")}`}
-          </span>
-        </div>
+          Hide
+        </button>
       </div>
-    )}
 
+      {/* Progress Bar */}
+      <div
+        style={{
+          width: "100%",
+          height: "8px",
+          borderRadius: "4px",
+          backgroundColor: "rgba(255, 255, 255, 0.1)",
+          overflow: "hidden",
+          marginBottom: "1rem",
+        }}
+      >
+        <div
+          style={{
+            width: `${(dailyPromosLeft / 4) * 100}%`,
+            height: "100%",
+            background: "linear-gradient(90deg, #FF6B6B, #FFB347)",
+            transition: "width 0.4s ease",
+          }}
+        />
+      </div>
 
-
-          <p style={{ 
-            fontSize: "0.8rem", 
-            color: "#bbb", 
-            marginTop: "0.8rem",
-          }}>
-            Boosts reset daily at midnight.
-          </p>
+      {/* Cooldown */}
+      {userCooldown && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.6rem",
+            background: "rgba(255,255,255,0.05)",
+            padding: "0.6rem 0.8rem",
+            borderRadius: "8px",
+            fontSize: "0.85rem",
+          }}
+        >
+          <ClockIcon />
+          <div>
+            <span style={{ opacity: 0.8 }}>Next boost in:</span>
+            <div style={{ fontWeight: "bold", marginTop: "0.1rem" }}>
+              {`${userCooldown.hours.toString().padStart(2, "0")}:${userCooldown.minutes
+                .toString()
+                .padStart(2, "0")}:${userCooldown.seconds.toString().padStart(2, "0")}`}
+            </div>
+          </div>
         </div>
       )}
 
-      
-{/* Minimized indicator - shows when card is hidden */}
-{user && !showPromoCard && (
-  <button
-    onClick={() => setShowPromoCard(true)}
-    style={{
-      position: "fixed",
-      bottom: "40px",
-      right: "1.5rem",
-      zIndex: 9998,
-      background: "rgba(30,30,30,0.85)",
-      backdropFilter: "blur(12px)",
-      WebkitBackdropFilter: "blur(12px)",
-      borderRadius: "50%",
-      width: "42px",
-      height: "42px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      boxShadow: "0 4px 20px rgba(0, 0, 0, 0.25)",
-      border: "1px solid rgba(255, 255, 255, 0.1)",
-      cursor: "pointer",
-    }}
-  >
-    <FlameIcon />
-    <div style={{
-      position: "absolute",
-      top: "-5px",
-      right: "-5px",
-      background: "#FF6B6B",
-      borderRadius: "50%",
-      width: "18px",
-      height: "18px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: "10px",
-      fontWeight: "bold",
-      border: "2px solid rgba(30,30,30,0.85)",
+
+    
+    <p
+      style={{
+        fontSize: "0.75rem",
+        color: "rgb(249, 249, 249)", 
+        marginTop: "0.25rem",
+        textAlign: "center",
+      }}
+    >
+      Promote your favourite community using boosts to increase its visibility.
+    </p>
+
+    <p style={{ 
+      fontSize: "0.75rem", 
+      color: "rgba(249, 249, 249, 0.83)", 
+      marginBottom: "0",
+      marginTop: "-1rem",
+      textAlign: "center"
     }}>
-      {dailyPromosLeft}
+      Boosts reset daily at midnight
+    </p>
+      
     </div>
-  </button>
-)}
 
+    {/* Mini floating icon button */}
+    {!showPromoCard && (
+      <button
+        onClick={() => setShowPromoCard(true)}
+        style={{
+          position: "fixed",
+          bottom: "1.5rem",
+          right: "1.5rem",
+          width: "50px",
+          height: "50px",
+          borderRadius: "50%",
+          background: "rgba(24, 24, 27, 0.9)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.25)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          zIndex: 9999,
+        }}
+      >
+        <FlameIcon />
+        <div
+          style={{
+            position: "absolute",
+            top: "-5px",
+            right: "-5px",
+            background: "#FF6B6B",
+            color: "#fff",
+            borderRadius: "999px",
+            fontSize: "0.7rem",
+            fontWeight: "bold",
+            width: "18px",
+            height: "18px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "2px solid rgba(24,24,27,0.9)",
+          }}
+        >
+          {dailyPromosLeft}
+        </div>
+      </button>
+    )}
 
-
-{/* Peeking Tab to Unhide Card */}
-{user && !showPromoCard && (
-  <div
-    onClick={() => setShowPromoCard(true)}
-    style={{
-      position: "fixed",
-      bottom: "0",
-      right: "1rem",
-      zIndex: 10000,
-      background: "rgba(30,30,30,0.85)",
-      color: "white",
-      padding: "0.3rem 1rem",
-      borderTopLeftRadius: "10px",
-      borderTopRightRadius: "10px",
-      fontSize: "1.3rem",
-      cursor: "pointer",
-      pointerEvents: "auto",
-    }}
-  >
-    Show Boosts
-  </div>
+    {/* Tab at bottom right edge */}
+    {!showPromoCard && (
+      <div
+        onClick={() => setShowPromoCard(true)}
+        style={{
+          position: "fixed",
+          bottom: 0,
+          right: "1.5rem",
+          background: "rgba(24, 24, 27, 0.9)",
+          color: "#fff",
+          padding: "0.3rem 1rem",
+          borderTopLeftRadius: "10px",
+          borderTopRightRadius: "10px",
+          fontSize: "0.9rem",
+          cursor: "pointer",
+          zIndex: 10001,
+        }}
+      >
+        Show Boosts
+      </div>
+    )}
+  </>
 )}
 
 

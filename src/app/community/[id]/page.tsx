@@ -407,165 +407,191 @@ export default function CommunityDetails() {
         </AnimatePresence>
       </div>
 
-{/* Floating Promo Status Card - for logged in users only */}
-{user && (
-        <div
+
+      {user && (
+  <>
+    {/* Floating Promo Card */}
+    <div
+      style={{
+        position: "fixed",
+        bottom: showPromoCard ? "1.5rem" : "-6rem",
+        right: "1.5rem",
+        zIndex: 10000,
+        backdropFilter: "blur(12px)",
+        backgroundColor: "rgba(24, 24, 27, 0.9)",
+        borderRadius: "1rem",
+        padding: "1.25rem",
+        width: "320px",
+        color: "#fff",
+        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.35)",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
+        transition: "all 0.4s ease",
+        opacity: showPromoCard ? 1 : 0,
+        fontFamily: "Inter, sans-serif",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 600 }}>
+          <FlameIcon />
+          Boosts Left: <strong>{dailyPromosLeft}</strong> / 4
+        </div>
+        <button
+          onClick={() => setShowPromoCard(false)}
           style={{
-            position: "fixed",
-            bottom: showPromoCard ? "1.5rem" : "-5rem",
-            right: "1.5rem",
-            zIndex: 9999,
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            background: "rgba(30,30,30,0.85)",
-            borderRadius: "16px",
-            padding: isMobile ? "0.8rem 1rem" : "1.2rem 1.5rem",
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-            color: "white",
-            transition: "all 0.5s ease",
-            opacity: showPromoCard ? 1 : 0,
-            maxWidth: "90vw",
-            width: isMobile ? "280px" :"320px",
-            fontSize: "0.95rem",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
+            background: "transparent",
+            border: "1px solid rgba(255,255,255,0.2)",
+            color: "#fff",
+            fontSize: "0.75rem",
+            padding: "0.25rem 0.6rem",
+            borderRadius: "6px",
+            cursor: "pointer",
+            transition: "background 0.2s ease",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.7rem" }}>
-            <span style={{ fontWeight: "600", display: "flex", alignItems: "center", gap: "0.6rem" }}>
-              <FlameIcon /> 
-              <span>Boosts Left: <strong>{dailyPromosLeft}</strong> / 4</span>
-            </span>
-            <button
-              onClick={() => setShowPromoCard(false)}
-              style={{
-                background: "rgba(255, 255, 255, 0.1)",
-                border: "none",
-                color: "#eee",
-                fontSize: "0.8rem",
-                cursor: "pointer",
-                padding: "0.3rem 0.6rem",
-                borderRadius: "8px",
-                transition: "all 0.2s ease",
-              }}
-            >
-              Hide
-            </button>
-          </div>
+          Hide
+        </button>
+      </div>
 
-          {/* Progress bar */}
-          <div style={{ 
-            width: "100%", 
-            height: "6px", 
-            background: "rgba(255, 255, 255, 0.1)", 
-            borderRadius: "3px",
-            marginBottom: "0.8rem",
-          }}>
-            <div style={{ 
-              width: `${(dailyPromosLeft / 4) * 100}%`, 
-              height: "100%", 
-              background: "linear-gradient(90deg, #FF6B6B, #FFB347)",
-              borderRadius: "3px",
-            }} />
-          </div>
+      {/* Progress Bar */}
+      <div
+        style={{
+          width: "100%",
+          height: "8px",
+          borderRadius: "4px",
+          backgroundColor: "rgba(255, 255, 255, 0.1)",
+          overflow: "hidden",
+          marginBottom: "1rem",
+        }}
+      >
+        <div
+          style={{
+            width: `${(dailyPromosLeft / 4) * 100}%`,
+            height: "100%",
+            background: "linear-gradient(90deg, #FF6B6B, #FFB347)",
+            transition: "width 0.4s ease",
+          }}
+        />
+      </div>
 
-          {userCooldown && (
-            <div style={{ 
-              marginTop: "0.5rem", 
-              display: "flex", 
-              alignItems: "center", 
-              gap: "0.6rem",
-              background: "rgba(0, 0, 0, 0.2)",
-              padding: "0.6rem 0.8rem",
-              borderRadius: "10px"
-            }}>
-              <ClockIcon />
-              <div>
-                <span style={{ fontSize: "0.8rem", opacity: 0.8 }}>Next boost in:</span>
-                <span style={{ fontWeight: "bold", display: "block" }}>
-                  {`${userCooldown.hours.toString().padStart(2, "0")}:${userCooldown.minutes
-                    .toString()
-                    .padStart(2, "0")}:${userCooldown.seconds.toString().padStart(2, "0")}`}
-                </span>
-              </div>
+      {/* Cooldown */}
+      {userCooldown && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.6rem",
+            background: "rgba(255,255,255,0.05)",
+            padding: "0.6rem 0.8rem",
+            borderRadius: "8px",
+            fontSize: "0.85rem",
+          }}
+        >
+          <ClockIcon />
+          <div>
+            <span style={{ opacity: 0.8 }}>Next boost in:</span>
+            <div style={{ fontWeight: "bold", marginTop: "0.1rem" }}>
+              {`${userCooldown.hours.toString().padStart(2, "0")}:${userCooldown.minutes
+                .toString()
+                .padStart(2, "0")}:${userCooldown.seconds.toString().padStart(2, "0")}`}
             </div>
-          )}
-
-          <p style={{ 
-            fontSize: "0.8rem", 
-            color: "#bbb", 
-            marginTop: "0.8rem",
-          }}>
-            Boosts reset daily at midnight.
-          </p>
+          </div>
         </div>
       )}
 
-      {/* Minimized indicator - shows when card is hidden */}
-      {user && !showPromoCard && (
-        <button
-          onClick={() => setShowPromoCard(true)}
+
+    
+    <p
+      style={{
+        fontSize: "0.85rem",
+        color: "rgb(249, 249, 249)", 
+        marginTop: "0.25rem",
+        textAlign: "center",
+      }}
+    >
+      Promote your favourite community using boosts to increase its visibility.
+    </p>
+
+    <p style={{ 
+      fontSize: "0.75rem", 
+      color: "rgba(249, 249, 249, 0.83)", 
+      marginBottom: "0",
+      marginTop: "-1rem",
+      textAlign: "center"
+    }}>
+      Boosts reset daily at midnight
+    </p>
+      
+    </div>
+
+    {/* Mini floating icon button */}
+    {!showPromoCard && (
+      <button
+        onClick={() => setShowPromoCard(true)}
+        style={{
+          position: "fixed",
+          bottom: "1.5rem",
+          right: "1.5rem",
+          width: "50px",
+          height: "50px",
+          borderRadius: "50%",
+          background: "rgba(24, 24, 27, 0.9)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.25)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          zIndex: 9999,
+        }}
+      >
+        <FlameIcon />
+        <div
           style={{
-            position: "fixed",
-            bottom: "40px",
-            right: "1.5rem",
-            zIndex: 9998,
-            background: "rgba(30,30,30,0.85)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            borderRadius: "50%",
-            width: "42px",
-            height: "42px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.25)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            cursor: "pointer",
-          }}
-        >
-          <FlameIcon />
-          <div style={{
             position: "absolute",
             top: "-5px",
             right: "-5px",
             background: "#FF6B6B",
-            borderRadius: "50%",
+            color: "#fff",
+            borderRadius: "999px",
+            fontSize: "0.7rem",
+            fontWeight: "bold",
             width: "18px",
             height: "18px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "10px",
-            fontWeight: "bold",
-            border: "2px solid rgba(30,30,30,0.85)",
-          }}>
-            {dailyPromosLeft}
-          </div>
-        </button>
-      )}
-
-      {/* Peeking Tab to Unhide Card */}
-      {user && !showPromoCard && (
-        <div
-          onClick={() => setShowPromoCard(true)}
-          style={{
-            position: "fixed",
-            bottom: "0",
-            right: "1rem",
-            zIndex: 10000,
-            background: "rgba(30,30,30,0.85)",
-            color: "white",
-            padding: "0.3rem 1rem",
-            borderTopLeftRadius: "10px",
-            borderTopRightRadius: "10px",
-            fontSize: "1.3rem",
-            cursor: "pointer",
-            pointerEvents: "auto",
+            border: "2px solid rgba(24,24,27,0.9)",
           }}
         >
-          Show Boosts
+          {dailyPromosLeft}
         </div>
-      )}
+      </button>
+    )}
+
+    {/* Tab at bottom right edge */}
+    {!showPromoCard && (
+      <div
+        onClick={() => setShowPromoCard(true)}
+        style={{
+          position: "fixed",
+          bottom: 0,
+          right: "1.5rem",
+          background: "rgba(24, 24, 27, 0.9)",
+          color: "#fff",
+          padding: "0.3rem 1rem",
+          borderTopLeftRadius: "10px",
+          borderTopRightRadius: "10px",
+          fontSize: "0.9rem",
+          cursor: "pointer",
+          zIndex: 10001,
+        }}
+      >
+        Show Boosts
+      </div>
+    )}
+  </>
+)}
+
 
       <div className="image-banner">
         <img src={community.image_url} alt={community.name} />
@@ -735,6 +761,163 @@ export default function CommunityDetails() {
   >
     Join
   </Link>
+{/* Share section */}
+<div className="share" style={{ marginTop: "2rem" }}>
+  <div style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "1rem" }}>Share</div>
+    {/* Encourage others */}
+    <div style={{ marginTop: "-1rem", fontSize: "1rem", color: "#9CA3AF", marginBottom: "1rem" }}>
+    Encourage others to promote this server!
+  </div>
+  <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <a
+        href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          width: "48px",
+          height: "48px",
+          borderRadius: "50%",
+          background: "#000",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        {/* X (formerly Twitter) logo */}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="35"
+          height="35"
+          viewBox="0 0 24 24"
+          fill="white"
+        >
+          <path d="M13.6823 10.6218L20.2391 3H18.6854L12.9921 9.61788L8.44486 3H3.2002L10.0765 13.0074L3.2002 21H4.75404L10.7663 14.0113L15.5549 21H20.7996L13.6818 10.6218H13.6823ZM11.5541 13.0956L10.8574 12.0991L5.31391 4.16971H7.70053L12.1742 10.5689L12.8709 11.5655L18.6861 19.8835H16.2995L11.5541 13.096V13.0956Z" />
+        </svg>
+      </a>
+      <div style={{ fontSize: "0.9rem", marginTop: "0.5rem" }}>X</div>
+    </div>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <a
+        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          width: "48px",
+          height: "48px",
+          borderRadius: "50%",
+          background: "#1877F2",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        {/* Official Facebook logo */}
+        <img
+          src="https://www.facebook.com/images/fb_icon_325x325.png"
+          alt="Facebook logo"
+          style={{ width: "48px", height: "48px", borderRadius: "4px" }}
+        />
+      </a>
+      <div style={{ fontSize: "0.9rem", marginTop: "0.5rem" }}>Facebook</div>
+    </div>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <a
+        href={`https://www.reddit.com/submit?url=${encodeURIComponent(window.location.href)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          width: "48px",
+          height: "48px",
+          borderRadius: "50%",
+          background: "#FF4500",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        {/* Official Reddit logo */}
+        <img
+          src="https://www.redditstatic.com/desktop2x/img/favicon/android-icon-192x192.png"
+          alt="Reddit logo"
+          style={{ width: "48px", height: "48px", borderRadius: "4px" }}
+        />
+      </a>
+      <div style={{ fontSize: "0.9rem", marginTop: "0.5rem" }}>Reddit</div>
+    </div>
+  </div>
+  <div
+    style={{
+      marginTop: "1.5rem",
+      border: "1px solid #3A3E44",
+      borderRadius: "0.5rem",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "0.75rem 1rem",
+      background: "#2A2E33",
+    }}
+  >
+    <div style={{ color: "#9CA3AF", overflow: "hidden", textOverflow: "ellipsis" }}>
+      {window.location.href}
+    </div>
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText(window.location.href);
+        const copyText = document.getElementById("copyText");
+        const copyIcon = document.getElementById("copyIcon");
+        const checkIcon = document.getElementById("checkIcon");
+        if (copyText) copyText.innerText = "Copied";
+        if (copyIcon) copyIcon.style.display = "none";
+        if (checkIcon) checkIcon.style.display = "inline";
+        setTimeout(() => {
+          if (copyText) copyText.innerText = "Copy";
+          if (copyIcon) copyIcon.style.display = "inline";
+          if (checkIcon) checkIcon.style.display = "none";
+        }, 2000);
+      }}
+      id="copyButton"
+      style={{
+        background: "#6366F1",
+        color: "white",
+        border: "none",
+        padding: "0.5rem 1rem",
+        borderRadius: "0.375rem",
+        display: "flex",
+        alignItems: "center",
+        cursor: "pointer",
+      }}
+    >
+      <span id="copyText">Copy</span>
+      <svg
+        id="copyIcon"
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        style={{ marginLeft: "0.5rem" }}
+      >
+        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+      </svg>
+      <svg
+        id="checkIcon"
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ marginLeft: "0.5rem", display: "none" }}
+      >
+        <path d="M20 6L9 17l-5-5" />
+      </svg>
+    </button>
+  </div>
+</div>
   
   {/* Long description moved below the join button */}
 <div className="about " style={{ marginTop: "2rem" }}>
