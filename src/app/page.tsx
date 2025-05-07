@@ -35,16 +35,16 @@ const cuisines: Cuisine[] = [
   "Gaming",
   "Education",
   "Football",
-  "Sports",
-  "Tech",
   "Politics",
+  "Tech",
+  "Sports",
   "Celebrities",
   "AI",
   "Finance",
-  "NSFW",
+  "Art",
   "Dating",
   "Anime",
-  "Art",
+  "NSFW",
   "Music",
   "Social",
   "Lifestyle",
@@ -548,7 +548,7 @@ export default function CommunityPage() {
     
     <p
       style={{
-        fontSize: "0.75rem",
+        fontSize: "0.85rem",
         color: "rgb(249, 249, 249)", 
         marginTop: "0.25rem",
         textAlign: "center",
@@ -637,6 +637,7 @@ export default function CommunityPage() {
     )}
   </>
 )}
+
 
 
       {/* Navigation Container */}
