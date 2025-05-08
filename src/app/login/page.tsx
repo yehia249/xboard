@@ -1,7 +1,7 @@
 //login page
 "use client";
 import { useState } from "react";
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, AuthError } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import React, { useLayoutEffect } from 'react';
@@ -25,31 +25,9 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Helper function to parse Firebase error codes into user-friendly messages
-  const getErrorMessage = (errorCode: string): string => {
-    switch (errorCode) {
-      case "auth/invalid-credential":
-        return "Invalid email or password. Please check your credentials and try again.";
-      case "auth/user-not-found":
-        return "No account found with this email address. Please check your email or sign up.";
-      case "auth/wrong-password":
-        return "Incorrect password. Please try again or reset your password.";
-      case "auth/invalid-email":
-        return "Please enter a valid email address.";
-      case "auth/user-disabled":
-        return "This account has been disabled. Please contact support.";
-      case "auth/too-many-requests":
-        return "Too many unsuccessful login attempts. Please try again later or reset your password.";
-      case "auth/network-request-failed":
-        return "Network error. Please check your internet connection and try again.";
-      case "auth/popup-closed-by-user":
-        return "Sign-in popup was closed before completing the process. Please try again.";
-      default:
-        return "Something went wrong. Please try again later.";
-    }
-  };
 
-  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+
+  const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     setErrorMsg("");
     setLoading(true);
@@ -68,18 +46,17 @@ export default function Login() {
 
       if (supabaseError) {
         console.error("❌ Supabase query error:", supabaseError);
-        setErrorMsg("We couldn't retrieve your account information. Please try again.");
+        setErrorMsg("Database error during login. Please try again.");
       } else if (!userData) {
         console.warn("⚠️ No matching user in Supabase for UID:", firebaseUser.uid);
-        setErrorMsg("Your account was not found in our database. Please contact support.");
+        setErrorMsg("User not found in Supabase.");
       } else {
         console.log("✅ User found in Supabase:", userData);
         router.push("/dashboard"); // Redirect to dashboard (adjust as needed)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ Firebase login error:", error);
-      const firebaseError = error as AuthError;
-      setErrorMsg(getErrorMessage(firebaseError.code));
+      setErrorMsg(error.message || "Failed to log in with those credentials.");
     } finally {
       setLoading(false);
     }
@@ -106,7 +83,7 @@ export default function Login() {
       
       if (queryError) {
         console.error("❌ Supabase query error:", queryError);
-        setErrorMsg("We couldn't retrieve your account information. Please try again.");
+        setErrorMsg("Database error during login. Please try again.");
         return;
       }
       
@@ -126,7 +103,7 @@ export default function Login() {
         
         if (insertError) {
           console.error("❌ Supabase insert error:", insertError);
-          setErrorMsg("We couldn't create your account. Please try again later.");
+          setErrorMsg("Failed to create user record. Please try again.");
           return;
         }
         console.log("✅ New user added to Supabase");
@@ -136,10 +113,9 @@ export default function Login() {
       
       // 4. Redirect to dashboard
       router.push("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ Google login error:", error);
-      const firebaseError = error as AuthError;
-      setErrorMsg(getErrorMessage(firebaseError.code));
+      setErrorMsg(error.message || "Failed to log in with Google.");
     } finally {
       setLoading(false);
     }
@@ -148,7 +124,7 @@ export default function Login() {
   return (
     <div className="min-h-screen w-full bg-black flex items-center justify-center">
       <form className="form" onSubmit={handleLogin}>
-        <div className="flex items-end justify-end w-full">
+        <div className="flex items-start justify-start w-full">
           <Link href="/" className="text-sm font-medium text-blue-600 hover:text-blue-800">
             Back to Home
           </Link>
@@ -257,7 +233,7 @@ export default function Login() {
         </div>
 
         {errorMsg && (
-          <div className="error-message" style={{ color: "#ef4444", fontSize: "14px", marginTop: "8px", padding: "10px", backgroundColor: "rgba(239, 68, 68, 0.1)", borderRadius: "4px", textAlign: "center" }}>
+          <div style={{ color: "#ef4444", fontSize: "14px", marginTop: "8px" }}>
             {errorMsg}
           </div>
         )}
