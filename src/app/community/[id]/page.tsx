@@ -167,178 +167,76 @@ export default function CommunityDetails() {
     }
   };
 
-// Custom signup modal component with redirect functionality
-const showSignupModal = () => {
-  // Get current path to use as redirect URL
-  const currentPath = window.location.pathname + window.location.search;
-  
-  // Create modal container
-  const modalOverlay = document.createElement('div');
-  modalOverlay.style.position = 'fixed';
-  modalOverlay.style.top = '0';
-  modalOverlay.style.left = '0';
-  modalOverlay.style.width = '100%';
-  modalOverlay.style.height = '100%';
-  modalOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-  modalOverlay.style.display = 'flex';
-  modalOverlay.style.justifyContent = 'center';
-  modalOverlay.style.alignItems = 'center';
-  modalOverlay.style.zIndex = '1000';
-  
-  // Create modal content
-  const modalContent = document.createElement('div');
-  modalContent.style.backgroundColor = '#1a1a1a'; // Dark mode background
-  modalContent.style.borderRadius = '12px';
-  modalContent.style.padding = '24px';
-  modalContent.style.width = '340px';
-  modalContent.style.boxShadow = '0 4px 24px rgba(0, 0, 0, 0.5)';
-  modalContent.style.border = '1px solid #333';
-  
-  // Create modal text
-  const modalText = document.createElement('p');
-  modalText.textContent = 'Would you like to create an account now?';
-  modalText.style.color = '#ffffff';
-  modalText.style.fontSize = '16px';
-  modalText.style.marginBottom = '20px';
-  modalText.style.fontWeight = '500';
-  
-  // Create button container
-  const buttonContainer = document.createElement('div');
-  buttonContainer.style.display = 'flex';
-  buttonContainer.style.justifyContent = 'flex-end';
-  buttonContainer.style.gap = '12px';
-  
-  // Create confirm button
-  const confirmButton = document.createElement('button');
-  confirmButton.textContent = 'Sign up';
-  confirmButton.style.backgroundColor = '#3366ff'; // Primary blue color
-  confirmButton.style.color = 'white';
-  confirmButton.style.border = 'none';
-  confirmButton.style.borderRadius = '8px';
-  confirmButton.style.padding = '10px 16px';
-  confirmButton.style.cursor = 'pointer';
-  confirmButton.style.fontWeight = '500';
-  confirmButton.addEventListener('click', () => {
-    document.body.removeChild(modalOverlay);
-    // Navigate to signup page with redirect parameter
-    window.location.href = `/signup?redirect=${encodeURIComponent(currentPath)}`;
-  });
-  confirmButton.addEventListener('mouseover', () => {
-    confirmButton.style.backgroundColor = '#2952cc'; // Darker blue on hover
-  });
-  confirmButton.addEventListener('mouseout', () => {
-    confirmButton.style.backgroundColor = '#3366ff';
-  });
-  
-  // Create cancel button
-  const cancelButton = document.createElement('button');
-  cancelButton.textContent = 'Cancel';
-  cancelButton.style.backgroundColor = 'transparent';
-  cancelButton.style.color = '#cccccc';
-  cancelButton.style.border = '1px solid #444';
-  cancelButton.style.borderRadius = '8px';
-  cancelButton.style.padding = '10px 16px';
-  cancelButton.style.cursor = 'pointer';
-  cancelButton.style.fontWeight = '500';
-  cancelButton.addEventListener('click', () => {
-    document.body.removeChild(modalOverlay);
-  });
-  cancelButton.addEventListener('mouseover', () => {
-    cancelButton.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'; // Subtle hover effect
-  });
-  cancelButton.addEventListener('mouseout', () => {
-    cancelButton.style.backgroundColor = 'transparent';
-  });
-  
-  // Assemble the modal
-  buttonContainer.appendChild(cancelButton);
-  buttonContainer.appendChild(confirmButton);
-  modalContent.appendChild(modalText);
-  modalContent.appendChild(buttonContainer);
-  modalOverlay.appendChild(modalContent);
-  
-  // Add to DOM
-  document.body.appendChild(modalOverlay);
-};
-  
-    // Handle promote button clicks.
-    const handlePromote = async (community_id: number) => {
-      try {
-        const auth = getAuth();
-        const token = await auth.currentUser?.getIdToken();
-        if (!token) {
-          shakeButton();
-          // Show error toast
-          showToast("Create an account to promote communities", "error");
-          
-          // After showing the toast, show a custom styled modal
-          setTimeout(() => {
-            // Show custom signup modal
-            showSignupModal();
-          }, 1500); // Short delay after the toast appears
-          
-          return;
-        }
-  
-        // Check if user is on cooldown
-        if (userPromoInfo.userLastPromotion) {
-          const userCooldown = getCountdown(userPromoInfo.userLastPromotion, 6 * 60 * 60 * 1000);
-          if (userCooldown) {
-            shakeButton();
-            showToast(`Wait ${userCooldown.hours}h ${userCooldown.minutes}m before promoting again`, "warning");
-            return;
-          }
-        }
-  
-        // Check daily limit
-        if (userPromoInfo.dailyPromotionCount >= 4) {
-          shakeButton();
-          showToast("You've used all 4 daily boosts", "error");
-          return;
-        }
-  
-        // Check community cooldown
-        if (communityPromotions[Number(id)]) {
-          const communityCooldown = getCountdown(communityPromotions[Number(id)], 24 * 60 * 60 * 1000);
-          if (communityCooldown) {
-            showToast("This community was already promoted in the last 24h", "info");
-            return;
-          }
-        }
-  
-        const res = await fetch("/api/promote", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ community_id }),
-        });
-        const data = await res.json();
-  
-        if (!res.ok) {
-          console.error("Promotion error:", data.error);
-          shakeButton();
-          showToast(data.error || "Failed to promote community", "error");
-          return;
-        }
-  
-        // on success, update your UI state without any alert
-        const nowISO = new Date().toISOString();
-        setCommunityPromotions((prev) => ({ ...prev, [community_id]: nowISO }));
-        setUserPromoInfo((prev) => ({
-          userLastPromotion: nowISO,
-          dailyPromotionCount: prev.dailyPromotionCount + 1,
-        }));
-        
-        showToast("Community successfully promoted!", "success");
-  
-      } catch (err) {
-        console.error("Unexpected error promoting:", err);
+  // Handle promote button clicks.
+  const handlePromote = async (community_id: number) => {
+    try {
+      const auth = getAuth();
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
         shakeButton();
-        showToast("Something went wrong. Please try again later.", "error");
+        showToast("Please login to promote communities", "error");
+        return;
       }
-    };
+
+      // Check if user is on cooldown
+      if (userPromoInfo.userLastPromotion) {
+        const userCooldown = getCountdown(userPromoInfo.userLastPromotion, 6 * 60 * 60 * 1000);
+        if (userCooldown) {
+          shakeButton();
+          showToast(`Wait ${userCooldown.hours}h ${userCooldown.minutes}m before promoting again`, "warning");
+          return;
+        }
+      }
+
+      // Check daily limit
+      if (userPromoInfo.dailyPromotionCount >= 4) {
+        shakeButton();
+        showToast("You've used all 4 daily boosts", "error");
+        return;
+      }
+
+      // Check community cooldown
+      if (communityPromotions[Number(id)]) {
+        const communityCooldown = getCountdown(communityPromotions[Number(id)], 24 * 60 * 60 * 1000);
+        if (communityCooldown) {
+          showToast("This community was already promoted in the last 24h", "info");
+          return;
+        }
+      }
+
+      const res = await fetch("/api/promote", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ community_id }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error("Promotion error:", data.error);
+        shakeButton();
+        showToast(data.error || "Failed to promote community", "error");
+        return;
+      }
+
+      // on success, update your UI state without any alert
+      const nowISO = new Date().toISOString();
+      setCommunityPromotions((prev) => ({ ...prev, [community_id]: nowISO }));
+      setUserPromoInfo((prev) => ({
+        userLastPromotion: nowISO,
+        dailyPromotionCount: prev.dailyPromotionCount + 1,
+      }));
+      
+      showToast("Community successfully promoted!", "success");
+
+    } catch (err) {
+      console.error("Unexpected error promoting:", err);
+      shakeButton();
+      showToast("Something went wrong. Please try again later.", "error");
+    }
+  };
 
   useEffect(() => {
     const fetchCommunity = async () => {
