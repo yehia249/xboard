@@ -31,12 +31,12 @@ export default function Signup() {
     setErrorMsg("");
 
     if (password !== confirmPassword) {
-      setErrorMsg("Passwords do not match");
+      setErrorMsg("Passwords do not match. Please ensure both passwords are identical.");
       return;
     }
 
     if (password.length < 6) {
-      setErrorMsg("Password must be at least 6 characters");
+      setErrorMsg("Password must be at least 6 characters long for security reasons.");
       return;
     }
 
@@ -59,9 +59,9 @@ export default function Signup() {
 
       if (supabaseError) {
         if (supabaseError.code === "23505") {
-          setErrorMsg("This account already exists. Try logging in instead.");
+          setErrorMsg("This account already exists. Please try logging in instead or use a different email address.");
         } else {
-          setErrorMsg(`Database error: ${supabaseError.message || supabaseError.code}`);
+          setErrorMsg(`Database error: ${supabaseError.message || supabaseError.code}. Please try again or contact support if the issue persists.`);
         }
         return;
       }
@@ -69,13 +69,17 @@ export default function Signup() {
       router.push("/dashboard");
     } catch (error: any) {
       if (error.code === "auth/email-already-in-use") {
-        setErrorMsg("This email is already registered. Try logging in instead.");
+        setErrorMsg("This email is already registered. Please use the login page instead or try a different email address.");
       } else if (error.code === "auth/invalid-email") {
-        setErrorMsg("Please enter a valid email address.");
+        setErrorMsg("The email address format is invalid. Please enter a valid email address (e.g., name@example.com).");
       } else if (error.code === "auth/weak-password") {
-        setErrorMsg("Password is too weak. Please use a stronger password.");
+        setErrorMsg("Password is too weak. Please use a stronger password with at least 6 characters, including numbers and special characters.");
+      } else if (error.code === "auth/network-request-failed") {
+        setErrorMsg("Network error. Please check your internet connection and try again.");
+      } else if (error.code === "auth/too-many-requests") {
+        setErrorMsg("Too many unsuccessful attempts. Please try again later or reset your password.");
       } else {
-        setErrorMsg(error.message || "Failed to create account. Please try again.");
+        setErrorMsg(error.message || "Failed to create account. Please try again later or contact support.");
       }
     } finally {
       setLoading(false);
@@ -98,7 +102,7 @@ export default function Signup() {
         .maybeSingle();
 
       if (queryError) {
-        setErrorMsg(`Database query error: ${queryError.message}`);
+        setErrorMsg(`Database query error: ${queryError.message}. Please try again or contact support if the issue persists.`);
         return;
       }
 
@@ -116,14 +120,24 @@ export default function Signup() {
           .select();
 
         if (insertError) {
-          setErrorMsg(`Failed to create user record: ${insertError.message}`);
+          setErrorMsg(`Failed to create user record: ${insertError.message}. Please try again or contact support.`);
           return;
         }
       }
 
       router.push("/dashboard");
     } catch (error: any) {
-      setErrorMsg(error.message || "Failed to sign up with Google.");
+      if (error.code === "auth/popup-closed-by-user") {
+        setErrorMsg("Google sign-in was cancelled. Please try again.");
+      } else if (error.code === "auth/popup-blocked") {
+        setErrorMsg("Pop-up blocked by browser. Please enable pop-ups for this site and try again.");
+      } else if (error.code === "auth/account-exists-with-different-credential") {
+        setErrorMsg("An account already exists with the same email address but different sign-in credentials. Please sign in using the original provider.");
+      } else if (error.code === "auth/network-request-failed") {
+        setErrorMsg("Network error. Please check your internet connection and try again.");
+      } else {
+        setErrorMsg(error.message || "Failed to sign up with Google. Please try again later or use email registration.");
+      }
     } finally {
       setLoading(false);
     }
@@ -229,7 +243,7 @@ export default function Signup() {
         </div>
 
         {errorMsg && (
-          <div style={{ color: "#ef4444", fontSize: "14px", marginTop: "8px" }}>
+          <div style={{ color: "#ef4444", fontSize: "14px", marginTop: "8px", padding: "8px", backgroundColor: "rgba(239, 68, 68, 0.1)", borderRadius: "4px" }}>
             {errorMsg}
           </div>
         )}

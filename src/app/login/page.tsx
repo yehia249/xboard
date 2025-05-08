@@ -24,11 +24,15 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-
-
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     setErrorMsg("");
+    
+    if (!email.trim() || !password.trim()) {
+      setErrorMsg("Please enter both email and password.");
+      return;
+    }
+    
     setLoading(true);
     try {
       // 1. Authenticate with Firebase
@@ -45,17 +49,33 @@ export default function Login() {
 
       if (supabaseError) {
         console.error("❌ Supabase query error:", supabaseError);
-        setErrorMsg("Database error during login. Please try again.");
+        setErrorMsg("Database error: Unable to access user data. Please try again later or contact support.");
       } else if (!userData) {
         console.warn("⚠️ No matching user in Supabase for UID:", firebaseUser.uid);
-        setErrorMsg("User not found in Supabase.");
+        setErrorMsg("Account record not found. Please contact support for assistance.");
       } else {
         console.log("✅ User found in Supabase:", userData);
         router.push("/dashboard"); // Redirect to dashboard (adjust as needed)
       }
     } catch (error: any) {
       console.error("❌ Firebase login error:", error);
-      setErrorMsg(error.message || "Failed to log in with those credentials.");
+      
+      // Provide specific error messages based on Firebase error codes
+      if (error.code === "auth/invalid-email") {
+        setErrorMsg("The email address format is invalid. Please enter a valid email address (e.g., name@example.com).");
+      } else if (error.code === "auth/invalid-credential" || error.code === "auth/wrong-password") {
+        setErrorMsg("Invalid email or password. Please check your credentials and try again.");
+      } else if (error.code === "auth/user-not-found") {
+        setErrorMsg("No account found with this email address. Please check your email or sign up for a new account.");
+      } else if (error.code === "auth/too-many-requests") {
+        setErrorMsg("Too many unsuccessful attempts. Please try again later or reset your password.");
+      } else if (error.code === "auth/user-disabled") {
+        setErrorMsg("This account has been disabled. Please contact support for assistance.");
+      } else if (error.code === "auth/network-request-failed") {
+        setErrorMsg("Network error. Please check your internet connection and try again.");
+      } else {
+        setErrorMsg(error.message || "Login failed. Please check your credentials and try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -82,7 +102,7 @@ export default function Login() {
       
       if (queryError) {
         console.error("❌ Supabase query error:", queryError);
-        setErrorMsg("Database error during login. Please try again.");
+        setErrorMsg("Database error: Unable to access user data. Please try again later or contact support.");
         return;
       }
       
@@ -102,7 +122,7 @@ export default function Login() {
         
         if (insertError) {
           console.error("❌ Supabase insert error:", insertError);
-          setErrorMsg("Failed to create user record. Please try again.");
+          setErrorMsg("Failed to create user record. Please try again or contact support if the issue persists.");
           return;
         }
         console.log("✅ New user added to Supabase");
@@ -114,7 +134,21 @@ export default function Login() {
       router.push("/dashboard");
     } catch (error: any) {
       console.error("❌ Google login error:", error);
-      setErrorMsg(error.message || "Failed to log in with Google.");
+      
+      // Provide specific error messages for Google login errors
+      if (error.code === "auth/popup-closed-by-user") {
+        setErrorMsg("Google sign-in was cancelled. Please try again.");
+      } else if (error.code === "auth/popup-blocked") {
+        setErrorMsg("Pop-up blocked by browser. Please enable pop-ups for this site and try again.");
+      } else if (error.code === "auth/account-exists-with-different-credential") {
+        setErrorMsg("An account already exists with the same email address but different sign-in credentials. Please sign in using the original provider.");
+      } else if (error.code === "auth/network-request-failed") {
+        setErrorMsg("Network error. Please check your internet connection and try again.");
+      } else if (error.code === "auth/user-disabled") {
+        setErrorMsg("This Google account has been disabled for this application. Please contact support.");
+      } else {
+        setErrorMsg(error.message || "Failed to sign in with Google. Please try again later or use email login.");
+      }
     } finally {
       setLoading(false);
     }
@@ -122,7 +156,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen w-full bg-black flex items-center justify-center">
-      <form className="form relative">
+      <form className="form relative" onSubmit={handleLogin}>
         {/* Back to Home link in top right */}
         <div className="absolute top-4 right-4">
           <Link href="/" className="text-blue-500 hover:text-blue-700">
@@ -184,42 +218,23 @@ export default function Login() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          {showPassword ? (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="black"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              onClick={() => setShowPassword(false)}
-              style={{ cursor: "pointer" }}
-            >
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-              <circle cx="12" cy="12" r="3" />
-              <line x1="1" y1="1" x2="23" y2="23" />
-            </svg>
-          ) : (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="black"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              onClick={() => setShowPassword(true)}
-              style={{ cursor: "pointer" }}
-            >
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-          )}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="black"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            onClick={() => setShowPassword(!showPassword)}
+            style={{ cursor: "pointer" }}
+          >
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+            {showPassword && <line x1="1" y1="1" x2="23" y2="23" />}
+          </svg>
         </div>
 
         <div className="flex-row">
@@ -233,12 +248,12 @@ export default function Login() {
         </div>
 
         {errorMsg && (
-          <div style={{ color: "#ef4444", fontSize: "14px", marginTop: "8px" }}>
+          <div style={{ color: "#ef4444", fontSize: "14px", marginTop: "8px", padding: "8px", backgroundColor: "rgba(239, 68, 68, 0.1)", borderRadius: "4px" }}>
             {errorMsg}
           </div>
         )}
 
-        <button className="button-submit" type="submit" disabled={loading} onClick={handleLogin}>
+        <button className="button-submit" type="submit" disabled={loading}>
           {loading ? "Logging in..." : "Sign In"}
         </button>
 
