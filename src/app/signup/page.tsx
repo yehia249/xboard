@@ -1,8 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
+import React, { useLayoutEffect } from 'react';
 import Link from "next/link";
 import "../loginform.css";
 
@@ -22,10 +23,8 @@ export default function Signup() {
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  
-  // Get the redirect path from URL query parameters
-  const redirectPath = searchParams?.get("redirect") || "/dashboard";
+
+
 
   const handleSignup = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -67,8 +66,7 @@ export default function Signup() {
         return;
       }
 
-      // Redirect to the specified path after successful signup
-      router.push(redirectPath);
+      router.push("/dashboard");
     } catch (error: any) {
       if (error.code === "auth/email-already-in-use") {
         setErrorMsg("This email is already registered. Please use the login page instead or try a different email address.");
@@ -127,8 +125,7 @@ export default function Signup() {
         }
       }
 
-      // Redirect to the specified path after successful signup
-      router.push(redirectPath);
+      router.push("/dashboard");
     } catch (error: any) {
       if (error.code === "auth/popup-closed-by-user") {
         setErrorMsg("Google sign-in was cancelled. Please try again.");
@@ -269,7 +266,7 @@ export default function Signup() {
 
         <p className="p">
           Already have an account?{" "}
-          <Link href={`/login?redirect=${encodeURIComponent(redirectPath)}`} className="span">
+          <Link href="/login" className="span">
             Sign In
           </Link>
         </p>
