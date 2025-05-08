@@ -131,7 +131,14 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen w-full bg-black flex items-center justify-center">
-      <form className="form" onSubmit={handleSignup}>
+      <form className="form relative" onSubmit={handleSignup}>
+        {/* Back to Home link in top right */}
+        <div className="absolute top-4 right-4">
+          <Link href="/" className="text-blue-500 hover:text-blue-700">
+            Back to Home
+          </Link>
+        </div>
+        
         <div className="flex-column">
           <label>Email</label>
         </div>

@@ -1,4 +1,3 @@
-//login page
 "use client";
 import { useState } from "react";
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
@@ -123,7 +122,14 @@ export default function Login() {
 
   return (
     <div className="min-h-screen w-full bg-black flex items-center justify-center">
-      <form className="form" onSubmit={handleLogin}>
+      <form className="form relative">
+        {/* Back to Home link in top right */}
+        <div className="absolute top-4 right-4">
+          <Link href="/" className="text-blue-500 hover:text-blue-700">
+            Back to Home
+          </Link>
+        </div>
+
         <div className="flex-column">
           <label>Email</label>
         </div>
@@ -232,7 +238,7 @@ export default function Login() {
           </div>
         )}
 
-        <button className="button-submit" type="submit" disabled={loading}>
+        <button className="button-submit" type="submit" disabled={loading} onClick={handleLogin}>
           {loading ? "Logging in..." : "Sign In"}
         </button>
 
