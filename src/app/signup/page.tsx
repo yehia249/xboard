@@ -1,9 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, AuthError } from "firebase/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import React, { useLayoutEffect } from 'react';
+import React from 'react';
 import Link from "next/link";
 import "../loginform.css";
 
@@ -23,6 +23,10 @@ export default function Signup() {
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Get the redirect URL from query parameters
+  const redirectUrl = searchParams.get('redirect') || '/dashboard';
 
   // Helper function to parse Firebase error codes into user-friendly messages
   const getErrorMessage = (errorCode: string): string => {
@@ -88,7 +92,8 @@ export default function Signup() {
         return;
       }
 
-      router.push("/dashboard");
+      // Redirect to the URL from query parameter or default to dashboard
+      router.push(redirectUrl);
     } catch (error) {
       console.error("Signup error:", error);
       const firebaseError = error as AuthError;
@@ -139,7 +144,8 @@ export default function Signup() {
         }
       }
 
-      router.push("/dashboard");
+      // Redirect to the URL from query parameter or default to dashboard
+      router.push(redirectUrl);
     } catch (error) {
       console.error("Google signup error:", error);
       const firebaseError = error as AuthError;
@@ -272,7 +278,7 @@ export default function Signup() {
 
         <p className="p">
           Already have an account?{" "}
-          <Link href="/login" className="span">
+          <Link href={`/login${redirectUrl !== '/dashboard' ? `?redirect=${encodeURIComponent(redirectUrl)}` : ''}`} className="span">
             Sign In
           </Link>
         </p>
