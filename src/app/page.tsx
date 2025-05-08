@@ -956,7 +956,7 @@ export default function CommunityPage() {
                           <div className="promote-timer-badge" style={{
                             position: "absolute",
                             bottom: "5px",
-                            left: "50%",
+                            left: "45%",
                             transform: "translateX(-50%)",
                             fontSize: "0.7rem",
                             background: "rgba(0, 0, 0, 0.7)",
@@ -1036,13 +1036,13 @@ export default function CommunityPage() {
           
           @keyframes promote-button-pulse {
             0% {
-              box-shadow: 0 0 8px rgba(120, 255, 150, 0.4);
+              box-shadow: 0 0 4px rgba(120, 255, 150, 0.4);
             }
             50% {
-              box-shadow: 0 0 15px rgba(120, 255, 150, 0.7);
+              box-shadow: 0 0 8px rgba(120, 255, 150, 0.7);
             }
             100% {
-              box-shadow: 0 0 8px rgba(120, 255, 150, 0.4);
+              box-shadow: 0 0 4px rgba(120, 255, 150, 0.4);
             }
           }
           
