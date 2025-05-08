@@ -124,12 +124,6 @@ export default function Login() {
   return (
     <div className="min-h-screen w-full bg-black flex items-center justify-center">
       <form className="form" onSubmit={handleLogin}>
-        <div className="flex items-start justify-start w-full">
-          <Link href="/" className="text-sm font-medium text-blue-600 hover:text-blue-800">
-            Back to Home
-          </Link>
-        </div>
-        
         <div className="flex-column">
           <label>Email</label>
         </div>
