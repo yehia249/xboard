@@ -11,6 +11,7 @@ export interface Community {
   image_url?: string;
   tags: string[];
   owner_id?: string;  // Track owner
+  tier?: "gold" | "silver" | "normal"; // ✅ Add this line
 }
 
 export function useCommunities(userId?: string) {

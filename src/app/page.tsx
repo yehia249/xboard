@@ -211,14 +211,23 @@ export default function CommunityPage() {
       }
 
       // Check if community is on cooldown
-      if (communityPromotions[community_id]) {
-        const communityCooldown = getCountdown(communityPromotions[community_id], 24 * 60 * 60 * 1000);
-        if (communityCooldown) {
-          addToast('info', 'This community was already promoted in the last 24h');
-          shakeButton(community_id);
-          return;
-        }
-      }
+// Find the current community's tier
+const currentCommunity = communities.find(c => c.id === community_id);
+const tier = currentCommunity?.tier || "normal";
+
+let cooldownMs = 24 * 60 * 60 * 1000;
+if (tier === "silver") cooldownMs = 12 * 60 * 60 * 1000;
+if (tier === "gold") cooldownMs = 6 * 60 * 60 * 1000;
+
+if (communityPromotions[community_id]) {
+  const communityCooldown = getCountdown(communityPromotions[community_id], cooldownMs);
+  if (communityCooldown) {
+    addToast('info', `This community was already promoted. Wait ${communityCooldown.hours}h ${communityCooldown.minutes}m`);
+    shakeButton(community_id);
+    return;
+  }
+}
+
 
       // Check if daily limit reached
       if (userPromoInfo.dailyPromotionCount >= 4) {
@@ -846,9 +855,14 @@ export default function CommunityPage() {
           ) : (
             currentServers.map((server) => {
               // If the community was promoted recently, calculate its 24‑hour cooldown
+              let cooldownMs = 24 * 60 * 60 * 1000;
+              if (server.tier === "silver") cooldownMs = 12 * 60 * 60 * 1000;
+              if (server.tier === "gold") cooldownMs = 6 * 60 * 60 * 1000;
+              
               const communityCooldown = communityPromotions[server.id]
-                ? getCountdown(communityPromotions[server.id], 24 * 60 * 60 * 1000)
+                ? getCountdown(communityPromotions[server.id], cooldownMs)
                 : null;
+              
               // Check if promoted
               const isPromoted = communityCooldown !== null;
               
@@ -863,7 +877,7 @@ export default function CommunityPage() {
               return (
                 <div
                   key={server.id}
-                  className="server-card" 
+                  className={`server-card ${server.tier === 'silver' ? 'silver-tier' : server.tier === 'gold' ? 'gold-tier' : 'normal-tier'}`}
                   onClick={() => router.push(`/community/${server.id}`)}
                   style={{ position: "relative", display: "flex", flexDirection: "column", cursor: "pointer"  }}
                 >

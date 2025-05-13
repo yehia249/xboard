@@ -10,6 +10,7 @@
   margin: 0 auto;
 }
 
+/* Base server card styles shared by all tiers */
 .server-card {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   position: relative;
@@ -40,7 +41,6 @@
   width: 100%;
   height: 200px;
   overflow: hidden;
-
 }
 
 .community-image {
@@ -50,15 +50,59 @@
   transition: transform 0.3s ease;
 }
 
-
-/* Card content */
+/* Base card content */
 .server-card h3 {
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
   padding: 20px 24px 8px 24px;
   margin-top: auto;
+  position: relative;
+}
+
+/* Normal tier title - no gradient, plain white */
+.normal-tier h3 {
   color: #f0f0f0;
+}
+
+/* Silver tier title - diamond blue gradient */
+.silver-tier h3 {
+  background: linear-gradient(90deg, #a8d8f0 0%, #e6f5fc 50%, #a8d8f0 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Gold tier title - gold gradient */
+.gold-tier h3 {
+  background: linear-gradient(90deg, #f8e9a1 0%, #f0f0f0 50%, #f8e9a1 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Style line under the title for silver tier */
+.silver-tier h3::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 24px;
+  width: 30px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(168, 216, 240, 0.8), rgba(168, 216, 240, 0.1));
+}
+
+/* Style line under the title for gold tier */
+.gold-tier h3::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 24px;
+  width: 30px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.7), rgba(212, 175, 55, 0.1));
 }
 
 .server-card p {
@@ -67,7 +111,6 @@
   line-height: 1.6;
   padding: 0 24px;
   margin-bottom: 16px;
-  
 }
 
 /* Tags styling */
@@ -88,7 +131,7 @@
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Join/Action button */
+/* Join/Action button base styles */
 .server-card .join-link,
 .server-card .delete-btn {
   display: block;
@@ -105,17 +148,52 @@
   overflow: hidden;
 }
 
-.server-card .join-link {
+/* Normal tier button */
+.normal-tier .join-link {
   background-color: white;
   color: #121212;
   border: none;
 }
 
-.server-card .join-link:hover {
+.normal-tier .join-link:hover {
   background-color: rgba(255, 255, 255, 0.9);
   transform: translateY(-2px);
 }
 
+/* Silver tier button with diamond blue shine effect */
+.silver-tier .join-link {
+  background-color: #d6eeff;
+  color: #1b2023;
+  border: none;
+  /* Diamond blue shine effect */
+  background-image: linear-gradient(to right, transparent, rgba(230, 245, 252, 0.5), transparent);
+  background-size: 200% 100%;
+  background-position: right center;
+}
+
+.silver-tier .join-link:hover {
+  background-color: #b8e0fb;
+  transform: translateY(-2px);
+  /* Animate diamond shine effect */
+  background-position: left center;
+  transition: background-position 1s ease, background-color 0.2s, transform 0.2s;
+}
+
+/* Gold tier button */
+.gold-tier .join-link {
+  background: linear-gradient(90deg, #f5d76e, #f0e68c, #f5d76e);
+  color: #121212;
+  border: none;
+  position: relative;
+  z-index: 1;
+}
+
+.gold-tier .join-link:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(90deg, #f5d76e, #fff8dc, #f5d76e);
+}
+
+/* Delete button styles - same for all tiers */
 .server-card .delete-btn {
   background-color: rgba(255, 59, 48, 0.1);
   color: rgba(255, 59, 48, 0.9);
@@ -126,7 +204,9 @@
   background-color: rgba(255, 59, 48, 0.2);
 }
 
-.edit-modal-overlay {
+/* Modal overlay styles */
+.edit-modal-overlay,
+.delete-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -139,28 +219,68 @@
   z-index: 999;
 }
 
-.edit-modal {
+/* Base modal styles */
+.edit-modal,
+.delete-modal {
   background-color: #1b2023;
   border-radius: 16px;
   padding: 24px;
-  width: 400px;
-  max-width: 90%;
+  color: #fff;
   box-shadow: 
     0 15px 25px -5px rgba(0, 0, 0, 0.2),
     0 10px 10px -5px rgba(0, 0, 0, 0.05);
-  color: #fff;
 }
 
-.edit-modal h2 {
+.edit-modal {
+  width: 400px;
+  max-width: 90%;
+}
+
+.delete-modal {
+  width: 350px;
+  max-width: 90%;
+  text-align: center;
+}
+
+/* Silver tier specific modal styles */
+.silver-tier-modal {
+  border: 1px solid rgba(168, 216, 240, 0.2);
+}
+
+.silver-tier-modal h2,
+.silver-tier-modal h3 {
+  background: linear-gradient(90deg, #a8d8f0 0%, #e6f5fc 50%, #a8d8f0 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Gold tier specific modal styles */
+.gold-tier-modal {
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.gold-tier-modal h2,
+.gold-tier-modal h3 {
+  background: linear-gradient(90deg, #f8e9a1 0%, #f0f0f0 50%, #f8e9a1 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Modal content styles */
+.edit-modal h2,
+.delete-modal h3 {
   margin-top: 0;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .edit-modal .form-group {
   margin-bottom: 16px;
 }
 
-.edit-modal textarea {
+.edit-modal textarea,
+.edit-modal input[type="text"] {
   width: 100%;
   padding: 8px;
   border-radius: 6px;
@@ -191,46 +311,6 @@
   cursor: pointer;
 }
 
-.edit-modal input[type="text"] {
-  width: 100%;
-  padding: 8px;
-  border-radius: 6px;
-  background-color: #2a2f32;
-  color: #fff;
-  border: 1px solid #444;
-}
-
-.delete-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.delete-modal {
-  background: #1b2023;
-  border-radius: 12px;
-  padding: 24px;
-  width: 350px;
-  max-width: 90%;
-  color: #fff;
-  text-align: center;
-  box-shadow:
-    0 15px 25px -5px rgba(0, 0, 0, 0.2),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-.delete-modal h3 {
-  margin-top: 0;
-  margin-bottom: 8px;
-}
-
 .delete-modal p {
   margin-bottom: 24px;
   color: rgba(229, 231, 235, 0.75);
@@ -241,6 +321,7 @@
   justify-content: space-around;
 }
 
+/* Button styles for modals */
 .confirm-btn {
   background-color: rgba(255, 59, 48, 0.1);
   color: rgba(255, 59, 48, 0.9);
@@ -254,7 +335,8 @@
   background-color: rgba(255, 59, 48, 0.2);
 }
 
-.cancel-btn {
+/* Normal tier cancel button */
+.normal-tier-modal .cancel-btn {
   background-color: rgba(255, 255, 255, 0.1);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -263,31 +345,54 @@
   cursor: pointer;
 }
 
-.cancel-btn:hover {
+.normal-tier-modal .cancel-btn:hover {
   background-color: rgba(255, 255, 255, 0.2);
 }
 
+/* Silver tier cancel button */
+.silver-tier-modal .cancel-btn {
+  background-color: rgba(168, 216, 240, 0.1);
+  color: #d6eeff;
+  border: 1px solid rgba(168, 216, 240, 0.3);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
 
+.silver-tier-modal .cancel-btn:hover {
+  background-color: rgba(168, 216, 240, 0.2);
+}
 
+/* Gold tier cancel button */
+.gold-tier-modal .cancel-btn {
+  background-color: rgba(212, 175, 55, 0.1);
+  color: #f5d76e;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.gold-tier-modal .cancel-btn:hover {
+  background-color: rgba(212, 175, 55, 0.2);
+}
 
 /* Responsive adjustments */
 @media (max-width: 1200px) {
-    .server-list, 
-    .communities-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 24px;
-      width: 80%;
-    }
+  .server-list, 
+  .communities-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    width: 80%;
   }
-  
-  @media (max-width: 768px) {
-    .server-list, 
-    .communities-grid {
-      grid-template-columns: 1fr;
-      gap: 16px;
-      padding: 24px;
-      width: 90%;
-    }
-  }
+}
 
-  
+@media (max-width: 768px) {
+  .server-list, 
+  .communities-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 24px;
+    width: 90%;
+  }
+}

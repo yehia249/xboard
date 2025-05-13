@@ -650,6 +650,46 @@ input:focus, textarea:focus, select:focus {
 }
 
 
+.tier-button {
+  display: flex;
+  align-items: center;
+  font-family: inherit;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 17px;
+  padding: 0.5em 1em 0.5em 0.5em;
+  color: black;
+  background: #ad5389;
+  background: linear-gradient(50deg, #ffffffec, #ffffffec, #ffffffec);
+  border: none;
+  letter-spacing: 0.05em;
+  border-radius: 10px;
+  position: absolute;
+  top: -40px; 
+  right: 10px;
+  z-index: 1;
+}
+
+.tier-button svg {
+  margin-right: 3px;
+  transform: rotate(30deg);
+  transition: transform 0.5s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.tier-button span {
+  transition: transform 0.5s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.tier-button:hover svg {
+  transform: translateX(5px) rotate(90deg);
+}
+
+.tier-button:hover span {
+  transform: translateX(7px);
+}
+
+
+
 /* Add this to your existing CSS files (community.css or create a new one) */
 
 .section-header {

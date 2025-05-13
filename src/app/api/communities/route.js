@@ -7,8 +7,8 @@ export async function GET(req) {
     const userId = searchParams.get("userId");
 
     let query = supabase
-      .from("servers")
-      .select("*, server_tags(tag_id, tags(name))");
+    .from("servers")
+    .select("id, name, description, long_description, invite_link, image_url, members, owner_id, tier, server_tags(tag_id, tags(name))");  
 
     if (userId) {
       query = query.eq("owner_id", userId);

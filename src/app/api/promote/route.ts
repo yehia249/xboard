@@ -6,7 +6,6 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { community_id } = body;
 
-  // ✅ Extract token from header
   const authHeader = req.headers.get("Authorization");
   const token = authHeader?.split("Bearer ")[1];
 
@@ -14,7 +13,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing Firebase token" }, { status: 401 });
   }
 
-  // ✅ Verify token using Firebase Admin
   let user_id: string;
   try {
     const decoded = await admin.auth().verifyIdToken(token);
@@ -27,7 +25,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing user or community ID" }, { status: 400 });
   }
 
-  // ✅ Check 6-hour cooldown
+  // ✅ Check last promotion by user (6-hour cooldown across all)
   const { data: lastPromotion } = await supabase
     .from("promotions")
     .select("promoted_at")
@@ -45,7 +43,7 @@ export async function POST(req: Request) {
     }
   }
 
-  // ✅ Check daily limit (4 boosts per UTC day)
+  // ✅ Check daily limit (4 boosts max)
   const now = new Date();
   const utcMidnight = new Date(Date.UTC(
     now.getUTCFullYear(),
@@ -64,7 +62,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "You’ve used all 4 daily boosts" }, { status: 403 });
   }
 
-  // ✅ Check 24h cooldown per community
+  // ✅ Get tier of community
+  const { data: serverTier } = await supabase
+    .from("servers")
+    .select("tier")
+    .eq("id", community_id)
+    .single();
+
+  if (!serverTier) {
+    return NextResponse.json({ error: "Community not found" }, { status: 404 });
+  }
+
+  // ✅ Determine cooldown
+  let cooldownMs = 24 * 60 * 60 * 1000; // default 24h
+  if (serverTier.tier === "silver") cooldownMs = 12 * 60 * 60 * 1000;
+  if (serverTier.tier === "gold") cooldownMs = 6 * 60 * 60 * 1000;
+
+  // ✅ Check last promotion time of this community
   const { data: lastBoost } = await supabase
     .from("promotions")
     .select("promoted_at")
@@ -76,9 +90,10 @@ export async function POST(req: Request) {
   if (lastBoost) {
     const last = new Date(lastBoost.promoted_at).getTime();
     const now = Date.now();
-    const twentyFourHours = 24 * 60 * 60 * 1000;
-    if (now - last < twentyFourHours) {
-      return NextResponse.json({ error: "This community was already promoted in the last 24 hours" }, { status: 403 });
+    if (now - last < cooldownMs) {
+      return NextResponse.json({
+        error: `This community was already promoted recently. Wait ${(cooldownMs - (now - last)) / (60 * 60 * 1000)} more hours.`,
+      }, { status: 403 });
     }
   }
 
@@ -94,7 +109,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
-  // ✅ Increment promote_count in servers table
+  // ✅ Increment promote_count
   const { data: serverData, error: fetchError } = await supabase
     .from("servers")
     .select("promote_count")
