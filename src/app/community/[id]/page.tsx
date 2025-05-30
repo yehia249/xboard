@@ -169,15 +169,17 @@ export default function CommunityDetails() {
   };
 
   // Handle promote button clicks.
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false);
   const handlePromote = async (community_id: number) => {
     try {
       const auth = getAuth();
       const token = await auth.currentUser?.getIdToken();
       if (!token) {
         shakeButton();
-        showToast("Please login to promote communities", "error");
+        showToast("Create an account to promote communities", "error");
+        setTimeout(() => setShowSignupPrompt(true), 600); // <== delay here
         return;
-      }
+      }      
 
       // Check if user is on cooldown
       if (userPromoInfo.userLastPromotion) {
@@ -366,6 +368,58 @@ export default function CommunityDetails() {
         </button>
       </header>
 
+      {showSignupPrompt && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    {/* Backdrop */}
+    <div
+      className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+      onClick={() => setShowSignupPrompt(false)}
+    />
+    
+    {/* Modal */}
+    <div className="relative w-full max-w-md rounded-2xl bg-neutral-900 p-6 shadow-2xl border border-neutral-800 z-10 animate-in fade-in duration-300">
+      <div className="flex flex-col items-center space-y-5">
+        {/* Icon Circle */}
+        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-neutral-800 mt-2">
+          <svg
+            className="h-5 w-5 text-neutral-300"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+        </div>
+        
+        {/* Content */}
+        <div className="text-center space-y-2">
+          <h2 className="text-neutral-100 text-2xl font-medium leading-tight">Sign up to continue</h2>
+          <p className="text-neutral-400 text-sm">You need an account to promote communities.</p>
+        </div>
+        
+        {/* Buttons */}
+        <div className="w-full space-y-3 pt-2">
+          <button
+            onClick={() => {
+              router.push(`/signup?redirect=/community/${id}`);
+            }}
+            className="w-full bg-neutral-100 text-neutral-900 font-medium py-3 transition-all hover:bg-white focus:ring-2 focus:ring-neutral-300 focus:ring-offset-1 focus:ring-offset-neutral-900"
+          >
+            Sign Up
+          </button>
+          
+          <button
+            onClick={() => setShowSignupPrompt(false)}
+            className="w-full bg-neutral-800 text-neutral-300 font-medium py-3 transition-all hover:bg-neutral-700 focus:ring-2 focus:ring-neutral-700 focus:ring-offset-1 focus:ring-offset-neutral-900"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
 
       {/* Toast Container - New Implementation */}
@@ -614,6 +668,28 @@ export default function CommunityDetails() {
 
       <div className="image-banner">
         <img src={community.image_url} alt={community.name} />
+
+        {community?.tier === "normal" && (
+    <button
+      onClick={() => router.push(`/community/${id}/upgrade`)}
+      className="tier-button"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        width="24"
+        height="24"
+      >
+        <path fill="none" d="M0 0h24v24H0z"></path>
+        <path
+          fill="currentColor"
+          d="M5 13c0-5.088 2.903-9.436 7-11.182C16.097 3.564 19 7.912 19 13c0 .823-.076 1.626-.22 2.403l1.94 1.832a.5.5 0 0 1 .095.603l-2.495 4.575a.5.5 0 0 1-.793.114l-2.234-2.234a1 1 0 0 0-.707-.293H9.414a1 1 0 0 0-.707.293l-2.234 2.234a.5.5 0 0 1-.793-.114l-2.495-4.575a.5.5 0 0 1 .095-.603l1.94-1.832C5.077 14.626 5 13.823 5 13zm1.476 6.696l.817-.817A3 3 0 0 1 9.414 18h5.172a3 3 0 0 1 2.121.879l.817.817.982-1.8-1.1-1.04a2 2 0 0 1-.593-1.82c.124-.664.187-1.345.187-2.036 0-3.87-1.995-7.3-5-8.96C8.995 5.7 7 9.13 7 13c0 .691.063 1.372.187 2.037a2 2 0 0 1-.593 1.82l-1.1 1.039.982 1.8zM12 13a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"
+        ></path>
+      </svg>
+      <span>Upgrade tier</span>
+    </button>
+  )}
+
       </div>
       <div className="community-info">
   <div
@@ -781,26 +857,7 @@ export default function CommunityDetails() {
     Join
   </Link>
 
-  {community?.tier === "normal" && (
-  <button
-    onClick={() => router.push(`/community/${id}/upgrade`)}
-    className="tier-button"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      width="24"
-      height="24"
-    >
-      <path fill="none" d="M0 0h24v24H0z"></path>
-      <path
-        fill="currentColor"
-        d="M5 13c0-5.088 2.903-9.436 7-11.182C16.097 3.564 19 7.912 19 13c0 .823-.076 1.626-.22 2.403l1.94 1.832a.5.5 0 0 1 .095.603l-2.495 4.575a.5.5 0 0 1-.793.114l-2.234-2.234a1 1 0 0 0-.707-.293H9.414a1 1 0 0 0-.707.293l-2.234 2.234a.5.5 0 0 1-.793-.114l-2.495-4.575a.5.5 0 0 1 .095-.603l1.94-1.832C5.077 14.626 5 13.823 5 13zm1.476 6.696l.817-.817A3 3 0 0 1 9.414 18h5.172a3 3 0 0 1 2.121.879l.817.817.982-1.8-1.1-1.04a2 2 0 0 1-.593-1.82c.124-.664.187-1.345.187-2.036 0-3.87-1.995-7.3-5-8.96C8.995 5.7 7 9.13 7 13c0 .691.063 1.372.187 2.037a2 2 0 0 1-.593 1.82l-1.1 1.039.982 1.8zM12 13a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"
-      ></path>
-    </svg>
-    <span>Upgrade tier</span>
-  </button>
-)}
+
 
 
 

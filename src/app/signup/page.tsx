@@ -4,6 +4,7 @@ import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWith
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import React, { useLayoutEffect } from 'react';
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import "../loginform.css";
 
@@ -23,6 +24,7 @@ export default function Signup() {
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
 
 
@@ -66,8 +68,9 @@ export default function Signup() {
         return;
       }
 
-      router.push("/dashboard");
-    } catch (error: any) {
+      const redirectPath = searchParams.get("redirect");
+      router.push(redirectPath || "/dashboard");
+          } catch (error: any) {
       if (error.code === "auth/email-already-in-use") {
         setErrorMsg("This email is already registered. Please use the login page instead or try a different email address.");
       } else if (error.code === "auth/invalid-email") {
@@ -125,8 +128,9 @@ export default function Signup() {
         }
       }
 
-      router.push("/dashboard");
-    } catch (error: any) {
+      const redirectPath = searchParams.get("redirect");
+      router.push(redirectPath || "/dashboard");
+          } catch (error: any) {
       if (error.code === "auth/popup-closed-by-user") {
         setErrorMsg("Google sign-in was cancelled. Please try again.");
       } else if (error.code === "auth/popup-blocked") {

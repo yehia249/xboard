@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
@@ -16,6 +16,15 @@ export default function UpgradeTierPage() {
   const [community, setCommunity] = useState<Community | null>(null);
   const [loading, setLoading] = useState(true);
 
+  useLayoutEffect(() => {
+    const key = "refreshed-login-page";
+    if (!sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, "true");
+      window.location.replace(window.location.href);
+    }
+    return () => sessionStorage.removeItem(key);
+  }, []);
+
   useEffect(() => {
     const fetchCommunity = async () => {
       const res = await fetch(`/api/communities/${id}`);
@@ -26,7 +35,7 @@ export default function UpgradeTierPage() {
     fetchCommunity();
   }, [id]);
 
-  if (loading) return <div className="text-white p-10">Loading...</div>;
+  if (loading) return null;
   if (!community) return <div className="text-white p-10">Community not found.</div>;
 
   const tierOrder = { normal: 0, silver: 1, gold: 2 };
@@ -100,7 +109,7 @@ export default function UpgradeTierPage() {
                 onClick={() => router.push(`/community/${id}/upgrade/pay?plan=gold`)}
                 className="w-full py-2 rounded-md bg-yellow-400 text-black font-semibold cursor-pointer transition-transform"
               >
-                Upgrade for $10/mo
+                Upgrade for $15/mo
               </button>
             )}
           </div>

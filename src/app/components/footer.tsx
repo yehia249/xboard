@@ -60,7 +60,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="text-center mt-4 text-base text-gray-400">
-          <p>© 2025 Yehia Wael. All rights reserved.</p>
+          <p>© 2025 Xboard. All rights reserved.</p>
         </div>
       </div>
     </footer>
