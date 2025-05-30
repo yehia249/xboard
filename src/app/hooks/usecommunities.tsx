@@ -11,6 +11,7 @@ interface CommunityResponse {
   totalPages: number;
 }
 
+
 export interface Community {
   id: number;
   name: string;
