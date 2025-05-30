@@ -5,110 +5,27 @@ export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
-    const searchTerm = searchParams.get("q") || "";
-    const tagsList = searchParams.get("tags");
-    const tags = tagsList?.split(",").filter(tag => tag.trim() !== "") || [];
-    const page = parseInt(searchParams.get("page") || "1");
-    const perPage = parseInt(searchParams.get("perPage") || "24");
-    
-    // Calculate pagination
-    const from = (page - 1) * perPage;
-    const to = from + perPage - 1;
 
-    // First, if we have a searchTerm and need to search tags, we'll need to get server IDs with matching tags
-    let serverIdsWithMatchingTags = [];
-    if (searchTerm) {
-      const { data: tagMatches } = await supabase
-        .from("tags")
-        .select("id")
-        .ilike("name", `%${searchTerm}%`);
-      
-      if (tagMatches && tagMatches.length > 0) {
-        const tagIds = tagMatches.map(tag => tag.id);
-        
-        const { data: serverTagMatches } = await supabase
-          .from("server_tags")
-          .select("server_id")
-          .in("tag_id", tagIds);
-        
-        if (serverTagMatches) {
-          serverIdsWithMatchingTags = serverTagMatches.map(st => st.server_id);
-        }
-      }
-    }
-
-    // Start building the base query
     let query = supabase
-      .from("servers")
-      .select("id, name, description, long_description, invite_link, promote_count, image_url, members, owner_id, tier, server_tags(tag_id, tags(name))", 
-        { count: "exact" });
+    .from("servers")
+    .select("id, name, description, long_description, invite_link, image_url, members, owner_id, tier, server_tags(tag_id, tags(name))");  
 
-    // Apply owner filter if userId is provided
     if (userId) {
       query = query.eq("owner_id", userId);
     }
 
-    // Apply search filter if searchTerm is provided
-    if (searchTerm) {
-      if (serverIdsWithMatchingTags.length > 0) {
-        // Search in name OR matching server IDs from tags
-        query = query.or(`name.ilike.%${searchTerm}%,id.in.(${serverIdsWithMatchingTags.join(',')})`);
-      } else {
-        // Search in name only — without the broken comma
-        query = query.or(`name.ilike.%${searchTerm}%`);
-      }
-    }
-    
-
-    // If specific tags are selected for filtering
-    if (tags.length > 0) {
-      // We'll handle tag filtering in-memory after fetching data
-    }
-
-    // Add sorting by tier (gold first, then silver, then normal)
-    // Then within each tier, sort by promote_count (highest first)
-    query = query.order("tier", { ascending: true }).order("promote_count", { ascending: false });
-
-    // Apply pagination
-    query = query.range(from, to);
-
-    // Execute the query
-    const { data, error, count } = await query;
+    const { data, error } = await query;
 
     if (error) throw error;
 
-    // Process the results to extract tags and format the data
-    let communities = data.map(server => ({
-      id: server.id,
-      name: server.name,
-      description: server.description,
-      long_description: server.long_description || "",
-      invite_link: server.invite_link,
+    const communities = data.map(server => ({
+      ...server,
+      tags: server.server_tags.map(st => st.tags.name),
       image_url: server.image_url || null,
-      members: server.members,
-      owner_id: server.owner_id,
-      tier: server.tier,
-      tags: server.server_tags.map(st => st.tags.name)
+      long_description: server.long_description || "" // Include long_description
     }));
 
-    // Apply tag filtering if needed (after getting the initial data)
-    if (tags.length > 0) {
-      communities = communities.filter(community => 
-        tags.some(tag => community.tags.some(t => t.toLowerCase() === tag.toLowerCase()))
-      );
-    }
-
-    // Total count after all filters
-    const totalCount = count || 0;
-    const totalPages = Math.ceil(totalCount / perPage);
-
-    return NextResponse.json({
-      communities,
-      totalCount,
-      page,
-      perPage,
-      totalPages
-    });
+    return NextResponse.json(communities);
   } catch (error) {
     console.error("❌ Error fetching communities:", error);
     return NextResponse.json({ error: "Database error" }, { status: 500 });
@@ -120,7 +37,7 @@ export async function POST(req) {
     const {
       name,
       description,
-      long_description,
+      long_description, // ✅ NEW: long description
       communityURL,
       tags,
       imageUrl,
@@ -150,7 +67,7 @@ export async function POST(req) {
         {
           name,
           description,
-          long_description: long_description || null,
+          long_description: long_description || null, // ✅ Add it here
           invite_link: communityURL,
           image_url: imageUrl,
           owner_id: userId,
