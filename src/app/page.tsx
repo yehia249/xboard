@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, AlertCircle, X } from "lucide-react";
 import { useCommunities } from "./hooks/usecommunities";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "./hooks/AuthContext";
 import Footer from '@/app/components/footer'; // Adjust path as needed
 import { getAuth } from "firebase/auth";
@@ -28,54 +28,58 @@ interface ToastMessage {
 }
 
 const cuisines: Cuisine[] = [
-  "Crypto",
-  "Memes",
-  "Fitness",
-  "Hangout",
-  "Gaming",
-  "Education",
-  "Football",
-  "Politics",
-  "Tech",
-  "Sports",
-  "Celebrities",
-  "AI",
-  "Finance",
-  "Art",
-  "Dating",
-  "Anime",
-  "NSFW",
-  "Music",
-  "Social",
-  "Lifestyle",
+  "Crypto","Memes","Fitness","Hangout","Gaming","Education","Football","Politics","Tech","Sports","Celebrities","AI","Finance","Art","Dating","Anime","NSFW", "Music","Social","Lifestyle",
 ];
 
 export default function CommunityPage() {
-  const { communities, loading, error } = useCommunities();
-  const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
+  const searchParamsObj = useSearchParams();
+  
+  // Get initial search parameters from URL
+  const initialSearchTerm = searchParamsObj.get("q") || "";
+  const initialTags = searchParamsObj.get("tags")?.split(",").filter(tag => tag !== "") || [];
+  const initialPage = parseInt(searchParamsObj.get("page") || "1");
+  
+  // State to track input value separately from API query
+  const [searchInputValue, setSearchInputValue] = useState(initialSearchTerm);
+  const [selectedCuisines, setSelectedCuisines] = useState<Cuisine[]>(initialTags);
+
+  // Use the custom hook with the initial parameters
+  const { 
+    communities, 
+    loading, 
+    error, 
+    totalPages, 
+    currentPage, 
+    updateSearchParams 
+  } = useCommunities({
+    q: initialSearchTerm,
+    tags: initialTags,
+    page: initialPage
+  });
+
   const { user, logout } = useAuth();
-  const [selectedCuisines, setSelectedCuisines] = useState<Cuisine[]>([]);
   const [mounted, setMounted] = useState(false);
 
-  // State to control visibility of the promo card
-  const [showPromoCard, setShowPromoCard] = useState(true);
-  const FlameIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2C12 2 4 8 8 16C10.5 20 12 22 12 22C12 22 13.5 20 16 16C20 8 12 2 12 2Z" />
-      <path d="M12 11a1 1 0 0 1-1 1 1 1 0 0 0 0 2 3 3 0 0 0 3-3 3 3 0 0 0-1-2.24" />
-    </svg>
-  );
-  
-  const ClockIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
-  );
-  
+    // State to control visibility of the promo card
+    const [showPromoCard, setShowPromoCard] = useState(true);
+    const FlameIcon = () => (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2C12 2 4 8 8 16C10.5 20 12 22 12 22C12 22 13.5 20 16 16C20 8 12 2 12 2Z" />
+        <path d="M12 11a1 1 0 0 1-1 1 1 1 0 0 0 0 2 3 3 0 0 0 3-3 3 3 0 0 0-1-2.24" />
+      </svg>
+    );
+    
+    const ClockIcon = () => (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+    );
+    
+
   // Toast notifications state
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const toastIdCounter = useRef(0);
@@ -110,10 +114,12 @@ export default function CommunityPage() {
     dailyPromotionCount: number;
   }>({ userLastPromotion: null, dailyPromotionCount: 0 });
 
-  // State for community promotions info: a mapping from community id to its last promotion time.
+
+  // State for community promotions
   const [communityPromotions, setCommunityPromotions] = useState<{ [key: number]: string }>({});
   const buttonTop = 0;  // Change this value to move button up/down
   const buttonRight = 0; // Change this value to move button left/right
+  
   // A state to store the current time (to update our timers every second)
   const [now, setNow] = useState(Date.now());
 
@@ -124,6 +130,7 @@ export default function CommunityPage() {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
 
   // Fetch user promotion info if logged in.
   // Expected to receive a JSON response such as:
@@ -285,12 +292,6 @@ if (communityPromotions[community_id]) {
     setMounted(true);
   }, []);
 
-  // Reset page number when search term or selected cuisines change.
-  const [currentPage, setCurrentPage] = useState(1);
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedCuisines]);
-
   // Manage header visibility based on scroll.
   const [showHeader, setShowHeader] = useState(true);
   const lastScrollTop = useRef(0);
@@ -308,31 +309,81 @@ if (communityPromotions[community_id]) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const toggleCuisine = (cuisine: Cuisine) => {
-    setSelectedCuisines((prev) =>
-      prev.includes(cuisine) ? prev.filter((c) => c !== cuisine) : [...prev, cuisine]
-    );
+  // Update URL when search, tags, or page changes
+  const updateUrlWithParams = (params: { 
+    q?: string; 
+    tags?: string[]; 
+    page?: number;
+  }) => {
+    const newSearchParams = new URLSearchParams(searchParamsObj.toString());
+    
+    // Update search term if provided
+    if (params.q !== undefined) {
+      if (params.q) {
+        newSearchParams.set('q', params.q);
+      } else {
+        newSearchParams.delete('q');
+      }
+    }
+    
+    // Update tags if provided
+    if (params.tags !== undefined) {
+      if (params.tags.length > 0) {
+        newSearchParams.set('tags', params.tags.join(','));
+      } else {
+        newSearchParams.delete('tags');
+      }
+    }
+    
+    // Update page if provided
+    if (params.page !== undefined) {
+      if (params.page > 1) {
+        newSearchParams.set('page', params.page.toString());
+      } else {
+        newSearchParams.delete('page');
+      }
+    }
+    
+    // Create the new URL and update both router and hook params
+    const newUrl = `${window.location.pathname}?${newSearchParams.toString()}`;
+    router.push(newUrl);
+    
+    // Update the hook params to trigger a new API request
+    updateSearchParams({
+      q: params.q !== undefined ? params.q : searchParamsObj.get("q") || "",
+      tags: params.tags !== undefined ? params.tags : 
+        (searchParamsObj.get("tags")?.split(",").filter(tag => tag !== "") || []),
+      page: params.page !== undefined ? params.page : parseInt(searchParamsObj.get("page") || "1")
+    });
   };
 
-  // Filter communities by search term and selected cuisines.
-  const filteredCommunities = communities.filter((server) => {
-    const matchesSearch =
-      searchTerm === "" ||
-      server.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      server.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCuisines =
-      selectedCuisines.length === 0 ||
-      selectedCuisines.some((cuisine) =>
-        server.tags.some((tag) => tag.toLowerCase() === cuisine.toLowerCase())
-      );
-    return matchesSearch && matchesCuisines;
-  });
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchInputValue(value);
+  };
 
-  // Pagination calculation.
-  const serversPerPage = 24;
-  const totalPages = Math.ceil(filteredCommunities.length / serversPerPage);
-  const startIndex = (currentPage - 1) * serversPerPage;
-  const currentServers = filteredCommunities.slice(startIndex, startIndex + serversPerPage);
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      updateUrlWithParams({ q: searchInputValue, page: 1 });
+    }
+  };
+
+  const toggleCuisine = (cuisine: Cuisine) => {
+    let newSelectedCuisines: string[];
+    
+    if (selectedCuisines.includes(cuisine)) {
+      newSelectedCuisines = selectedCuisines.filter(c => c !== cuisine);
+    } else {
+      newSelectedCuisines = [...selectedCuisines, cuisine];
+    }
+    
+    setSelectedCuisines(newSelectedCuisines);
+    updateUrlWithParams({ tags: newSelectedCuisines, page: 1 });
+  };
+
+  const handlePageChange = (newPage: number) => {
+    updateUrlWithParams({ page: newPage });
+  };
 
   const handlePostCommunity = () => {
     if (user) {
@@ -345,19 +396,24 @@ if (communityPromotions[community_id]) {
   if (!mounted) {
     return null;
   }
-  
-  // Calculate the user's 6‑hour cooldown and the number of promotions left today.
-  const userCooldown = userPromoInfo.userLastPromotion
+
+    // Calculate the user's 6‑hour cooldown and the number of promotions left today.
+    const userCooldown = userPromoInfo.userLastPromotion
     ? getCountdown(userPromoInfo.userLastPromotion, 6 * 60 * 60 * 1000)
     : null;
   const dailyPromosLeft = 4 - (userPromoInfo.dailyPromotionCount || 0);
 
+  const isMobile = window.innerWidth <= 768;
+  const isDesktop = window.innerWidth > 1200;
+  
+
   return (
     <div
       className="community-page"
-      style={{ position: "relative", width: "100%", margin: 0, padding: 0 }}
+      style={{  position: "relative", width: "100%", margin: 0, padding: 0 }}
     >
-{/* Toast Container */}
+
+      {/* Toast Container */}
 <div style={{
   position: "fixed",
   top: "1rem",
@@ -698,7 +754,8 @@ if (communityPromotions[community_id]) {
             justifyContent: "center",
           }}
         >
-          <span style={{ fontSize: "3rem", fontWeight: "bold" }}>Discover </span>
+
+      <span style={{ fontSize: "3rem", fontWeight: "bold" }}>Discover </span>
           <svg
             viewBox="0 0 24 24"
             aria-hidden="true"
@@ -727,8 +784,9 @@ if (communityPromotions[community_id]) {
             className="input"
             placeholder=" "
             id="search-input"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchInputValue}
+            onChange={handleSearchChange}
+            onKeyDown={handleSearchKeyDown}
           />
           <label htmlFor="search-input" className="user-label">
             Search by tag or name
@@ -800,80 +858,36 @@ if (communityPromotions[community_id]) {
           </div>
         </div>
 
-
         {/* Community Server List */}
         <div className="server-list" >
-          {loading ? (
-            <div
-  className="..."
-  style={{
-    background: "linear-gradient(135deg, #111, #222)", // soft gradient instead of plain black
-    padding: "40px",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    width: "88vw", // responsive width instead of fixed "160vh"
-     // added height to center better
-    borderRadius: "16px", // modern rounded corners
-    boxShadow: "0 8px 24px rgba(0,0,0,0.5)", // soft shadow
-    fontFamily: "Arial, sans-serif",
-  }}
->
-  <p
-    style={{
-      textAlign: "center",
-      color: "#eee", // lighter white
-      fontSize: "22px", // slightly bigger for modern look
-      letterSpacing: "0.5px", // spaced out letters a bit
-      margin: 0,
-    }}
-  >
-    Loading communities...
-  </p>
-</div>
-
-          ) : error ? (
+          {loading ? null  : error ? (
             <p>Error: {error}</p>
-          ) : filteredCommunities.length === 0 ? (
-<p
-  style={{
-    textAlign: "center",
-    color: "#ccc", // softer white
-    fontSize: "22px",
-    letterSpacing: "0.5px",
-    margin: 0,
-    padding: "20px",
-    borderRadius: "12px",
-    background: "linear-gradient(135deg, #111, #1c1c1c)", // subtle dark gradient
-    boxShadow: "0 6px 18px rgba(0, 0, 0, 0.4)", // soft floating shadow
-    width: "160vh",
-    marginInline: "auto", // center horizontally
-  }}
->
-  No communities found.
-</p>
+          ) : communities.length === 0 ? (
+            <div className="error-content" style={{ display: 'flex', justifyContent: 'center',  width: isMobile ? '100%' : isDesktop ? '320%' : '200%' 
+            }}>
+  <h3 style={{ textAlign: 'center' }}>No results found.</h3>
+</div>
           ) : (
-            currentServers.map((server) => {
-              // If the community was promoted recently, calculate its 24‑hour cooldown
+            communities.map((server) => {
+                            // If the community was promoted recently, calculate its 24‑hour cooldown
               let cooldownMs = 24 * 60 * 60 * 1000;
               if (server.tier === "silver") cooldownMs = 12 * 60 * 60 * 1000;
               if (server.tier === "gold") cooldownMs = 6 * 60 * 60 * 1000;
-              
-              const communityCooldown = communityPromotions[server.id]
-                ? getCountdown(communityPromotions[server.id], cooldownMs)
-                : null;	
-              
-              // Check if promoted
-              const isPromoted = communityCooldown !== null;
-              
-              // Format countdown timer for tooltip
+                            
+             const communityCooldown = communityPromotions[server.id]
+             ? getCountdown(communityPromotions[server.id], cooldownMs)
+              : null;	
+                            
+             // Check if promoted
+            const isPromoted = communityCooldown !== null;
+                            
+                // Format countdown timer for tooltip
               const formattedCountdown = communityCooldown ? 
-                `${communityCooldown.hours.toString().padStart(2, "0")}:${communityCooldown.minutes.toString().padStart(2, "0")}:${communityCooldown.seconds.toString().padStart(2, "0")}` : 
+              `${communityCooldown.hours.toString().padStart(2, "0")}:${communityCooldown.minutes.toString().padStart(2, "0")}:${communityCooldown.seconds.toString().padStart(2, "0")}` : 
                 "";
-              
+                                            
               // Button is shaking?
               const isShaking = shakingButtons[server.id] || false;
-              
               return (
                 <div
                   key={server.id}
@@ -910,7 +924,7 @@ if (communityPromotions[community_id]) {
                         right: buttonRight,
                       }}
                     >
-                      <div className="promote-button-container" style={{ position: "relative" }}>
+                <div className="promote-button-container" style={{ position: "relative" }}>
                         <button
                           // In your button's className, ensure the shake animation has highest priority
                           className={`promote-button ${isShaking ? 'button-shake' : ''} ${isPromoted ? 'promote-button-promoted' : ''}`}
@@ -995,7 +1009,19 @@ if (communityPromotions[community_id]) {
                   <p>{server.description}</p>
                   <div className="tags">
                     {server.tags.map((tag, index) => (
-                      <span key={index} className="tag">
+                      <span 
+                        key={index} 
+                        className="tag"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Add this tag as a filter if not already selected
+                          if (!selectedCuisines.includes(tag)) {
+                            const newTags = [...selectedCuisines, tag];
+                            setSelectedCuisines(newTags);
+                            updateUrlWithParams({ tags: newTags, page: 1 });
+                          }
+                        }}
+                      >
                         {tag}
                       </span>
                     ))}
@@ -1034,6 +1060,7 @@ if (communityPromotions[community_id]) {
           )}
         </div>
 
+        
         {/* Add the necessary CSS animations with scoped names */}
         <style jsx>{`
           @keyframes promote-button-shine {
@@ -1103,117 +1130,114 @@ if (communityPromotions[community_id]) {
     align-items: center;
   }
 `}</style>
+
       {/* Pagination UI */}
-{totalPages > 1 && (
-  <div
-    className="pagination"
-    style={{
-      display: "flex",
-      justifyContent: "center",
-      marginTop: "0rem",
-      marginBottom: "2.5rem", /* Adding bottom margin to raise buttons from bottom edge */
-      position: "relative",
-    }}
-  >
-    {/* White oval background */}
-    <div
-      style={{
-        position: "absolute",
-        width: "100%",
-        height: "100%",
-        borderRadius: "20px",
-        zIndex: 0,
-      }}
-    ></div>
-    
-    {/* Pagination elements */}
-    <div style={{ display: "flex", padding: "0.25rem", alignItems: "center" }}>
-      {/* Left arrow button - hidden on first page */}
-      {currentPage > 1 && (
-        <button
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+      {totalPages > 1 && (
+        <div
+          className="pagination"
           style={{
-            width: "40px",
-            height: "40px",
-            marginRight: "0.5rem",
-            border: "1px solid #444",
-            borderRadius: "4px",
             display: "flex",
             justifyContent: "center",
-            alignItems: "center",
-            cursor: "pointer",
-            background: "#111",
-            color: "white",
-            fontWeight: "bold",
-            zIndex: 1,
-            fontSize: "1.2rem",
+            marginTop: "0rem",
+            marginBottom: "2.5rem", /* Adding bottom margin to raise buttons from bottom edge */
+            position: "relative",
           }}
         >
-          &lt;
-        </button>
+          {/* White oval background */}
+          <div
+            style={{
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              borderRadius: "20px",
+              zIndex: 0,
+            }}
+          ></div>
+          
+          {/* Pagination elements */}
+          <div style={{ display: "flex", padding: "0.25rem", alignItems: "center" }}>
+            {/* Left arrow button - hidden on first page */}
+            {currentPage > 1 && (
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  marginRight: "0.5rem",
+                  border: "1px solid #444",
+                  borderRadius: "4px",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  cursor: "pointer",
+                  background: "#111",
+                  color: "white",
+                  fontWeight: "bold",
+                  zIndex: 1,
+                  fontSize: "1.2rem",
+                }}
+              >
+                &lt;
+              </button>
+            )}
+            
+            {/* Page number buttons */}
+            {Array.from({ length: totalPages }, (_, index) => (
+              <button
+                key={index}
+                onClick={() => handlePageChange(index + 1)}
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  margin: "0 0.25rem",
+                  border: "1px solid #444",
+                  borderRadius: "4px",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  cursor: "pointer",
+                  background: currentPage === index + 1 ? "white" : "#111",
+                  color: currentPage === index + 1 ? "black" : "white",
+                  fontWeight: "bold",
+                  zIndex: 1,
+                  fontSize: "1rem",
+                }}
+              >
+                {index + 1}
+              </button>
+            ))}
+            
+            {/* Right arrow button - hidden on last page */}
+            {currentPage < totalPages && (
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  marginLeft: "0.5rem",
+                  border: "1px solid #444",
+                  borderRadius: "4px",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  cursor: "pointer",
+                  background: "#111",
+                  color: "white",
+                  fontWeight: "bold",
+                  zIndex: 1,
+                  fontSize: "1.2rem",
+                }}
+              >
+                &gt;
+              </button>
+            )}
+          </div>
+        </div>
       )}
-      
-      {/* Page number buttons */}
-      {Array.from({ length: totalPages }, (_, index) => (
-        <button
-          key={index}
-          onClick={() => setCurrentPage(index + 1)}
-          style={{
-            width: "40px",
-            height: "40px",
-            margin: "0 0.25rem",
-            border: "1px solid #444",
-            borderRadius: "4px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            cursor: "pointer",
-            background: currentPage === index + 1 ? "white" : "#111",
-            color: currentPage === index + 1 ? "black" : "white",
-            fontWeight: "bold",
-            zIndex: 1,
-            fontSize: "1rem",
-          }}
-        >
-          {index + 1}
-        </button>
-      ))}
-      
-      {/* Right arrow button - hidden on last page */}
-      {currentPage < totalPages && (
-        <button
-          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-          style={{
-            width: "40px",
-            height: "40px",
-            marginLeft: "0.5rem",
-            border: "1px solid #444",
-            borderRadius: "4px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            cursor: "pointer",
-            background: "#111",
-            color: "white",
-            fontWeight: "bold",
-            zIndex: 1,
-            fontSize: "1.2rem",
-          }}
-        >
-          &gt;
-        </button>
-      )}
-    </div>
-  </div>
-)}
 
-{/* Footer */}
-<Footer />
-
-
-
+      {/* Footer */}
+      <Footer />
       </div>
     </div>
   );
 }
-
