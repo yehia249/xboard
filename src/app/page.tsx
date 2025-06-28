@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, AlertCircle, X } from "lucide-react";
 import { useCommunities } from "./hooks/usecommunities";
@@ -31,7 +31,7 @@ const cuisines: Cuisine[] = [
   "Crypto","Memes","Fitness","Hangout","Gaming","Education","Football","Politics","Tech","Sports","Celebrities","AI","Finance","Art","Dating","Anime","NSFW", "Music","Social","Lifestyle",
 ];
 
-export default function CommunityPage() {
+function CommunityPageContent() {
   const router = useRouter();
   const searchParamsObj = useSearchParams();
   
@@ -413,8 +413,8 @@ if (communityPromotions[community_id]) {
       style={{  position: "relative", width: "100%", margin: 0, padding: 0 }}
     >
 
-      {/* Toast Container */}
-<div style={{
+ {/* Toast Container */}
+ <div style={{
   position: "fixed",
   top: "1rem",
   left: "50%",
@@ -743,6 +743,7 @@ if (communityPromotions[community_id]) {
         )}
       </div>
 
+
       {/* Main Content */}
       <div style={{ paddingTop: "1rem" }}>
         <div
@@ -793,6 +794,7 @@ if (communityPromotions[community_id]) {
           </label>
         </div>
 
+        
         {/* Cuisine (Tag) Selector */}
         <div className="cuisine-container">
           <div className="cuisine-grid">
@@ -858,6 +860,7 @@ if (communityPromotions[community_id]) {
           </div>
         </div>
 
+
         {/* Community Server List */}
         <div className="server-list" >
           {loading ? null  : error ? (
@@ -907,6 +910,7 @@ if (communityPromotions[community_id]) {
                     />
                     <div className="image-gradient"></div>
                   </div>
+                  
                   
                   {/* Container for title with promote button */}
                   <div style={{ position: "relative", paddingRight: "110px", marginBottom: "8px" }}>
@@ -1027,8 +1031,6 @@ if (communityPromotions[community_id]) {
                     ))}
                   </div>
 
-                  {/* Container to push the Join button to the bottom */}
-                  <div style={{ flex: "1" }}></div>
 
                   {/* Centered Join Button Container */}
                   <div style={{ display: "flex", justifyContent: "center", margin: "8px 0 -5px" }}>
@@ -1060,7 +1062,7 @@ if (communityPromotions[community_id]) {
           )}
         </div>
 
-        
+
         {/* Add the necessary CSS animations with scoped names */}
         <style jsx>{`
           @keyframes promote-button-shine {
@@ -1130,6 +1132,7 @@ if (communityPromotions[community_id]) {
     align-items: center;
   }
 `}</style>
+
 
       {/* Pagination UI */}
       {totalPages > 1 && (
@@ -1239,5 +1242,13 @@ if (communityPromotions[community_id]) {
       <Footer />
       </div>
     </div>
+  );
+}
+
+export default function CommunityPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CommunityPageContent />
+    </Suspense>
   );
 }

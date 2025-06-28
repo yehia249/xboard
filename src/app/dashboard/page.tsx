@@ -219,8 +219,8 @@ const XCommunityForm: React.FC<{
         <div className="form-step-container slide-animation">
           {formStep === 1 && (
             <div className="form-step active">
-           {/* Community URL */}
-           <div className="form-group">
+                        {/* Community URL */}
+                        <div className="form-group">
                 <label htmlFor="communityURL">Community URL</label>
                 <div className="input-with-icon">
                   <div className="input-icon">
