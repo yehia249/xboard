@@ -71,10 +71,11 @@
   text-decoration: none;
   color: #fff;
   background: linear-gradient(45deg, #b1b1b1, #b1b1b1);
-  padding: 10px 25px;
+  padding: 9.57px 25px;
   border-radius: 10px;
   left: -10px;
-  font-size: 1.25em;
+  font-size: 1em;
+  margin-right: 1em;
   cursor: pointer;
   display: inline-block;
   box-shadow: 0 4px 10px rgba(46, 49, 146, 0.2);
@@ -111,7 +112,7 @@
   background: linear-gradient(45deg, #f5f7fa, #e6e9f0);
   padding: 10px 40px;
   border-radius: 10px;
-  font-size: 1.25em;
+  font-size: 1em;
   cursor: pointer;
   display: inline-block;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
@@ -167,10 +168,11 @@
   text-decoration: none;
   color: #fff;
   background: linear-gradient(45deg, #780f0f, #780f0f);
-  padding: 10px 15px;            /* Match signabutton padding */
+  padding: 9.57px 25px;            /* Match signabutton padding */
   border-radius: 10px;
+  margin-right: 1.4em;
   left: -10px;           /* Match signabutton border-radius */
-  font-size: 1.25em;             /* Match signabutton font-size */
+  font-size: .9em;             /* Match signabutton font-size */
   cursor: pointer;
   display: inline-block;
   box-shadow: 0 4px 10px rgba(46, 49, 146, 0.2);
@@ -209,18 +211,6 @@
   filter: blur(8px);
 }
 
-/* Media queries that match signabutton */
-@media (max-width: 550px) {
-  .logoutbuttonD {
-    font-size: 1.2rem;
-    padding: 10px 14px;
-    white-space: nowrap;
-    line-height: 1.2;
-    position: relative;
-    left: -20px;
-    right: auto;
-  }
-}
 
 @media (max-width: 500px) {
   .logoutbuttonD {
@@ -254,8 +244,8 @@
   background: linear-gradient(45deg, #929292, #929292);
   padding: 10px 24px;            /* Match signabutton padding */
   border-radius: 10px;
-  left: -10px;           /* Match signabutton border-radius */
-  font-size: 1.25em;             /* Match signabutton font-size */
+  left: -0px;           /* Match signabutton border-radius */
+  font-size: .9em;             /* Match signabutton font-size */
   cursor: pointer;
   display: inline-block;
   box-shadow: 0 4px 10px rgba(46, 49, 146, 0.2);
@@ -294,18 +284,6 @@
   filter: blur(8px);
 }
 
-/* Media queries that match signabutton */
-@media (max-width: 550px) {
-  .logabuttonD {
-    font-size: 1.2rem;
-    padding: 10px 20px;
-    white-space: nowrap;
-    line-height: 1.2;
-    position: relative;
-    left: -20px;
-    right: auto;
-  }
-}
 
 @media (max-width: 500px) {
   .logabuttonD {
@@ -377,25 +355,58 @@
 
 @media (max-width: 550px) {
   .logabutton {
-    font-size: 1.2rem;
+    font-size: 1rem;
     padding: 10px 25px;
     white-space: nowrap;
     line-height: 1.2;
     position: relative;      /* Add positioning context */
-    left: -20;              /* Reset left positioning */
+    left: -25;              /* Reset left positioning */
     right: 0;                /* Position from right edge */
   }
 }
 
 @media (max-width: 550px) {
   .signabutton {
-    font-size: 1.2rem;
+    font-size: 1rem;
     padding: 10px 27px;
     white-space: nowrap;
     line-height: 1.2;
     position: relative;      /* Add positioning context */
-    left: -23;                 /* Position from left edge */
+    left: -18;                 /* Position from left edge */
     right: auto;             /* Reset right positioning */
+  }
+}
+
+@media (max-width: 550px) {
+  .postabutton {
+    font-size: 1.3rem;
+    padding: 15px 25px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: 0;                 /* Position from left edge */
+    right: auto;             /* Reset right positioning */
+  }
+}
+
+@media (max-width: 550px) {
+  .logabuttonD {
+    font-size: .9rem;
+    padding: 12px 20px;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;      /* Add positioning context */
+    left: -10;                 /* Position from left edge */
+    right: auto;             /* Reset right positioning */
+  }
+}
+
+@media (max-width: 550px) {
+  .logoutbuttonD {
+    font-size: .9rem;
+    padding: 12px 20px;
+    white-space: nowrap;
+    line-height: 1.2;
   }
 }
 
@@ -413,7 +424,7 @@
 
 @media (max-width: 500px) {
   .logabutton {
-    font-size: 1.2rem;
+    font-size: 1rem;
     padding: 10px 25px;
     white-space: nowrap;
     line-height: 1.2;
@@ -425,7 +436,7 @@
 
 @media (max-width: 500px) {
   .signabutton {
-    font-size: 1.2rem;
+    font-size: 1rem;
     padding: 10px 29px;
     white-space: nowrap;
     line-height: 1.2;
@@ -434,6 +445,23 @@
     right: auto;             /* Reset right positioning */
   }
 }
+
+@media (max-width: 500px) {
+  .logabuttonD {
+    font-size: .9rem;
+    padding: 10px 20px;
+    white-space: nowrap;    
+  }
+}
+
+@media (max-width: 500px) {
+  .logoutbuttonD {
+    font-size: .9rem;
+    padding: 10px 20px;
+    white-space: nowrap;    
+  }
+}
+
 
 
 @media (max-width: 470px) {
@@ -450,20 +478,20 @@
 
 @media (max-width: 470px) {
   .logabutton {
-    font-size: 1.2rem;
+    font-size: 1rem;
     padding: 10px 22px;
     white-space: nowrap;
     line-height: 1.2;
     position: relative;      /* Add positioning context */
-    left: -10;              /* Reset left positioning */
+    left: -11;              /* Reset left positioning */
     right: 0;                /* Position from right edge */
   }
 }
 
 @media (max-width: 470px) {
   .signabutton {
-    font-size: 1.2rem;
-    padding: 10px 26px;
+    font-size: 1rem;
+    padding: 10px 28px;
     white-space: nowrap;
     line-height: 1.2;
     position: relative;      /* Add positioning context */
@@ -471,8 +499,6 @@
     right: auto;             /* Reset right positioning */
   }
 }
-
-
 
 @media (max-width: 431px) {
   .postabutton {
@@ -492,8 +518,8 @@
 
 @media (max-width: 431px) {
   .logoutbuttonD {
-    font-size: .9rem;
-    padding: 10px 10px;
+    font-size: .8rem;
+    padding: 10px 9px;
     white-space: nowrap;
     line-height: 1.2;
   }
@@ -501,8 +527,9 @@
 
 @media (max-width: 431px) {
   .logabuttonD {
-    font-size: .9rem;
-    padding: 10px 15px;
+    font-size: .8rem;
+    left: -5px;
+    padding: 10px 14px;
     white-space: nowrap;
     line-height: 1.2;
   }
@@ -556,9 +583,32 @@
   }
 }
 
+
+@media (max-width: 415px) {
+  .logabutton {
+    font-size: .7rem;
+    padding: 10px 14px;
+    white-space: nowrap;
+    line-height: 1.2;
+    margin-right: 0.5rem;
+    position: relative;      /* Add positioning context */
+  }
+}
+
+@media (max-width: 415px) {
+  .signabutton {
+    font-size: .7rem;
+    padding: 10px 21px;
+    white-space: nowrap;
+    line-height: 1.2;
+    left: -5px;
+    position: relative;      /* Add positioning context */
+  }
+}
+
 @media (max-width: 415px) {
   .logoutbuttonD {
-    font-size: .9rem;
+    font-size: .8rem;
     padding: 10px 8px;
     white-space: nowrap;
     line-height: 1.2;
@@ -569,32 +619,12 @@
 
 @media (max-width: 415px) {
   .logabuttonD {
-    font-size: .9rem;
-    padding: 10px 14px;
+    font-size: .8rem;
+    padding: 10px 10px;
     white-space: nowrap;
     line-height: 1.2;
     position: relative;
     right: auto;
-  }
-}
-
-@media (max-width: 415px) {
-  .logabutton {
-    font-size: .9rem;
-    padding: 10px 14px;
-    white-space: nowrap;
-    line-height: 1.2;
-    position: relative;      /* Add positioning context */
-  }
-}
-
-@media (max-width: 415px) {
-  .signabutton {
-    font-size: .9rem;
-    padding: 10px 21px;
-    white-space: nowrap;
-    line-height: 1.2;
-    position: relative;      /* Add positioning context */
   }
 }
 
@@ -625,7 +655,7 @@
 
 @media (max-width: 392px) {
   .logoutbuttonD {
-    font-size: .8rem;
+    font-size: .7rem;
     padding: 10px 5px;
     white-space: nowrap;
     line-height: 1.2;
@@ -636,8 +666,8 @@
 
 @media (max-width: 392px) {
   .logabuttonD {
-    font-size: .8rem;
-    padding: 10px 10px;
+    font-size: .7rem;
+    padding: 10px 9px;
     white-space: nowrap;
     line-height: 1.2;
     position: relative;
@@ -674,7 +704,8 @@
 @media (max-width: 361px) {
   .postabutton {
     font-size: .8rem;
-    padding: 13px 7px;
+    right: 20px;
+    padding: 13px 6px;
     white-space: nowrap;
     line-height: 1.2;
     position: relative;      /* Add positioning context */
@@ -684,48 +715,50 @@
 
 @media (max-width: 361px) {
   #postabutton {
-    margin-left: 1.6rem;
+    margin-left: 1rem;
     margin-right: 0.5rem; /* or however much space you want */
   }
 }
 
 @media (max-width: 361px) {
   .logoutbuttonD {
-    font-size: .8rem;
-    padding: 10px 10px;
+    font-size: .7rem;
+    padding: 10px 9px;
     white-space: nowrap;
     line-height: 1.2;
     position: relative;
-    right: auto;
+    left: 0;
   }
 }
 
 @media (max-width: 361px) {
   .logabuttonD {
-    font-size: .8rem;
-    padding: 10px 17px;
+    font-size: .7rem;
+    padding: 10px 13px;
     white-space: nowrap;
     line-height: 1.2;
     position: relative;
-    right: auto;
+    left: 10;
   }
 }
 
 @media (max-width: 361px) {
   .logabutton {
-    font-size: .8rem;
+    font-size: .65rem;
     padding: 10px 10px;
     white-space: nowrap;
     line-height: 1.2;
+    left: 3px;
     position: relative;      /* Add positioning context */
   }
 }
 
 @media (max-width: 361px) {
   .signabutton {
-    font-size: .8rem;
+    font-size: .65rem;
     padding: 10px 15px;
     white-space: nowrap;
+    left: 10px;
     line-height: 1.2;
   }
 }
