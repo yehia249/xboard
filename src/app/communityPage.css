@@ -46,6 +46,8 @@
   filter: blur(7px); /* Added blur to the banner image */
 }
 
+
+
 .tier-button {
   display: flex;
   align-items: center;
