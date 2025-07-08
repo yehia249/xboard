@@ -665,11 +665,14 @@ export default function CommunityDetails() {
   </>
 )}
 
-
       <div className="image-banner">
         <img src={community.image_url} alt={community.name} />
 
-        {community?.tier === "normal" && (
+
+      </div>
+      <div className="community-info">
+        
+      {community?.tier === "normal" && (
     <button
       onClick={() => router.push(`/community/${id}/upgrade`)}
       className="tier-button"
@@ -689,9 +692,6 @@ export default function CommunityDetails() {
       <span>Upgrade tier</span>
     </button>
   )}
-
-      </div>
-      <div className="community-info">
   <div
     style={{
       display: "flex",
