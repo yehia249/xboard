@@ -60,7 +60,7 @@
   background: linear-gradient(50deg, #3f3d2eec, #3e3925ec, #3f3d2eec);
   border: none;
   letter-spacing: 0.05em;
-  border-radius: 10px;
+  border-radius: 12px;
   position: absolute;
   top: -30px;
   right: -30px;
@@ -69,6 +69,8 @@
   margin-right: 2em;
   overflow: hidden; /* Important for shine effect */
 }
+
+
 
 .tier-button::before {
   content: "";
@@ -85,7 +87,7 @@
   );
   transform: skewX(-25deg);
   filter: blur(4px);
-  animation: shine 8s ease-in-out infinite;
+  animation: shine 7s ease-in-out infinite;
   pointer-events: none;
 }
 
@@ -142,7 +144,7 @@
 .community-info {
   max-width: 800px;
   margin: -60px auto 0;
-  padding: 2.5rem 2rem;
+  padding: 2.8rem 2rem;
   position: relative;
   z-index: 2;
   background: rgba(18, 18, 20, 0.6);
