@@ -260,7 +260,7 @@
 
 
 
-@media (max-width: 490px) {
+@media (max-width: 510px) {
   .image-banner {
     height: 220px;
   }
@@ -269,7 +269,7 @@
     padding: 3rem 1rem;
 
 
-    margin-top: -30px;
+    top: 20px;
   }
   
   .community-info h1 {
