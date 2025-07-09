@@ -59,24 +59,32 @@ const XCommunityForm: React.FC<{
   const remainingLongDescChars = 1800 - formData.long_description.length;
   const remainingTags = MAX_TAGS - formData.tags.length;
 
-  // Helper to fetch community data
-  const fetchCommunityData = async (url: string) => {
-    try {
-      const res = await fetch("https://xboardscrape-production.up.railway.app/scrape", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ communityURL: url }),
-      });
-      const data = await res.json();
-      return {
-        imageUrl: data.imageUrl || null,
-        communityName: data.communityName || null,
-      };
-    } catch (error) {
-      console.error("Error fetching community data:", error);
-      return { imageUrl: null, communityName: null };
-    }
-  };
+// Helper to fetch community data
+const fetchCommunityData = async (url: string) => {
+  try {
+    const backendBaseUrl = "https://xboardscrape-production.up.railway.app";
+    const res = await fetch(`${backendBaseUrl}/scrape`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ communityURL: url }),
+    });
+    const data = await res.json();
+
+    // Prepend base URL if imageUrl is relative
+    const fullImageUrl = data.imageUrl?.startsWith("/images/")
+      ? `${backendBaseUrl}${data.imageUrl}`
+      : data.imageUrl || null;
+
+    return {
+      imageUrl: fullImageUrl,
+      communityName: data.communityName || null,
+    };
+  } catch (error) {
+    console.error("Error fetching community data:", error);
+    return { imageUrl: null, communityName: null };
+  }
+};
+
 
   // Handle changes for both description and long_description with their respective limits
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
