@@ -38,6 +38,224 @@ const isValidXCommunityURL = (url: string): boolean => {
 
 const MAX_TAGS = 5;
 
+// Share Modal Component
+const ShareModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  community: Community;
+}> = ({ isOpen, onClose, community }) => {
+  if (!isOpen) return null;
+
+  const shareUrl = `${window.location.origin}/community/${community.id}`;
+  const shareText = `Support this community by promoting it!`;
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareUrl);
+    const copyText = document.getElementById("copyText");
+    const copyIcon = document.getElementById("copyIcon");
+    const checkIcon = document.getElementById("checkIcon");
+    if (copyText) copyText.innerText = "Copied";
+    if (copyIcon) copyIcon.style.display = "none";
+    if (checkIcon) checkIcon.style.display = "inline";
+    setTimeout(() => {
+      if (copyText) copyText.innerText = "Copy";
+      if (copyIcon) copyIcon.style.display = "inline";
+      if (checkIcon) checkIcon.style.display = "none";
+    }, 2000);
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 1000,
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          background: "#1A1D23",
+          borderRadius: "12px",
+          padding: "2rem",
+          maxWidth: "500px",
+          width: "90%",
+          maxHeight: "80vh",
+          overflow: "auto",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+          <h2 style={{ color: "white", margin: 0 }}>Share Community</h2>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#9CA3AF",
+              fontSize: "1.5rem",
+              cursor: "pointer",
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        <div style={{ marginBottom: "1.5rem" }}>
+          <p style={{ color: "#9CA3AF", fontSize: "1rem" }}>Encourage others to promote this community!</p>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginBottom: "1.5rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <a
+              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                background: "#000",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                textDecoration: "none",
+              }}
+            >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="35"
+          height="35"
+          viewBox="0 0 24 24"
+          fill="white"
+        >
+          <path d="M13.6823 10.6218L20.2391 3H18.6854L12.9921 9.61788L8.44486 3H3.2002L10.0765 13.0074L3.2002 21H4.75404L10.7663 14.0113L15.5549 21H20.7996L13.6818 10.6218H13.6823ZM11.5541 13.0956L10.8574 12.0991L5.31391 4.16971H7.70053L12.1742 10.5689L12.8709 11.5655L18.6861 19.8835H16.2995L11.5541 13.096V13.0956Z" />
+        </svg>
+            </a>
+            <div style={{ fontSize: "0.9rem", marginTop: "0.5rem", color: "#9CA3AF" }}>X</div>
+          </div>
+          
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <a
+              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                background: "#1877F2",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                textDecoration: "none",
+              }}
+            >
+        <img
+          src="https://www.facebook.com/images/fb_icon_325x325.png"
+          alt="Facebook logo"
+          style={{ width: "48px", height: "48px", borderRadius: "4px" }}
+        />
+            </a>
+            <div style={{ fontSize: "0.9rem", marginTop: "0.5rem", color: "#9CA3AF" }}>Facebook</div>
+          </div>
+          
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <a
+              href={`https://www.reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent("Support this community by sharing it.")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                background: "#FF4500",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                textDecoration: "none",
+              }}
+            >
+        <img
+          src="https://www.redditstatic.com/desktop2x/img/favicon/android-icon-192x192.png"
+          alt="Reddit logo"
+          style={{ width: "48px", height: "48px", borderRadius: "4px" }}
+        />
+            </a>
+            <div style={{ fontSize: "0.9rem", marginTop: "0.5rem", color: "#9CA3AF" }}>Reddit</div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            border: "1px solid #3A3E44",
+            borderRadius: "0.5rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "0.75rem 1rem",
+            background: "#2A2E33",
+          }}
+        >
+          <div style={{ color: "#9CA3AF", overflow: "hidden", textOverflow: "ellipsis", fontSize: "0.9rem" }}>
+            {shareUrl}
+          </div>
+          <button
+            onClick={handleCopyLink}
+            id="copyButton"
+            style={{
+              background: "#6366F1",
+              color: "white",
+              border: "none",
+              padding: "0.5rem 1rem",
+              borderRadius: "0.375rem",
+              display: "flex",
+              alignItems: "center",
+              cursor: "pointer",
+              fontSize: "0.9rem",
+            }}
+          >
+            <span id="copyText">Copy</span>
+            <svg
+              id="copyIcon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              style={{ marginLeft: "0.5rem" }}
+            >
+              <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+            </svg>
+            <svg
+              id="checkIcon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ marginLeft: "0.5rem", display: "none" }}
+            >
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // XCommunityForm component with toast integration and complete form steps
 const XCommunityForm: React.FC<{
   onShowToast: (type: "success" | "error", title: string, description: string) => void;
@@ -225,10 +443,10 @@ const fetchCommunityData = async (url: string) => {
       </div>
       <form onSubmit={handleSubmit}>
         <div className="form-step-container slide-animation">
-          {formStep === 1 && (
+        {formStep === 1 && (
             <div className="form-step active">
-                        {/* Community URL */}
-                        <div className="form-group">
+              {/* Community URL */}
+              <div className="form-group">
                 <label htmlFor="communityURL">Community URL</label>
                 <div className="input-with-icon">
                   <div className="input-icon">
@@ -317,7 +535,7 @@ const fetchCommunityData = async (url: string) => {
               {/* Long Description */}
               <div className="form-group">
                 <label htmlFor="long_description">
-                  Long Description (Optional) <span className="char-counter">{remainingLongDescChars} characters remaining</span>
+                  Long Description (Optional)   <span className="char-counter">{remainingLongDescChars} characters remaining</span>
                 </label>
                 <textarea
                   id="long_description"
@@ -326,9 +544,9 @@ const fetchCommunityData = async (url: string) => {
                   onChange={handleChange}
                   rows={8}
                   maxLength={1800}
-                  placeholder="Enter a more detailed description. (Optional)"
+                  placeholder="Enter a more detailed description.  (Optional)"
                 ></textarea>
-                <p className="input-help">You may leave this empty if you want. The card description will be used.</p>
+                <p className="input-help">You may leave this empty if you want, The card description will be used.</p>
               </div>
 
               <div className="form-submit">
@@ -366,9 +584,10 @@ const fetchCommunityData = async (url: string) => {
   );
 };
 
+
 // Dashboard content component
 function DashboardContent() {
-  const { communities, loading: communitiesLoading, error: communitiesError } = useCommunities();
+const { communities, loading: communitiesLoading, error: communitiesError } = useCommunities({ perPage: 500 });
   const { user, logout, loading: authLoading } = useAuth();
   const router = useRouter();
   const [userName, setUserName] = useState("");
@@ -386,6 +605,10 @@ function DashboardContent() {
   // DELETE POPUP STATE
   const [deleteCommunityId, setDeleteCommunityId] = useState<number | null>(null);
 
+  // SHARE MODAL STATE
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
+
   const showToast = (type: "success" | "error", title: string, description: string) => {
     setToast({ visible: true, type, title, description });
     setTimeout(() => setToast(null), 3000);
@@ -393,6 +616,17 @@ function DashboardContent() {
 
   const closeToast = () => {
     setToast(null);
+  };
+
+  // SHARE LOGIC
+  const openShareModal = (community: Community) => {
+    setSelectedCommunity(community);
+    setShareModalOpen(true);
+  };
+
+  const closeShareModal = () => {
+    setShareModalOpen(false);
+    setSelectedCommunity(null);
   };
 
   // DELETE LOGIC
@@ -606,10 +840,10 @@ function DashboardContent() {
     }}
   />
 </Link>
-      </header>
 
-      {/* Toast Alert */}
-      {toast && toast.visible && (
+      </header>
+            {/* Toast Alert */}
+            {toast && toast.visible && (
         <div className="toast-container">
           <div className={`toast ${toast.type}`}>
             <div className="toast-icon">
@@ -635,14 +869,13 @@ function DashboardContent() {
           </div>
         </div>
       )}
-
       <div style={{ textAlign: "center", margin: "20px 0" }}>
         <h2 style={{ display: "inline-block", borderBottom: "3px solid #0070f3", paddingBottom: "5px" }}>Dashboard</h2>
       </div>
       
       <div className="dashboard-buttons">
         <Link href="/" className="homeBtn" passHref>
-          <div className="sign">
+        <div className="sign">
             <svg viewBox="0 0 576 512">
             <path d="M280.4 148.3L96 300.1V464c0 8.8 7.2 16 16 16l112-.3c8.8 0 16-7.2 16-16V368c0-8.8 7.2-16 16-16h64c8.8 0 16 7.2 16 16v95.6c0 8.8 7.2 16 16 16l112 .3c8.8 0 16-7.2 16-16V300L295.7 148.3c-8.6-7-21-7-29.6 0zM571.6 251.5L488 182.6V44c0-6.6-5.4-12-12-12h-56c-6.6 0-12 5.4-12 12v72.6L318.5 43c-18.9-15.5-46.1-15.5-65 0L4.3 251.5c-5.1 4.2-5.8 11.7-1.6 16.8l25.5 30.5c4.2 5.1 11.7 5.8 16.8 1.6L64 278.6V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V278.6l19 21.9c4.2 4.2 11.7 3.6 15.9-1.5l25.5-30.5c4.2-5.1 3.5-12.6-1.6-16.8z"/>
             </svg>
@@ -662,7 +895,6 @@ function DashboardContent() {
       <div className="community-form-container">
         <XCommunityForm onShowToast={showToast} />
       </div>
-
       <div className="communities-section">
         <div style={{ textAlign: "center", margin: "20px 0" }}>
           <h2 style={{ display: "inline-block", borderBottom: "3px solid #0070f3", paddingBottom: "5px" }}>Your Communities</h2>
@@ -675,6 +907,8 @@ function DashboardContent() {
               .filter((server) => server.owner_id === user?.uid)
               .map((server: Community) => (
                 <div key={server.id} className="server-card">
+
+  
                   {server.image_url && (
                     <img src={server.image_url} alt={server.name} className="community-image" />
                   )}
@@ -688,18 +922,66 @@ function DashboardContent() {
                     ))}
                   </div>
                   <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
-                    <button onClick={() => openEditModal(server)} className="join-link">
-                      Edit
-                    </button>
-                    <button onClick={() => showDeletePopup(server.id)} className="delete-btn">
-                      Delete
-                    </button>
-                  </div>
+  <button onClick={() => openEditModal(server)} className="edit-btn">
+    Edit
+  </button>
+                    {/* Share button in top right corner */}
+                    <button 
+    onClick={() => openShareModal(server)} 
+    className="share-btn-top-right"
+    style={{
+      position: "absolute",
+      top: "10px",
+      right: "10px",
+      background: "black",
+      color: "white",
+      border: "none",
+      borderRadius: "20px",
+      padding: "8px 12px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "6px",
+      cursor: "pointer",
+      zIndex: 10,
+      fontSize: "14px",
+      fontWeight: "500"
+    }}
+    title="Share"
+  >
+    Share
+    <svg 
+      width="16" 
+      height="16" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2"
+    >
+      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+      <polyline points="16,6 12,2 8,6"/>
+      <line x1="12" y1="2" x2="12" y2="15"/>
+    </svg>
+  </button>
+
+  <button onClick={() => showDeletePopup(server.id)} className="delete-btn">
+    Delete
+  </button>
+</div>
                 </div>
               ))
           )}
         </div>
       </div>
+
+      {shareModalOpen && selectedCommunity && (
+  <ShareModal
+    isOpen={shareModalOpen}
+    onClose={closeShareModal}
+    community={selectedCommunity}
+  />
+)}
+
 
       {/* EDIT FORM MODAL */}
       {editCommunityId && (
@@ -811,6 +1093,7 @@ function DashboardContent() {
           </div>
         </div>
       )}
+
     </div>
   );
 }
@@ -818,7 +1101,7 @@ function DashboardContent() {
 // Main dashboard page with Suspense wrapper
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div></div>}>
       <DashboardContent />
     </Suspense>
   );

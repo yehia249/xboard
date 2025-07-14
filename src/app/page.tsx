@@ -1247,7 +1247,7 @@ if (communityPromotions[community_id]) {
 
 export default function CommunityPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div></div>}>
       <CommunityPageContent />
     </Suspense>
   );

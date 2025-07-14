@@ -849,14 +849,16 @@ export default function CommunityDetails() {
   ))}
 </div>
 
-  <Link
-    href={community.invite_link || "#"}
-    target="_blank"
-    className="join-button"  style={{ marginTop: "2rem"}}
-  >
-    Join
-  </Link>
-
+<Link
+  href={community.invite_link || "#"}
+  target="_blank"
+  className="join-button"
+  style={{
+    marginTop: community.tags.length === 0 ? "6rem" : "2rem", // More space only if no tags
+  }}
+>
+  Join
+</Link>
 
 
 

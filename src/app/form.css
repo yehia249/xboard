@@ -238,7 +238,6 @@ button[type="submit"]::after {
 
 button[type="submit"]:hover {
   background: linear-gradient(135deg, #0069e0, #005fcd);
-  transform: translateY(-2px);
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
 }
 
@@ -493,7 +492,6 @@ button[type="submit"].submitting {
 /* Hover effect for Next and Back buttons */
 .form-submit button[type="button"]:hover {
   background: linear-gradient(135deg, #4b5563, #374151);
-  transform: translateY(-2px);
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
 }
 
