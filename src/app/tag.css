@@ -357,11 +357,13 @@
 
 @media (max-width: 456px) {
   .cuisine-chip {
-    font-size: 0.65rem;             /* reduced from 1.25rem */
+    font-size: 0.7rem;             /* reduced from 1.25rem */
     padding-left: 0.7rem;        /* slightly smaller horizontal padding */
     padding-right: 0.6rem;
     padding-top: 0.4rem;          /* slightly smaller vertical padding */
     padding-bottom: 0.4rem;
+        margin: 0.17rem;             /* optional: reduce surrounding margin */
+
   }
   .cuisine-container {
     margin-left: .7rem;
@@ -371,11 +373,13 @@
 
 @media (max-width: 444px) {
   .cuisine-chip {
-    font-size: 0.65rem;             /* reduced from 1.25rem */
+    font-size: 0.7rem;             /* reduced from 1.25rem */
     padding-left: 0.65rem;        /* slightly smaller horizontal padding */
     padding-right: 0.6rem;
     padding-top: 0.4rem;          /* slightly smaller vertical padding */
     padding-bottom: 0.4rem;
+    margin: 0.17rem;             /* optional: reduce surrounding margin */
+
   }
   .cuisine-container {
     margin-left: .5rem;
@@ -385,11 +389,13 @@
 
 @media (max-width: 436px) {
   .cuisine-chip {
-    font-size: 0.65rem;             /* reduced from 1.25rem */
+    font-size: 0.7rem;             /* reduced from 1.25rem */
     padding-left: 0.64rem;        /* slightly smaller horizontal padding */
     padding-right: 0.58rem;
     padding-top: 0.4rem;          /* slightly smaller vertical padding */
     padding-bottom: 0.4rem;
+    margin: 0.17rem;             /* optional: reduce surrounding margin */
+
   }
   .cuisine-container {
     margin-left: .3rem;
@@ -399,12 +405,12 @@
 
 @media (max-width: 431px) {
   .cuisine-chip {
-    font-size: .65rem;             /* reduced from 1.25rem */
+    font-size: .7rem;             /* reduced from 1.25rem */
     padding-left: 0.5rem;        /* slightly smaller horizontal padding */
     padding-right: 0.6rem;
     padding-top: 0.4rem;          /* slightly smaller vertical padding */
     padding-bottom: 0.4rem;
-    margin: 0.25rem;             /* optional: reduce surrounding margin */
+    margin: 0.17rem;             /* optional: reduce surrounding margin */
   }
   .cuisine-container {
     margin-left: .5rem;
@@ -414,12 +420,12 @@
 
 @media (max-width: 422px) {
   .cuisine-chip {
-    font-size: .65rem;             /* reduced from 1.25rem */
+    font-size: .7rem;             /* reduced from 1.25rem */
     padding-left: 0.5rem;        /* slightly smaller horizontal padding */
     padding-right: 0.5rem;
     padding-top: 0.4rem;          /* slightly smaller vertical padding */
     padding-bottom: 0.4rem;
-    margin: 0.25rem;             /* optional: reduce surrounding margin */
+    margin: 0.17rem;             /* optional: reduce surrounding margin */
   }
   .cuisine-container {
     margin-left: .5rem;
@@ -429,12 +435,12 @@
 
 @media (max-width: 412px) {
   .cuisine-chip {
-    font-size: .6rem;             /* reduced from 1.25rem */
-    padding-left: 0.55rem;        /* slightly smaller horizontal padding */
+    font-size: .7rem;             /* reduced from 1.25rem */
+    padding-left: 0.5rem;        /* slightly smaller horizontal padding */
     padding-right: 0.5rem;
     padding-top: 0.4rem;          /* slightly smaller vertical padding */
     padding-bottom: 0.4rem;
-    margin: 0.25rem;             /* optional: reduce surrounding margin */
+    margin: 0.2rem;             /* optional: reduce surrounding margin */
   }
   .cuisine-container {
     margin-left: .2rem;
@@ -444,12 +450,12 @@
 
 @media (max-width: 408px) {
   .cuisine-chip {
-    font-size: .64rem;             /* reduced from 1.25rem */
+    font-size: .69rem;             /* reduced from 1.25rem */
     padding-left: 0.45rem;        /* slightly smaller horizontal padding */
     padding-right: 0.5rem;
     padding-top: 0.4rem;          /* slightly smaller vertical padding */
     padding-bottom: 0.4rem;
-    margin: 0.25rem;             /* optional: reduce surrounding margin */
+    margin: 0.2rem;             /* optional: reduce surrounding margin */
   }
   .cuisine-container {
     margin-left: .4rem;
@@ -459,12 +465,12 @@
 
 @media (max-width: 403px) {
   .cuisine-chip {
-    font-size: .65rem;             /* reduced from 1.25rem */
+    font-size: .7rem;             /* reduced from 1.25rem */
     padding-left: 0.4rem;        /* slightly smaller horizontal padding */
     padding-right: 0.4rem;
     padding-top: 0.4rem;          /* slightly smaller vertical padding */
     padding-bottom: 0.4rem;
-    margin: 0.25rem;             /* optional: reduce surrounding margin */
+    margin: 0.2rem;             /* optional: reduce surrounding margin */
   }
   .cuisine-container {
     margin-left: .6rem;
