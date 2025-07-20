@@ -197,15 +197,17 @@ function CommunityPageContent() {
   };
 
   // Handle promote button clicks.
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false);
   const handlePromote = async (community_id: number) => {
     try {
       const auth = getAuth();
       const token = await auth.currentUser?.getIdToken();
       if (!token) {
-        addToast('error', 'Please login to promote communities');
         shakeButton(community_id);
+        addToast("error", "Create an account to promote communities");
+        setTimeout(() => setShowSignupPrompt(true), 600); // <== delay here
         return;
-      }
+      }      
 
       // Check for user cooldown
       if (userPromoInfo.userLastPromotion) {
@@ -703,7 +705,59 @@ if (communityPromotions[community_id]) {
   </>
 )}
 
+{showSignupPrompt && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+  {/* Backdrop */}
+  <div
+    className="absolute inset-0 bg-black/70 backdrop-blur-md transition-opacity"
+    onClick={() => setShowSignupPrompt(false)}
+  />
 
+  {/* Modal */}
+  <div className="relative w-full max-w-md rounded-2xl bg-neutral-950/95 border border-neutral-800 shadow-[0_8px_32px_rgba(0,0,0,0.6)] p-6 z-10 animate-[fadeIn_0.3s_ease-out,scaleIn_0.3s_ease-out] ">
+    <div className="flex flex-col items-center space-y-6">
+      {/* Icon Circle */}
+      <div className="flex items-center justify-center w-14 h-14 rounded-full bg-neutral-900 border border-neutral-800 shadow-inner mt-6">
+        <svg
+          className="h-6 w-6 text-neutral-300"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+      </div>
+
+      {/* Content */}
+      <div className="text-center space-y-2 mt-2">
+        <h2 className="text-white text-2xl font-semibold">Sign up to continue</h2>
+        <p className="text-neutral-400 text-sm">
+          Create an account to promote and discover communities.
+        </p>
+      </div>
+
+      {/* Buttons */}
+      <div className="w-full space-y-3 pt-2">
+        <button
+          onClick={() => router.push(`/signup?redirect=/`)}
+          className="w-full bg-white text-black font-medium py-3 rounded-xl transition-colors hover:bg-neutral-100 focus:ring-2 focus:ring-white/30 cursor-pointer"
+        >
+          Sign Up
+        </button>
+
+        <button
+          onClick={() => setShowSignupPrompt(false)}
+          className="w-full bg-neutral-900 text-neutral-300 font-medium py-3 rounded-xl border border-neutral-800 transition-colors hover:bg-neutral-800 focus:ring-2 focus:ring-neutral-700 cursor-pointer"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+)}
 
       {/* Navigation Container */}
       <div
