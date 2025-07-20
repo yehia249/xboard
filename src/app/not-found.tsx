@@ -4,6 +4,8 @@ export const metadata = {
     description: "Sorry, this page does not exist.",
   };
   
+  export const dynamic = "force-dynamic";
+
   export default function NotFound() {
     return (
       <div style={{ textAlign: "center", padding: "50px" }}>
