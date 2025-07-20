@@ -13,6 +13,8 @@ import "@/app/community.css";
 import "@/app/form.css";
 import "@/app/toastAlerts.css";
 
+export const dynamic = "force-dynamic";
+
 // Define the shape of a toast message
 interface ToastData {
   visible: boolean;
