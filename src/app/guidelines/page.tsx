@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/hooks/AuthContext";
 
+export const dynamic = "force-dynamic";
+
 
 export default function GuidelinesPage() {
   const router = useRouter();
