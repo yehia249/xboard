@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./hooks/AuthContext"; // ✅ Import the provider
-import SeoWrapper from "./components/SeoWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "XBoard - Discover and Promote X Communities",
-  description: "Find and promote X (Twitter) communities on XBoard.",
-  viewport: "width=device-width, initial-scale=1.0",
+  title: "Xboard",
+  description: "Discover X communities",
+  viewport: "width=device-width, initial-scale=1.0", // ✅ Add this line
 };
 
 export default function RootLayout({
@@ -29,9 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/* ✅ Safe Client Component */}
-        <SeoWrapper />
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>{children}</AuthProvider> {/* ✅ Wrap app in AuthProvider */}
       </body>
     </html>
   );

@@ -8,7 +8,6 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import "../loginform.css";
 
-export const dynamic = "force-dynamic";
 
 const auth = getAuth();
 const googleProvider = new GoogleAuthProvider();

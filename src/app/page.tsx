@@ -14,7 +14,6 @@ import "./all.css";
 import "./tag.css";
 import "./logup.css";
 
-export const dynamic = "force-dynamic";
 
 // Define a type for cuisine strings
 type Cuisine = string;
