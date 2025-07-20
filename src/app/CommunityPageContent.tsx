@@ -32,7 +32,7 @@ const cuisines: Cuisine[] = [
   "Crypto","Memes","Fitness","Hangout","Gaming","Education","Football","Politics","Tech","Sports","Celebrities","AI","Finance","Art","Dating","Anime","NSFW", "Music","Social","Lifestyle",
 ];
 
-function CommunityPageContent() {
+function CommunityPageContentInner() {
   const router = useRouter();
   const searchParamsObj = useSearchParams();
   
@@ -798,7 +798,7 @@ if (communityPromotions[community_id]) {
         )}
       </div>
 
-
+      
       {/* Main Content */}
       <div style={{ paddingTop: "1rem" }}>
         <div
@@ -828,6 +828,7 @@ if (communityPromotions[community_id]) {
           </svg>
           <span style={{ fontSize: "3rem", fontWeight: "bold" }}> Communities</span>
         </div>
+
 
 
         {/* Search Input */}
@@ -914,7 +915,6 @@ if (communityPromotions[community_id]) {
             })}
           </div>
         </div>
-
 
         {/* Community Server List */}
         <div className="server-list" >
@@ -1118,6 +1118,7 @@ if (communityPromotions[community_id]) {
         </div>
 
 
+        
         {/* Add the necessary CSS animations with scoped names */}
         <style jsx>{`
           @keyframes promote-button-shine {
@@ -1293,6 +1294,7 @@ if (communityPromotions[community_id]) {
         </div>
       )}
 
+
       {/* Footer */}
       <Footer />
       </div>
@@ -1300,10 +1302,10 @@ if (communityPromotions[community_id]) {
   );
 }
 
-export default function CommunityPage() {
+export default function CommunityPageContent() {
   return (
     <Suspense fallback={<div></div>}>
-      <CommunityPageContent />
+      <CommunityPageContentInner />
     </Suspense>
   );
 }
