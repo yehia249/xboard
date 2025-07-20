@@ -4,8 +4,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./hooks/AuthContext"; // ✅ Import the provider
-import { DefaultSeo } from "next-seo";
-import SEO from "./next-seo.config"; // ✅ Make sure this file exists
+import SeoWrapper from "./components/SeoWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,10 +30,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/* ✅ Global SEO settings */}
-        <DefaultSeo {...SEO} />
-
-        {/* ✅ Wrap app in AuthProvider */}
+        {/* ✅ Safe Client Component */}
+        <SeoWrapper />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
