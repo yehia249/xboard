@@ -6,7 +6,7 @@ import Link from "next/link";
 import React, { useLayoutEffect } from 'react';
 import "../loginform.css"; // Import your CSS file
 
-
+export const dynamic = "force-dynamic";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
