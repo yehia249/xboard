@@ -1,4 +1,4 @@
-import CommunityPageContent from '../CommunityPageContent';
+import CommunityPageContent from '../page';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {

@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useState, useEffect, useRef, useLayoutEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, AlertCircle, X } from "lucide-react";
@@ -7,7 +8,7 @@ import { useCommunities } from "./hooks/usecommunities";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "./hooks/AuthContext";
-import Footer from '@/app/components/footer'; // Adjust path as needed
+import Footer from "@/app/components/footer";
 import { getAuth } from "firebase/auth";
 import "./community.css";
 import "./all.css";
@@ -1302,7 +1303,7 @@ if (communityPromotions[community_id]) {
   );
 }
 
-export default function CommunityPageContent() {
+export default function HomeClient() {
   return (
     <Suspense fallback={<div></div>}>
       <CommunityPageContentInner />
