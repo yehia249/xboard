@@ -173,7 +173,7 @@ export async function POST(req: NextRequest) {
           .update({ tier_expires_at: expiresAt.toISOString() })
           .eq("id", serverId);
 
-        break;
+        break;   
       }
 
       default:
