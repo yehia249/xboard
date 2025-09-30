@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     // 3) Verify HMAC (adjust input if Paynow requires ts concatenation)
     const h = crypto.createHmac("sha256", secret);
-    h.update(rawBody);
+    h.update(`${ts}.${rawBody}`);
     const computed = h.digest("hex");
     if (!timingSafeEqual(computed, sig)) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });

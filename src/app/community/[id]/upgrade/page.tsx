@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useLayoutEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Crown, Star, Clock, ShieldCheck, Zap } from "lucide-react";
 
 type Community = {
@@ -13,36 +13,44 @@ export default function UpgradeTierPage() {
   const { id } = useParams();
   const router = useRouter();
 
-  // =======================
-  // TODO 1) Put your Paynow product URLs here (copy from Paynow)
-  // Example format (hosted webstore): https://paynow.gg/<your-store>/buy/<product-slug>
-  const PAYNOW_GOLD_URL = "https://paynow.gg/<your-store>/buy/<gold-product>";     // <-- replace
-  const PAYNOW_SILVER_URL = "https://paynow.gg/<your-store>/buy/<silver-product>"; // <-- replace
-  // =======================
+  // ====== Put your real Paynow product IDs here ======
+  const PAYNOW_GOLD_PRODUCT_ID = "476427054443663360";
+  const PAYNOW_SILVER_PRODUCT_ID = "476429842842124288";  
+  // ===================================================
 
   const [community, setCommunity] = useState<Community | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Try to get the Firebase UID (adjust if you store it under a different key)
   function getUserUid() {
-    // If you save it yourself:
+    // adjust to wherever you store it
     const fromLocal =
       typeof window !== "undefined" &&
       (localStorage.getItem("firebase_uid") ||
         localStorage.getItem("uid") ||
         "");
-
-    // If you later want to use Firebase auth directly, you can swap this to onAuthStateChanged.
     return fromLocal || "";
   }
 
-  // Build Paynow link with the reference we need for the webhook:
-  // reference = "srv=<server_id>|uid=<firebase_uid>"
-  function buildPaynowUrl(baseUrl: string) {
-    const uid = getUserUid();
-    const ref = encodeURIComponent(`srv=${id}|uid=${uid}`);
-    const hasQuery = baseUrl.includes("?");
-    return `${baseUrl}${hasQuery ? "&" : "?"}reference=${ref}`;
+  async function goToCheckout(productId: string, tier: "gold" | "silver") {
+    const serverId = Number(id);
+    const userUid = getUserUid();
+    try {
+      const r = await fetch("/api/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, tier, serverId, userUid }),
+      });
+      const { url, error, detail } = await r.json();
+      if (!r.ok || !url) {
+        console.error("Checkout failed:", error, detail);
+        alert("Checkout failed. See console for details.");
+        return;
+      }
+      window.location.href = url; // ← real paywall link from Paynow
+    } catch (e) {
+      console.error(e);
+      alert("Network error starting checkout.");
+    }
   }
 
   // keep your refresh behavior
@@ -95,7 +103,6 @@ export default function UpgradeTierPage() {
   }
 
   const tierOrder = { normal: 0, silver: 1, gold: 2 };
-  const currentTier = community.tier || "normal";
 
   const TierCard = ({
     title,
@@ -114,7 +121,7 @@ export default function UpgradeTierPage() {
     disabled,
   }: {
     title: "Normal" | "Silver" | "Gold";
-    subtitle: string; // cooldown text
+    subtitle: string;
     price: string;
     gradient: string;
     border: string;
@@ -226,12 +233,10 @@ export default function UpgradeTierPage() {
             badgeIcon={<Star size={14} className="text-slate-200" />}
             perks={["Better listing priority", "Half the cooldown time", "Early access to new features"]}
             disabledText="Downgrade Not Allowed"
-            disabled={tierOrder[community.tier] >= tierOrder["silver"]}
+            disabled={["silver", "gold"].includes(community.tier)}
             isCurrent={community.tier === "silver"}
             cta="Upgrade"
-            onClick={() => {
-              window.location.href = buildPaynowUrl(PAYNOW_SILVER_URL);
-            }}
+            onClick={() => goToCheckout(PAYNOW_SILVER_PRODUCT_ID, "silver")}
             active={community.tier !== "silver"}
           />
 
@@ -245,12 +250,10 @@ export default function UpgradeTierPage() {
             badgeIcon={<Crown size={14} className="text-yellow-300" />}
             perks={["Top listing priority", "Fastest promotion cooldown", "Priority support"]}
             disabledText="Downgrade Not Allowed"
-            disabled={tierOrder[community.tier] >= tierOrder["gold"]}
+            disabled={community.tier === "gold"}
             isCurrent={community.tier === "gold"}
             cta="Upgrade"
-            onClick={() => {
-              window.location.href = buildPaynowUrl(PAYNOW_GOLD_URL);
-            }}
+            onClick={() => goToCheckout(PAYNOW_GOLD_PRODUCT_ID, "gold")}
             active={community.tier !== "gold"}
           />
         </div>
