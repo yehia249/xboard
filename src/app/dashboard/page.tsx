@@ -12,7 +12,7 @@ import "@/app/all.css";
 import "@/app/community.css";
 import "@/app/form.css";
 import "@/app/toastAlerts.css";   
-
+   
 
 // Define the shape of a toast message
 interface ToastData {
