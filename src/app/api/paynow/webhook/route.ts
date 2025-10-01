@@ -2,21 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 
-// Make sure we're on Node (not Edge)
 export const runtime = "nodejs";
-// Avoid static optimization
 export const dynamic = "force-dynamic";
 
-// --- Safe compare to avoid timing leaks ---
 function timingSafeEqual(a: string, b: string) {
   const ab = Buffer.from(a);
   const bb = Buffer.from(b);
   if (ab.length !== bb.length) return false;
   return crypto.timingSafeEqual(ab, bb);
 }
-
-// Map tier → cooldown hours (kept if you use it later)
-const COOLDOWN_HOURS: Record<"gold" | "silver", number> = { gold: 6, silver: 12 };
 
 function plusOneMonth(from: Date) {
   const d = new Date(from);
@@ -26,89 +20,143 @@ function plusOneMonth(from: Date) {
 
 export async function POST(req: NextRequest) {
   try {
-    // ----- ENV (read at runtime) -----
+    // ENV
     const secret = process.env.PAYNOW_WEBHOOK_SECRET || "";
     const supabaseUrl = process.env.SUPABASE_URL || "";
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
     if (!secret) {
+      console.error("Missing PAYNOW_WEBHOOK_SECRET");
       return NextResponse.json({ error: "Missing PAYNOW_WEBHOOK_SECRET" }, { status: 500 });
     }
     if (!supabaseUrl || !supabaseKey) {
+      console.error("Missing Supabase configuration");
       return NextResponse.json({ error: "Missing Supabase envs" }, { status: 500 });
     }
 
-    // ----- Create Supabase client at runtime (prevents build-time crash) -----
     const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 
-    // 1) Read RAW body (required for HMAC)
+    // 1) Read RAW body
     const rawBody = await req.text();
+    console.log("Webhook received, body length:", rawBody.length);
 
     // 2) Verify headers
     const sig = req.headers.get("paynow-signature") || "";
     const ts = req.headers.get("paynow-timestamp") || "";
-    if (!sig || !ts) return NextResponse.json({ error: "Missing signature headers" }, { status: 400 });
+    
+    if (!sig || !ts) {
+      console.error("Missing signature headers");
+      return NextResponse.json({ error: "Missing signature headers" }, { status: 400 });
+    }
 
-    // 3) Verify HMAC (adjust input if Paynow requires ts concatenation)
+    // 3) Verify HMAC
     const h = crypto.createHmac("sha256", secret);
     h.update(`${ts}.${rawBody}`);
     const computed = h.digest("hex");
+    
     if (!timingSafeEqual(computed, sig)) {
+      console.error("Invalid signature");
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
-    // 4) Anti-replay (5 min window)
+    // 4) Anti-replay
     const skew = Math.abs(Date.now() - Number(ts));
     if (!Number(ts) || skew > 5 * 60 * 1000) {
+      console.error("Stale timestamp, skew:", skew);
       return NextResponse.json({ error: "Stale timestamp" }, { status: 408 });
     }
 
-    // 5) Parse JSON after verification
+    // 5) Parse event
     const evt = JSON.parse(rawBody);
     const type: string = evt?.event_type;
     const data: any = evt?.body || {};
 
-    // Identify server & user via reference we appended to the Paynow link
-    const reference: string | undefined = data?.reference || data?.metadata?.reference;
+    console.log("Webhook event:", type);
+    console.log("Event data:", JSON.stringify(data, null, 2));
+
+    // Extract reference - check multiple possible locations
+    const reference: string = 
+      data?.metadata?.reference ||
+      data?.reference || 
+      data?.checkout?.metadata?.reference ||
+      "";
+
     if (!reference) {
-      // Accept but do nothing destructive
-      return NextResponse.json({ ok: true, note: "No reference in payload; nothing to update." }, { status: 200 });
+      console.warn("No reference in webhook payload");
+      return NextResponse.json({ 
+        ok: true, 
+        note: "No reference in payload; nothing to update." 
+      }, { status: 200 });
     }
+
+    console.log("Reference found:", reference);
 
     // Parse "srv=123|uid=abc"
     const parts = new URLSearchParams(reference.replaceAll("|", "&"));
     const serverId = Number(parts.get("srv") || "");
     const userUid = parts.get("uid") || "";
+
     if (!serverId || !userUid) {
-      return NextResponse.json({ error: "Missing serverId/userUid in reference" }, { status: 400 });
+      console.error("Invalid reference format:", reference);
+      return NextResponse.json({ 
+        error: "Missing serverId/userUid in reference" 
+      }, { status: 400 });
     }
 
-    // Tier from product metadata
+    console.log("Parsed reference:", { serverId, userUid });
+
+    // Extract tier
     const tierRaw: string =
+      data?.metadata?.tier ||
+      data?.lines?.[0]?.metadata?.tier ||
       data?.product?.metadata?.tier ||
       data?.variables?.tier ||
       data?.plan?.metadata?.tier ||
       "";
+    
     const tier = (tierRaw === "gold" || tierRaw === "silver") ? tierRaw : null;
+    console.log("Tier extracted:", tier);
 
-    const subscriptionId: string | undefined = data?.subscription_id || data?.id || data?.subscription?.id;
+    const subscriptionId: string | undefined = 
+      data?.subscription_id || 
+      data?.id || 
+      data?.subscription?.id;
+    
+    console.log("Subscription ID:", subscriptionId);
+
     const now = new Date();
 
     switch (type) {
       case "ON_ORDER_COMPLETED":
-        // Optional: record initial payment
+        console.log("Order completed, no action needed");
         break;
 
       case "ON_SUBSCRIPTION_ACTIVATED":
       case "ON_SUBSCRIPTION_RENEWED": {
-        if (!tier) return NextResponse.json({ error: "No tier metadata on product" }, { status: 400 });
+        if (!tier) {
+          console.error("No tier metadata found in event");
+          return NextResponse.json({ 
+            error: "No tier metadata on product" 
+          }, { status: 400 });
+        }
 
         const gatewayExpiry: string | undefined =
-          data?.current_period_end || data?.expires_at || data?.period?.end;
+          data?.current_period_end || 
+          data?.expires_at || 
+          data?.period?.end;
+        
         const expiresAt = gatewayExpiry ? new Date(gatewayExpiry) : plusOneMonth(now);
 
+        console.log("Updating subscription:", {
+          serverId,
+          userUid,
+          tier,
+          expiresAt: expiresAt.toISOString(),
+          subscriptionId
+        });
+
         // Upsert subscription
-        await supabase
+        const { error: subError } = await supabase
           .from("server_subscriptions")
           .upsert(
             {
@@ -124,41 +172,64 @@ export async function POST(req: NextRequest) {
             { onConflict: "provider_subscription_id" }
           );
 
-        // Update server tier & expiry
-        await supabase
+        if (subError) {
+          console.error("Subscription upsert error:", subError);
+        }
+
+        // Update server tier
+        const { error: serverError } = await supabase
           .from("servers")
-          .update({ tier: tier as "gold" | "silver", tier_expires_at: expiresAt.toISOString() })
+          .update({ 
+            tier: tier as "gold" | "silver", 
+            tier_expires_at: expiresAt.toISOString() 
+          })
           .eq("id", serverId);
 
+        if (serverError) {
+          console.error("Server update error:", serverError);
+        }
+
+        console.log("Subscription activated/renewed successfully");
         break;
       }
 
       case "ON_SUBSCRIPTION_CANCELED": {
         const gatewayExpiry: string | undefined =
-          data?.current_period_end || data?.expires_at || data?.period?.end;
+          data?.current_period_end || 
+          data?.expires_at || 
+          data?.period?.end;
+        
         const expiresAt = gatewayExpiry ? new Date(gatewayExpiry) : plusOneMonth(now);
+
+        console.log("Canceling subscription:", { subscriptionId, expiresAt });
 
         await supabase
           .from("server_subscriptions")
-          .update({ status: "canceled", expires_at: expiresAt.toISOString() })
+          .update({ 
+            status: "canceled", 
+            expires_at: expiresAt.toISOString() 
+          })
           .eq("provider_subscription_id", subscriptionId || "");
 
-        // Keep tier until expiry; only update expiry on server
         await supabase
           .from("servers")
           .update({ tier_expires_at: expiresAt.toISOString() })
           .eq("id", serverId);
 
+        console.log("Subscription canceled successfully");
         break;
       }
 
       default:
-        // Ignore other events
+        console.log("Unhandled event type:", type);
         break;
     }
 
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message || "Webhook error" }, { status: 500 });
+    console.error("Webhook error:", e);
+    return NextResponse.json({ 
+      error: e.message || "Webhook error" 
+    }, { status: 500 });
   }
 }
