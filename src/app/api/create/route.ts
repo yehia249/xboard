@@ -1,4 +1,3 @@
-// src/app/api/paynow/create/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -12,36 +11,31 @@ export async function POST(req: NextRequest) {
   try {
     const { productId, tier, serverId, userUid } = await req.json();
 
-    const apiKey = (process.env.PAYNOW_API_KEY || "").trim();
-    if (!apiKey) {
+    if (!process.env.PAYNOW_API_KEY) {
       return NextResponse.json({ error: "Missing PAYNOW_API_KEY" }, { status: 500 });
     }
+
     if (!productId || !tier || !serverId || !userUid) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    // Reference string that your webhook parses into serverId/userUid
-    const reference = `srv=${serverId}|uid=${userUid}`;
+    // Get customer IP from the request
+    const customerIp = req.headers.get("x-forwarded-for")?.split(",")[0] || 
+                       req.headers.get("x-real-ip") || 
+                       "127.0.0.1";
 
-    // Best-effort customer IP (required by Paynow when not called from the browser)
-    // On Vercel/Node, the client IP is usually in x-forwarded-for: "ip, proxy1, proxy2"
-    const fwd = req.headers.get("x-forwarded-for") || "";
-    const customerIp = fwd.split(",")[0]?.trim() || "0.0.0.0"; // fallback if missing
+    // This matches what your webhook expects to parse
+    const reference = `srv=${serverId}|uid=${userUid}`;
 
     const resp = await fetch("https://api.paynow.gg/v1/checkouts", {
       method: "POST",
       headers: {
-        // IMPORTANT: include "Bearer " prefix
-        Authorization: `Bearer ${apiKey}`,
+        // Fix: Add Bearer prefix to the API key
+        Authorization: `Bearer ${process.env.PAYNOW_API_KEY}`,
         "Content-Type": "application/json",
-        Accept: "*/*",
-
-        // Required when request is not from the customer browser
+        Accept: "application/json",
+        // Add customer IP header (required when not from customer's browser)
         "x-paynow-customer-ip": customerIp,
-
-        // Optional but recommended if you know it (ISO 3166-1 alpha-2)
-        // Set to your best guess; override from client if you have it
-        "x-paynow-customer-countrycode": "EG",
       },
       body: JSON.stringify({
         lines: [
@@ -60,17 +54,22 @@ export async function POST(req: NextRequest) {
     });
 
     if (!resp.ok) {
-      // Pass through Paynow's error for easier debugging
       const text = await resp.text();
+      console.error("PayNow API error:", text);
       return NextResponse.json(
-        { error: "Paynow error", detail: text },
+        { error: "Paynow error", detail: text }, 
         { status: 502 }
       );
     }
 
-    const data = await resp.json(); // { id, token, url }
+    const data = await resp.json();
+    // { id, token, url }
     return NextResponse.json({ url: data.url }, { status: 200 });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message ?? "failed" }, { status: 500 });
+    console.error("PayNow checkout creation failed:", e);
+    return NextResponse.json(
+      { error: e.message ?? "failed" }, 
+      { status: 500 }
+    );
   }
 }
