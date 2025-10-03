@@ -27,7 +27,7 @@ export default function CommunityDetails() {
     id: string;
     message: string;
     type: 'success' | 'error' | 'warning' | 'info';
-    timeout?: NodeJS.Timeout;
+    timeout?: NodeJS.Timeout; 
   }>>([]);
   
   // State for user promotion info: last promotion time and how many boosts used today.
