@@ -27,14 +27,21 @@ export async function POST(req: NextRequest) {
     // This matches what your webhook expects to parse
     const reference = `srv=${serverId}|uid=${userUid}`;
 
+    console.log("Making PayNow API request with:", {
+      productId,
+      tier,
+      serverId,
+      userUid,
+      customerIp,
+    });
+
     const resp = await fetch("https://api.paynow.gg/v1/checkouts", {
       method: "POST",
       headers: {
-        // Fix: Add Bearer prefix to the API key
-        Authorization: `Bearer ${process.env.PAYNOW_API_KEY}`,
+        // Try without Bearer prefix - just the raw API key
+        "Authorization": process.env.PAYNOW_API_KEY,
         "Content-Type": "application/json",
-        Accept: "application/json",
-        // Add customer IP header (required when not from customer's browser)
+        "Accept": "application/json",
         "x-paynow-customer-ip": customerIp,
       },
       body: JSON.stringify({
@@ -53,17 +60,18 @@ export async function POST(req: NextRequest) {
       }),
     });
 
+    const responseText = await resp.text();
+    console.log("PayNow API response status:", resp.status);
+    console.log("PayNow API response:", responseText);
+
     if (!resp.ok) {
-      const text = await resp.text();
-      console.error("PayNow API error:", text);
       return NextResponse.json(
-        { error: "Paynow error", detail: text }, 
+        { error: "Paynow error", detail: responseText, status: resp.status }, 
         { status: 502 }
       );
     }
 
-    const data = await resp.json();
-    // { id, token, url }
+    const data = JSON.parse(responseText);
     return NextResponse.json({ url: data.url }, { status: 200 });
   } catch (e: any) {
     console.error("PayNow checkout creation failed:", e);
