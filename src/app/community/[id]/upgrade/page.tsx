@@ -35,7 +35,7 @@ export default function UpgradeTierPage() {
     const serverId = Number(id);
     const userUid = getUserUid();
     try {
-      const r = await fetch("/api/create", {
+      const r = await fetch("/api/create/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productId, tier, serverId, userUid }),
