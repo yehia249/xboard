@@ -5,44 +5,38 @@ export const dynamic = "force-dynamic";
 
 /**
  * POST /api/paynow/create
- * Body: { productId: string, tier: "gold"|"silver", serverId: number, userUid: string }
+ * Body: { productId: string, tier: "gold"|"silver", serverId: number, userUid: string, customerId: string }
  */
 export async function POST(req: NextRequest) {
   try {
-    const { productId, tier, serverId, userUid } = await req.json();
+    const { productId, tier, serverId, userUid, customerId } = await req.json();
 
     if (!process.env.PAYNOW_API_KEY) {
       return NextResponse.json({ error: "Missing PAYNOW_API_KEY" }, { status: 500 });
     }
 
-    if (!productId || !tier || !serverId || !userUid) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    if (!process.env.PAYNOW_STORE_ID) {
+      return NextResponse.json({ error: "Missing PAYNOW_STORE_ID" }, { status: 500 });
     }
 
-    // Get customer IP from the request
-    const customerIp = req.headers.get("x-forwarded-for")?.split(",")[0] || 
-                       req.headers.get("x-real-ip") || 
-                       "127.0.0.1";
+    if (!productId || !tier || !serverId || !userUid || !customerId) {
+      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    }
 
     // This matches what your webhook expects to parse
     const reference = `srv=${serverId}|uid=${userUid}`;
 
-    console.log("Making PayNow API request with:", {
-      productId,
-      tier,
-      serverId,
-      userUid,
-      customerIp,
-    });
+    // Use the MANAGEMENT API endpoint with storeId
+    const url = `https://api.paynow.gg/v1/stores/${process.env.PAYNOW_STORE_ID}/checkouts`;
 
-    const resp = await fetch("https://api.paynow.gg/v1/checkouts", {
+    console.log("Making PayNow API request to:", url);
+
+    const resp = await fetch(url, {
       method: "POST",
       headers: {
-        // Try without Bearer prefix - just the raw API key
         "Authorization": process.env.PAYNOW_API_KEY,
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "x-paynow-customer-ip": customerIp,
       },
       body: JSON.stringify({
         lines: [
@@ -57,6 +51,7 @@ export async function POST(req: NextRequest) {
         cancel_url: "https://xboardz.com/upgrade/cancel",
         auto_redirect: true,
         metadata: { reference },
+        customer_id: customerId, // Required for Management API
       }),
     });
 
