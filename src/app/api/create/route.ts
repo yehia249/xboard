@@ -34,10 +34,10 @@ export async function POST(req: NextRequest) {
     const resp = await fetch(url, {
       method: "POST",
       headers: {
-        "Authorization": process.env.PAYNOW_API_KEY,
+        "Authorization": process.env.PAYNOW_API_KEY!,
         "Content-Type": "application/json",
         "Accept": "application/json",
-      },
+      },      
       body: JSON.stringify({
         lines: [
           {
