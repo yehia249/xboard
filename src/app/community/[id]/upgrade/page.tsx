@@ -4,41 +4,60 @@ import { useState, useEffect, useLayoutEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Crown, Star, Clock, ShieldCheck, Zap } from "lucide-react";
 
-type Community = {
-  name: string;
-  tier: "normal" | "silver" | "gold";
-};
+type Community = { name: string; tier: "normal" | "silver" | "gold" };
 
 export default function UpgradeTierPage() {
   const { id } = useParams();
   const router = useRouter();
 
-  // ====== Put your real Paynow product IDs here ======
   const PAYNOW_GOLD_PRODUCT_ID = "476427054443663360";
-  const PAYNOW_SILVER_PRODUCT_ID = "476429842842124288";  
-  // ===================================================
+  const PAYNOW_SILVER_PRODUCT_ID = "476429842842124288";
 
   const [community, setCommunity] = useState<Community | null>(null);
   const [loading, setLoading] = useState(true);
 
   function getUserUid() {
-    // adjust to wherever you store it
     const fromLocal =
       typeof window !== "undefined" &&
-      (localStorage.getItem("firebase_uid") ||
-        localStorage.getItem("uid") ||
-        "");
+      (localStorage.getItem("firebase_uid") || localStorage.getItem("uid") || "");
     return fromLocal || "";
+  }
+
+  async function upsertAndGetCustomerId(userUid: string): Promise<string> {
+    const displayName =
+      (typeof window !== "undefined" && (localStorage.getItem("displayName") || localStorage.getItem("email"))) ||
+      "XBoard User";
+
+    const r = await fetch("/api/paynow/upsert-customer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userUid, name: displayName }),
+    });
+
+    if (!r.ok) {
+      console.error("upsert-customer failed:", await r.text());
+      return "";
+    }
+    const data = await r.json();
+    return data?.customerId || "";
   }
 
   async function goToCheckout(productId: string, tier: "gold" | "silver") {
     const serverId = Number(id);
     const userUid = getUserUid();
+
+    // Ensure we have a PayNow customer and get its id
+    let customerId = await upsertAndGetCustomerId(userUid);
+    if (!customerId) {
+      alert("Could not resolve customer. Try again.");
+      return;
+    }
+
     try {
       const r = await fetch("/api/create/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, tier, serverId, userUid }),
+        body: JSON.stringify({ productId, tier, serverId, userUid, customerId }),
       });
       const { url, error, detail } = await r.json();
       if (!r.ok || !url) {
@@ -46,14 +65,13 @@ export default function UpgradeTierPage() {
         alert("Checkout failed. See console for details.");
         return;
       }
-      window.location.href = url; // ← real paywall link from Paynow
+      window.location.href = url;
     } catch (e) {
       console.error(e);
       alert("Network error starting checkout.");
     }
   }
 
-  // keep your refresh behavior
   useLayoutEffect(() => {
     const key = "refreshed-login-page";
     if (!sessionStorage.getItem(key)) {
@@ -98,11 +116,7 @@ export default function UpgradeTierPage() {
     );
   }
 
-  if (!community) {
-    return <div className="text-white p-10">Community not found.</div>;
-  }
-
-  const tierOrder = { normal: 0, silver: 1, gold: 2 };
+  if (!community) return <div className="text-white p-10">Community not found.</div>;
 
   const TierCard = ({
     title,
@@ -146,25 +160,13 @@ export default function UpgradeTierPage() {
         <span className="font-medium">{title}</span>
         <span className="opacity-70">• {accentText}</span>
       </div>
-      <h2
-        className={`text-xl font-semibold mb-1 ${
-          title === "Gold" ? "text-yellow-300" : title === "Silver" ? "text-slate-100" : "text-white"
-        }`}
-      >
+      <h2 className={`text-xl font-semibold mb-1 ${title === "Gold" ? "text-yellow-300" : title === "Silver" ? "text-slate-100" : "text-white"}`}>
         {title}
       </h2>
-      <p
-        className={`text-sm mb-4 ${
-          title === "Gold" ? "text-yellow-200/90" : title === "Silver" ? "text-gray-400" : "text-gray-400"
-        }`}
-      >
-        {subtitle}
-      </p>
+      <p className={`text-sm mb-4 ${title === "Gold" ? "text-yellow-200/90" : "text-gray-400"}`}>{subtitle}</p>
       <ul className="mb-5 space-y-2 text-sm text-slate-300/90">
         {perks.map((p) => (
-          <li key={p} className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-            • {p}
-          </li>
+          <li key={p} className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">• {p}</li>
         ))}
       </ul>
       {disabled ? (
@@ -196,10 +198,7 @@ export default function UpgradeTierPage() {
       </div>
 
       <div className="mx-auto max-w-5xl px-6 py-12">
-        <button
-          onClick={() => router.back()}
-          className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10"
-        >
+        <button onClick={() => router.back()} className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10">
           <ArrowLeft size={16} /> Back
         </button>
 
@@ -209,64 +208,14 @@ export default function UpgradeTierPage() {
         </p>
 
         <div className="grid gap-6 md:grid-cols-3">
-          <TierCard
-            title="Normal"
-            subtitle="24h Cooldown"
-            price=""
-            gradient="bg-[#151515]"
-            border="border border-white/10 opacity-70"
-            accentText="base"
-            badgeIcon={<Clock size={14} className="text-slate-300" />}
-            perks={["Standard listing placement", "Default promotion speed", "Community support"]}
-            disabledText="Downgrade Not Allowed"
-            disabled
-            isCurrent={community.tier === "normal"}
-          />
-
-          <TierCard
-            title="Silver"
-            subtitle="12h Cooldown"
-            price="$10/mo"
-            gradient="bg-gradient-to-br from-slate-800 to-slate-900"
-            border={community.tier === "silver" ? "border border-slate-300" : "border border-slate-500"}
-            accentText=""
-            badgeIcon={<Star size={14} className="text-slate-200" />}
-            perks={["Better listing priority", "Half the cooldown time", "Early access to new features"]}
-            disabledText="Downgrade Not Allowed"
-            disabled={["silver", "gold"].includes(community.tier)}
-            isCurrent={community.tier === "silver"}
-            cta="Upgrade"
-            onClick={() => goToCheckout(PAYNOW_SILVER_PRODUCT_ID, "silver")}
-            active={community.tier !== "silver"}
-          />
-
-          <TierCard
-            title="Gold"
-            subtitle="6h Cooldown"
-            price="$14.99/mo"
-            gradient="bg-gradient-to-br from-yellow-900 via-yellow-800 to-[#1a1a1a]"
-            border={community.tier === "gold" ? "border border-yellow-300" : "border border-yellow-400"}
-            accentText="best value"
-            badgeIcon={<Crown size={14} className="text-yellow-300" />}
-            perks={["Top listing priority", "Fastest promotion cooldown", "Priority support"]}
-            disabledText="Downgrade Not Allowed"
-            disabled={community.tier === "gold"}
-            isCurrent={community.tier === "gold"}
-            cta="Upgrade"
-            onClick={() => goToCheckout(PAYNOW_GOLD_PRODUCT_ID, "gold")}
-            active={community.tier !== "gold"}
-          />
+          <TierCard title="Normal" subtitle="24h Cooldown" price="" gradient="bg-[#151515]" border="border border-white/10 opacity-70" accentText="base" badgeIcon={<Clock size={14} className="text-slate-300" />} perks={["Standard listing placement", "Default promotion speed", "Community support"]} disabledText="Downgrade Not Allowed" disabled isCurrent={community.tier === "normal"} />
+          <TierCard title="Silver" subtitle="12h Cooldown" price="$10/mo" gradient="bg-gradient-to-br from-slate-800 to-slate-900" border={community.tier === "silver" ? "border border-slate-300" : "border border-slate-500"} accentText="" badgeIcon={<Star size={14} className="text-slate-200" />} perks={["Better listing priority", "Half the cooldown time", "Early access to new features"]} disabledText="Downgrade Not Allowed" disabled={["silver", "gold"].includes(community.tier)} isCurrent={community.tier === "silver"} cta="Upgrade" onClick={() => goToCheckout(PAYNOW_SILVER_PRODUCT_ID, "silver")} active={community.tier !== "silver"} />
+          <TierCard title="Gold" subtitle="6h Cooldown" price="$14.99/mo" gradient="bg-gradient-to-br from-yellow-900 via-yellow-800 to-[#1a1a1a]" border={community.tier === "gold" ? "border border-yellow-300" : "border border-yellow-400"} accentText="best value" badgeIcon={<Crown size={14} className="text-yellow-300" />} perks={["Top listing priority", "Fastest promotion cooldown", "Priority support"]} disabledText="Downgrade Not Allowed" disabled={community.tier === "gold"} isCurrent={community.tier === "gold"} cta="Upgrade" onClick={() => goToCheckout(PAYNOW_GOLD_PRODUCT_ID, "gold")} active={community.tier !== "gold"} />
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 text-sm text-slate-400/90 sm:flex-row">
-          <div className="inline-flex items-center gap-2">
-            <ShieldCheck size={16} />
-            <span>Payments handled securely via Paynow</span>
-          </div>
-          <div className="inline-flex items-center gap-2">
-            <Zap size={16} />
-            <span>Cancel anytime • Renews monthly</span>
-          </div>
+          <div className="inline-flex items-center gap-2"><ShieldCheck size={16} /><span>Payments handled securely via Paynow</span></div>
+          <div className="inline-flex items-center gap-2"><Zap size={16} /><span>Cancel anytime • Renews monthly</span></div>
         </div>
       </div>
     </div>

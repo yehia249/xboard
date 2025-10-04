@@ -5,42 +5,32 @@ export const dynamic = "force-dynamic";
 
 /**
  * POST /api/create
- * Body: { productId: string, tier: "gold"|"silver", serverId: number, userUid: string }
+ * Body: { productId: string, tier: "gold"|"silver", serverId: number, userUid: string, customerId: string }
  */
 export async function POST(req: NextRequest) {
   try {
-    const { productId, tier, serverId, userUid } = await req.json();
+    const { productId, tier, serverId, userUid, customerId } = await req.json();
 
     if (!process.env.PAYNOW_API_KEY) {
       return NextResponse.json({ error: "Missing PAYNOW_API_KEY" }, { status: 500 });
     }
-
-    // REMOVED the customerId validation here
-    if (!productId || !tier || !serverId || !userUid) {
+    if (!process.env.PAYNOW_STORE_ID) {
+      return NextResponse.json({ error: "Missing PAYNOW_STORE_ID" }, { status: 500 });
+    }
+    if (!productId || !tier || !serverId || !userUid || !customerId) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
     const reference = `srv=${serverId}|uid=${userUid}`;
-
-    // Use STOREFRONT API
-    const url = `https://api.paynow.gg/v1/store/checkouts`;
-
-    console.log("Making PayNow API request to:", url);
-    console.log("Request body:", JSON.stringify({
-      lines: [{ product_id: productId, subscription: true, quantity: 1, metadata: { tier } }],
-      return_url: "https://xboardz.com/upgrade/success",
-      cancel_url: "https://xboardz.com/upgrade/cancel",
-      auto_redirect: true,
-      metadata: { reference },
-    }, null, 2));
+    const url = `https://api.paynow.gg/v1/stores/${process.env.PAYNOW_STORE_ID}/checkouts`;
 
     const resp = await fetch(url, {
       method: "POST",
       headers: {
-        "Authorization": process.env.PAYNOW_API_KEY!,
+        Authorization: process.env.PAYNOW_API_KEY!, // management key
         "Content-Type": "application/json",
-        "Accept": "application/json",
-      },      
+        Accept: "application/json",
+      },
       body: JSON.stringify({
         lines: [
           {
@@ -54,16 +44,14 @@ export async function POST(req: NextRequest) {
         cancel_url: "https://xboardz.com/upgrade/cancel",
         auto_redirect: true,
         metadata: { reference },
+        customer_id: customerId, // REQUIRED
       }),
     });
 
     const responseText = await resp.text();
-    console.log("PayNow API response status:", resp.status);
-    console.log("PayNow API response:", responseText);
-
     if (!resp.ok) {
       return NextResponse.json(
-        { error: "Paynow error", detail: responseText, status: resp.status }, 
+        { error: "Paynow error", detail: responseText, status: resp.status },
         { status: 502 }
       );
     }
@@ -71,10 +59,6 @@ export async function POST(req: NextRequest) {
     const data = JSON.parse(responseText);
     return NextResponse.json({ url: data.url }, { status: 200 });
   } catch (e: any) {
-    console.error("PayNow checkout creation failed:", e);
-    return NextResponse.json(
-      { error: e.message ?? "failed" }, 
-      { status: 500 }
-    );
+    return NextResponse.json({ error: e.message ?? "failed" }, { status: 500 });
   }
 }
