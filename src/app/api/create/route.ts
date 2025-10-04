@@ -4,30 +4,26 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/paynow/create
- * Body: { productId: string, tier: "gold"|"silver", serverId: number, userUid: string, customerId: string }
+ * POST /api/create
+ * Body: { productId: string, tier: "gold"|"silver", serverId: number, userUid: string }
  */
 export async function POST(req: NextRequest) {
   try {
-    const { productId, tier, serverId, userUid, customerId } = await req.json();
+    const { productId, tier, serverId, userUid } = await req.json();
 
     if (!process.env.PAYNOW_API_KEY) {
       return NextResponse.json({ error: "Missing PAYNOW_API_KEY" }, { status: 500 });
     }
 
-    if (!process.env.PAYNOW_STORE_ID) {
-      return NextResponse.json({ error: "Missing PAYNOW_STORE_ID" }, { status: 500 });
-    }
-
-    if (!productId || !tier || !serverId || !userUid || !customerId) {
+    if (!productId || !tier || !serverId || !userUid) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
     // This matches what your webhook expects to parse
     const reference = `srv=${serverId}|uid=${userUid}`;
 
-    // Use the MANAGEMENT API endpoint with storeId
-    const url = `https://api.paynow.gg/v1/stores/${process.env.PAYNOW_STORE_ID}/checkouts`;
+    // Use the STOREFRONT API endpoint (no store ID in path)
+    const url = `https://api.paynow.gg/v1/store/checkouts`;
 
     console.log("Making PayNow API request to:", url);
 
@@ -51,7 +47,7 @@ export async function POST(req: NextRequest) {
         cancel_url: "https://xboardz.com/upgrade/cancel",
         auto_redirect: true,
         metadata: { reference },
-        customer_id: customerId, // Required for Management API
+        // NO customer_id - PayNow creates it automatically
       }),
     });
 
