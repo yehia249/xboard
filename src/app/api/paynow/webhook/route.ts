@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing Supabase envs" }, { status: 500 });
     }
 
-    // ----- Create Supabase client at runtime (prevents build-time crash) -----
+    // ----- Create Supabase client -----
     const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 
     // 1) Read RAW body (required for HMAC)
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     const ts = req.headers.get("paynow-timestamp") || "";
     if (!sig || !ts) return NextResponse.json({ error: "Missing signature headers" }, { status: 400 });
 
-    // 3) Verify HMAC (adjust input if Paynow requires ts concatenation)
+    // 3) Verify HMAC
     const h = crypto.createHmac("sha256", secret);
     h.update(`${ts}.${rawBody}`);
     const computed = h.digest("hex");
@@ -71,7 +71,6 @@ export async function POST(req: NextRequest) {
     // Identify server & user via reference we appended to the Paynow link
     const reference: string | undefined = data?.reference || data?.metadata?.reference;
     if (!reference) {
-      // Accept but do nothing destructive
       return NextResponse.json({ ok: true, note: "No reference in payload; nothing to update." }, { status: 200 });
     }
 
@@ -83,11 +82,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing serverId/userUid in reference" }, { status: 400 });
     }
 
-    // Tier from product metadata
+    // Tier from metadata
     const tierRaw: string =
       data?.product?.metadata?.tier ||
       data?.variables?.tier ||
       data?.plan?.metadata?.tier ||
+      data?.order?.lines?.[0]?.metadata?.tier || // added for one-time orders
+      data?.lines?.[0]?.metadata?.tier ||        // alternate shape
       "";
     const tier = (tierRaw === "gold" || tierRaw === "silver") ? tierRaw : null;
 
@@ -95,10 +96,43 @@ export async function POST(req: NextRequest) {
     const now = new Date();
 
     switch (type) {
-      case "ON_ORDER_COMPLETED":
-        // Optional: record initial payment
-        break;
+      // ---------------- ONE-TIME PURCHASES ----------------
+      case "ON_ORDER_COMPLETED": {
+        if (!tier) {
+          return NextResponse.json({ ok: true, note: "Order completed without tier metadata." }, { status: 200 });
+        }
 
+        const expiresAt = plusOneMonth(now);
+
+        try {
+          await supabase
+            .from("server_subscriptions")
+            .upsert(
+              {
+                server_id: serverId,
+                user_id: userUid,
+                tier: tier as "gold" | "silver",
+                provider: "paynow",
+                provider_subscription_id: null,
+                status: "active",
+                started_at: now.toISOString(),
+                expires_at: expiresAt.toISOString(),
+              },
+              { onConflict: "provider_subscription_id" }
+            );
+        } catch (err) {
+          console.error("Failed to upsert one-time subscription:", err);
+        }
+
+        await supabase
+          .from("servers")
+          .update({ tier: tier as "gold" | "silver", tier_expires_at: expiresAt.toISOString() })
+          .eq("id", serverId);
+
+        break;
+      }
+
+      // ---------------- SUBSCRIPTIONS ----------------
       case "ON_SUBSCRIPTION_ACTIVATED":
       case "ON_SUBSCRIPTION_RENEWED": {
         if (!tier) return NextResponse.json({ error: "No tier metadata on product" }, { status: 400 });
@@ -107,7 +141,6 @@ export async function POST(req: NextRequest) {
           data?.current_period_end || data?.expires_at || data?.period?.end;
         const expiresAt = gatewayExpiry ? new Date(gatewayExpiry) : plusOneMonth(now);
 
-        // Upsert subscription
         await supabase
           .from("server_subscriptions")
           .upsert(
@@ -124,7 +157,6 @@ export async function POST(req: NextRequest) {
             { onConflict: "provider_subscription_id" }
           );
 
-        // Update server tier & expiry
         await supabase
           .from("servers")
           .update({ tier: tier as "gold" | "silver", tier_expires_at: expiresAt.toISOString() })
@@ -133,6 +165,7 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      // ---------------- CANCELLATIONS ----------------
       case "ON_SUBSCRIPTION_CANCELED": {
         const gatewayExpiry: string | undefined =
           data?.current_period_end || data?.expires_at || data?.period?.end;
@@ -143,7 +176,6 @@ export async function POST(req: NextRequest) {
           .update({ status: "canceled", expires_at: expiresAt.toISOString() })
           .eq("provider_subscription_id", subscriptionId || "");
 
-        // Keep tier until expiry; only update expiry on server
         await supabase
           .from("servers")
           .update({ tier_expires_at: expiresAt.toISOString() })
@@ -153,12 +185,12 @@ export async function POST(req: NextRequest) {
       }
 
       default:
-        // Ignore other events
         break;
     }
 
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (e: any) {
+    console.error("Webhook error:", e);
     return NextResponse.json({ error: e.message || "Webhook error" }, { status: 500 });
   }
 }
