@@ -10,11 +10,30 @@ export default function UpgradeTierPage() {
   const { id } = useParams();
   const router = useRouter();
 
+  // ====== Paynow product IDs ======
   const PAYNOW_GOLD_PRODUCT_ID = "476427054443663360";
   const PAYNOW_SILVER_PRODUCT_ID = "476429842842124288";
+  // ================================
 
   const [community, setCommunity] = useState<Community | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Ensure we always have a userUid in localStorage (replace with your real auth if available)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // If you use Firebase, set the uid/displayName here from the auth user.
+    // For now, seed a stable guest id if missing so upsert works.
+    const existing = localStorage.getItem("uid");
+    if (!existing) {
+      const guestId =
+        (globalThis.crypto as any)?.randomUUID?.() ||
+        `guest-${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem("uid", guestId);
+      localStorage.setItem("displayName", "Guest User");
+      console.info("[upgrade] seeded guest uid:", guestId);
+    }
+  }, []);
 
   function getUserUid() {
     const fromLocal =
@@ -25,7 +44,8 @@ export default function UpgradeTierPage() {
 
   async function upsertAndGetCustomerId(userUid: string): Promise<string> {
     const displayName =
-      (typeof window !== "undefined" && (localStorage.getItem("displayName") || localStorage.getItem("email"))) ||
+      (typeof window !== "undefined" &&
+        (localStorage.getItem("displayName") || localStorage.getItem("email"))) ||
       "XBoard User";
 
     const r = await fetch("/api/paynow/upsert-customer", {
@@ -39,6 +59,9 @@ export default function UpgradeTierPage() {
       return "";
     }
     const data = await r.json();
+    if (!data?.customerId) {
+      console.error("upsert-customer returned no customerId:", data);
+    }
     return data?.customerId || "";
   }
 
@@ -46,32 +69,41 @@ export default function UpgradeTierPage() {
     const serverId = Number(id);
     const userUid = getUserUid();
 
-    // Ensure we have a PayNow customer and get its id
+    if (!userUid) {
+      console.error("[upgrade] No userUid in storage. Aborting.");
+      alert("Please sign in again.");
+      return;
+    }
+
+    // 1) Ensure PayNow customer exists
     let customerId = await upsertAndGetCustomerId(userUid);
     if (!customerId) {
       alert("Could not resolve customer. Try again.");
       return;
     }
 
+    // 2) Create checkout
     try {
       const r = await fetch("/api/create/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productId, tier, serverId, userUid, customerId }),
       });
+
       const { url, error, detail } = await r.json();
       if (!r.ok || !url) {
         console.error("Checkout failed:", error, detail);
         alert("Checkout failed. See console for details.");
         return;
       }
-      window.location.href = url;
+      window.location.href = url; // PayNow hosted checkout
     } catch (e) {
       console.error(e);
       alert("Network error starting checkout.");
     }
   }
 
+  // keep your refresh behavior
   useLayoutEffect(() => {
     const key = "refreshed-login-page";
     if (!sessionStorage.getItem(key)) {
@@ -81,6 +113,7 @@ export default function UpgradeTierPage() {
     return () => sessionStorage.removeItem(key);
   }, []);
 
+  // load community data
   useEffect(() => {
     const fetchCommunity = async () => {
       const res = await fetch(`/api/communities/${id}`);
@@ -118,6 +151,7 @@ export default function UpgradeTierPage() {
 
   if (!community) return <div className="text-white p-10">Community not found.</div>;
 
+  // ---- Tier Card ----
   const TierCard = ({
     title,
     subtitle,
@@ -179,9 +213,7 @@ export default function UpgradeTierPage() {
           className={`w-full rounded-md px-4 py-2 font-semibold transition-transform active:scale-[0.99] ${
             title === "Gold"
               ? "bg-yellow-400 text-black hover:brightness-105"
-              : title === "Silver"
-              ? "bg-gradient-to-r from-slate-300 to-slate-100 text-black hover:from-slate-200 hover:to-white"
-              : "bg-white/10 text-white hover:bg-white/15"
+              : "bg-gradient-to-r from-slate-300 to-slate-100 text-black hover:from-slate-200 hover:to-white"
           }`}
         >
           {cta} {price && <span className="opacity-80">• {price}</span>}
