@@ -11,7 +11,7 @@ export default function UpgradeTierPage() {
   const router = useRouter();
 
   // ====== Paynow product IDs ======
-  const PAYNOW_GOLD_PRODUCT_ID = "476427054443663360";
+  const PAYNOW_GOLD_PRODUCT_ID = "478332020456427520"; // one-time product
   const PAYNOW_SILVER_PRODUCT_ID = "476429842842124288";
   // ================================
 

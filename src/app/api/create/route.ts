@@ -24,6 +24,10 @@ export async function POST(req: NextRequest) {
     const reference = `srv=${serverId}|uid=${userUid}`;
     const url = `https://api.paynow.gg/v1/stores/${process.env.PAYNOW_STORE_ID}/checkouts`;
 
+    // ONE-TIME product for quick test (Gold):
+    const ONE_TIME_GOLD_ID = "478332020456427520";
+    const isSubscription = productId !== ONE_TIME_GOLD_ID;
+
     const resp = await fetch(url, {
       method: "POST",
       headers: {
@@ -35,7 +39,7 @@ export async function POST(req: NextRequest) {
         lines: [
           {
             product_id: productId,
-            subscription: true,
+            subscription: isSubscription,
             quantity: 1,
             metadata: { tier },
           },
