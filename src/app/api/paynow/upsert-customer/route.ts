@@ -1,49 +1,90 @@
-// app/api/paynow/customer/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/paynow/customer
- * Body: { customerToken?: string }   // OR header: x-paynow-customer-token
- * Returns: { customerId: string, raw: any }
+ * POST /api/paynow/upsert-customer
+ * Body: { userUid: string, name?: string }
+ * Returns: { customerId: string, created: boolean, raw?: any }
  */
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json().catch(() => ({}));
-    const headerToken = req.headers.get("x-paynow-customer-token") || "";
-    const customerToken = body.customerToken || headerToken;
+    const { userUid, name } = await req.json();
 
-    if (!customerToken) {
-      return NextResponse.json(
-        { error: "Missing customer token. Provide in body.customerToken or header x-paynow-customer-token." },
-        { status: 400 }
-      );
+    if (!process.env.PAYNOW_API_KEY) {
+      return NextResponse.json({ error: "Missing PAYNOW_API_KEY" }, { status: 500 });
+    }
+    if (!process.env.PAYNOW_STORE_ID) {
+      return NextResponse.json({ error: "Missing PAYNOW_STORE_ID" }, { status: 500 });
+    }
+    if (!userUid) {
+      return NextResponse.json({ error: "Missing userUid" }, { status: 400 });
     }
 
-    // Call PayNow Customer API
-    const resp = await fetch("https://api.paynow.gg/v1/store/customer", {
-      method: "GET",
-      headers: {
-        // IMPORTANT: this is a *Customer* token, not your management API key
-        Authorization: `customer ${customerToken}`,
-        Accept: "application/json",
-      },
+    const base = `https://api.paynow.gg/v1/stores/${process.env.PAYNOW_STORE_ID}`;
+    const headers = {
+      Authorization: process.env.PAYNOW_API_KEY!, // e.g. "apikey pnapi_v1_..."
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    };
+
+    // 1) Try to find by external_id (some tenants expose a filter; handle both list/single)
+    const findUrl = `${base}/customers?external_id=${encodeURIComponent(userUid)}`;
+    const findResp = await fetch(findUrl, { method: "GET", headers });
+    if (findResp.ok) {
+      const txt = await findResp.text();
+      try {
+        const json = JSON.parse(txt);
+        const list = Array.isArray(json) ? json : Array.isArray(json?.data) ? json.data : null;
+
+        if (list && list.length > 0 && list[0]?.id) {
+          return NextResponse.json(
+            { customerId: String(list[0].id), created: false, raw: list[0] },
+            { status: 200 }
+          );
+        }
+        if (!list && json?.id) {
+          return NextResponse.json(
+            { customerId: String(json.id), created: false, raw: json },
+            { status: 200 }
+          );
+        }
+      } catch {
+        // fall through to create
+      }
+    }
+
+    // 2) Create if not found
+    const createResp = await fetch(`${base}/customers`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        external_id: String(userUid),
+        name: name || "XBoard User",
+        metadata: { source: "xboard", uid: String(userUid) },
+      }),
     });
 
-    const text = await resp.text();
-    if (!resp.ok) {
+    const createText = await createResp.text();
+    if (!createResp.ok) {
       return NextResponse.json(
-        { error: "Failed to fetch customer from PayNow", status: resp.status, detail: text },
+        { error: "Failed to create PayNow customer", status: createResp.status, detail: createText },
         { status: 502 }
       );
     }
 
-    const json = JSON.parse(text);
-    // json.id is the PayNow customer_id (e.g., "477872717161304064")
-    return NextResponse.json({ customerId: json?.id, raw: json }, { status: 200 });
+    const created = JSON.parse(createText);
+    const customerId = String(created?.id || created?.customer_id || "");
+    if (!customerId) {
+      return NextResponse.json(
+        { error: "Create returned no id", raw: created },
+        { status: 502 }
+      );
+    }
+
+    return NextResponse.json({ customerId, created: true, raw: created }, { status: 200 });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || "customer lookup error" }, { status: 500 });
+    return NextResponse.json({ error: e?.message || "upsert error" }, { status: 500 });
   }
 }
