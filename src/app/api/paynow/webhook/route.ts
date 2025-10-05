@@ -67,11 +67,15 @@ export async function POST(req: NextRequest) {
 
     // --- parse after verify ---
     const evt = JSON.parse(rawBody);
+    
+    // LOG THE ENTIRE WEBHOOK FOR DEBUGGING
+    console.log("🔔 PayNow Webhook received:", JSON.stringify(evt, null, 2));
+    
     const type: string = evt?.event_type;
-    const data: any = evt?.body || {};
+    const data: any = evt?.body || evt?.data || {};
     const now = new Date();
 
-    // ---- reference (support multiple shapes) ----testt
+    // ---- reference (support multiple shapes) ----
     const reference =
       data?.reference ||
       data?.metadata?.reference ||
@@ -83,7 +87,7 @@ export async function POST(req: NextRequest) {
       "";
 
     if (!reference) {
-      // Nothing we can map to a server/user — just ack success so PayNow stops retrying
+      console.warn("⚠️ No reference found in webhook. Payload:", JSON.stringify(evt, null, 2));
       return NextResponse.json({ ok: true, note: "No reference; nothing to update." }, { status: 200 });
     }
 
@@ -91,33 +95,106 @@ export async function POST(req: NextRequest) {
     const params = new URLSearchParams(reference.replaceAll("|", "&"));
     const serverId = Number(params.get("srv") || "");
     const userUid = params.get("uid") || "";
+    
+    console.log("📋 Parsed reference - serverId:", serverId, "userUid:", userUid);
+    
     if (!serverId || !userUid) {
+      console.error("❌ Missing serverId/userUid in reference:", reference);
       return NextResponse.json({ error: "Missing serverId/userUid in reference" }, { status: 400 });
     }
 
-    // ---- tier lookup (both subscription + one-time shapes) ----
-    const tierRaw: string =
-      data?.product?.metadata?.tier ||
-      data?.variables?.tier ||
-      data?.plan?.metadata?.tier ||
-      data?.order?.lines?.[0]?.metadata?.tier ||
-      data?.lines?.[0]?.metadata?.tier ||
-      "";
+    // ---- tier lookup (EXPANDED to check more locations) ----
+    let tierRaw: string = "";
+    
+    // Helper function to deeply search for tier in nested objects
+    function findTierInObject(obj: any, path: string = ""): string {
+      if (!obj || typeof obj !== "object") return "";
+      
+      // Check if current object has tier
+      if (obj.tier) {
+        console.log(`✅ Found tier at ${path}.tier:`, obj.tier);
+        return obj.tier;
+      }
+      if (obj.metadata?.tier) {
+        console.log(`✅ Found tier at ${path}.metadata.tier:`, obj.metadata.tier);
+        return obj.metadata.tier;
+      }
+      
+      // Recursively check arrays
+      if (Array.isArray(obj)) {
+        for (let i = 0; i < obj.length; i++) {
+          const result = findTierInObject(obj[i], `${path}[${i}]`);
+          if (result) return result;
+        }
+      }
+      
+      // Recursively check common nested locations
+      const keysToCheck = ['lines', 'order', 'checkout', 'product', 'data', 'body'];
+      for (const key of keysToCheck) {
+        if (obj[key]) {
+          const result = findTierInObject(obj[key], path ? `${path}.${key}` : key);
+          if (result) return result;
+        }
+      }
+      
+      return "";
+    }
+    
+    // Try structured locations first
+    const possibleTierLocations = [
+      { path: "data.product.metadata.tier", value: data?.product?.metadata?.tier },
+      { path: "data.variables.tier", value: data?.variables?.tier },
+      { path: "data.plan.metadata.tier", value: data?.plan?.metadata?.tier },
+      { path: "data.order.lines[0].metadata.tier", value: data?.order?.lines?.[0]?.metadata?.tier },
+      { path: "data.lines[0].metadata.tier", value: data?.lines?.[0]?.metadata?.tier },
+      { path: "data.checkout.lines[0].metadata.tier", value: data?.checkout?.lines?.[0]?.metadata?.tier },
+      { path: "data.metadata.tier", value: data?.metadata?.tier },
+      { path: "evt.metadata.tier", value: evt?.metadata?.tier },
+      { path: "evt.lines[0].metadata.tier", value: evt?.lines?.[0]?.metadata?.tier },
+      { path: "evt.body.lines[0].metadata.tier", value: evt?.body?.lines?.[0]?.metadata?.tier },
+    ];
+    
+    console.log("🔍 Searching for tier in structured locations...");
+    for (const location of possibleTierLocations) {
+      if (location.value) {
+        tierRaw = location.value;
+        console.log(`✅ Found tier at ${location.path}:`, tierRaw);
+        break;
+      }
+    }
+    
+    // If not found, do deep search
+    if (!tierRaw) {
+      console.log("🔍 Tier not found in structured locations, performing deep search...");
+      tierRaw = findTierInObject(evt, "evt");
+    }
+    
+    // Log if tier not found
+    if (!tierRaw) {
+      console.error("❌ Tier not found anywhere in webhook payload");
+      console.log("Full webhook payload:", JSON.stringify(evt, null, 2));
+    }
+    
     const tier = tierRaw === "gold" || tierRaw === "silver" ? tierRaw : null;
 
     const subscriptionId: string | undefined =
       data?.subscription_id || data?.id || data?.subscription?.id;
 
+    console.log("🎯 Processing event:", type, "| Tier:", tier, "| ServerId:", serverId);
+
     switch (type) {
       case "ON_ORDER_COMPLETED": {
         if (!tier) {
+          console.error("❌ Order completed but no tier found. Data:", JSON.stringify(data, null, 2));
           return NextResponse.json({ ok: true, note: "Order completed without tier metadata." }, { status: 200 });
         }
         const expiresAt = plusOneMonth(now);
 
+        console.log("💰 Processing one-time order - tier:", tier, "expires:", expiresAt);
+
         // record (best-effort)
         try {
-          await supabase.from("server_subscriptions").upsert(
+          const { error: upsertError } = await supabase.from("server_subscriptions").upsert(
             {
               server_id: serverId,
               user_id: userUid,
@@ -130,27 +207,44 @@ export async function POST(req: NextRequest) {
             },
             { onConflict: "provider_subscription_id" }
           );
+          
+          if (upsertError) {
+            console.error("❌ Upsert subscription failed:", upsertError);
+          } else {
+            console.log("✅ Subscription record created");
+          }
         } catch (e) {
-          console.error("upsert one-time failed:", e);
+          console.error("❌ Upsert one-time failed:", e);
         }
 
-        await supabase
+        const { error: serverUpdateError } = await supabase
           .from("servers")
           .update({ tier: tier as "gold" | "silver", tier_expires_at: expiresAt.toISOString() })
           .eq("id", serverId);
+
+        if (serverUpdateError) {
+          console.error("❌ Failed to update server tier:", serverUpdateError);
+        } else {
+          console.log("✅ Server tier updated successfully to:", tier);
+        }
 
         break;
       }
 
       case "ON_SUBSCRIPTION_ACTIVATED":
       case "ON_SUBSCRIPTION_RENEWED": {
-        if (!tier) return NextResponse.json({ error: "No tier metadata on product" }, { status: 400 });
+        if (!tier) {
+          console.error("❌ Subscription event without tier. Data:", JSON.stringify(data, null, 2));
+          return NextResponse.json({ error: "No tier metadata on product" }, { status: 400 });
+        }
 
         const gatewayExpiry: string | undefined =
           data?.current_period_end || data?.expires_at || data?.period?.end;
         const expiresAt = gatewayExpiry ? new Date(gatewayExpiry) : plusOneMonth(now);
 
-        await supabase.from("server_subscriptions").upsert(
+        console.log("🔄 Processing subscription event - tier:", tier, "expires:", expiresAt);
+
+        const { error: upsertError } = await supabase.from("server_subscriptions").upsert(
           {
             server_id: serverId,
             user_id: userUid,
@@ -164,10 +258,22 @@ export async function POST(req: NextRequest) {
           { onConflict: "provider_subscription_id" }
         );
 
-        await supabase
+        if (upsertError) {
+          console.error("❌ Failed to upsert subscription:", upsertError);
+        } else {
+          console.log("✅ Subscription upserted successfully");
+        }
+
+        const { error: serverUpdateError } = await supabase
           .from("servers")
           .update({ tier: tier as "gold" | "silver", tier_expires_at: expiresAt.toISOString() })
           .eq("id", serverId);
+
+        if (serverUpdateError) {
+          console.error("❌ Failed to update server:", serverUpdateError);
+        } else {
+          console.log("✅ Server updated successfully");
+        }
 
         break;
       }
@@ -176,6 +282,8 @@ export async function POST(req: NextRequest) {
         const gatewayExpiry: string | undefined =
           data?.current_period_end || data?.expires_at || data?.period?.end;
         const expiresAt = gatewayExpiry ? new Date(gatewayExpiry) : plusOneMonth(now);
+
+        console.log("🚫 Processing cancellation - expires:", expiresAt);
 
         await supabase
           .from("server_subscriptions")
@@ -191,12 +299,14 @@ export async function POST(req: NextRequest) {
       }
 
       default:
+        console.log("ℹ️ Unhandled event type:", type);
         break;
     }
 
+    console.log("✅ Webhook processed successfully");
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (e: any) {
-    console.error("Webhook error:", e);
+    console.error("❌ Webhook error:", e);
     return NextResponse.json({ error: e?.message || "Webhook error" }, { status: 500 });
   }
-} 
+}
