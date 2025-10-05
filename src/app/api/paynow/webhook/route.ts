@@ -1,4 +1,3 @@
-// app/api/paynow/webhook/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
@@ -29,10 +28,10 @@ export async function POST(req: NextRequest) {
 
     const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 
-    // 1) raw body FIRST (exact bytes)
+    // --- exact raw body for HMAC ---
     const rawBody = await req.text();
 
-    // 2) headers (case-insensitive)
+    // --- headers (case-insensitive) ---
     const sigHeader =
       req.headers.get("PayNow-Signature") ||
       req.headers.get("paynow-signature") ||
@@ -43,19 +42,13 @@ export async function POST(req: NextRequest) {
       req.headers.get("paynow-timestamp") ||
       req.headers.get("x-paynow-timestamp") ||
       "";
-
     if (!sigHeader) return NextResponse.json({ error: "Missing signature" }, { status: 400 });
     if (!ts) return NextResponse.json({ error: "Missing timestamp" }, { status: 400 });
 
-    // 3) signature base per docs: "<timestamp>.<body>"
+    // HMAC per docs: sha256(secret, `${ts}.${rawBody}`)
     const base = `${ts}.${rawBody}`;
-
-    // compute in both encodings (some installs send base64)
-    const h = crypto.createHmac("sha256", secret).update(base);
-    const expectedHex = h.digest("hex");
+    const expectedHex = crypto.createHmac("sha256", secret).update(base).digest("hex");
     const expectedB64 = crypto.createHmac("sha256", secret).update(base).digest("base64");
-
-    // strip possible "sha256=" prefix
     const provided = sigHeader.replace(/^sha256=/i, "").trim();
 
     const ok =
@@ -63,32 +56,38 @@ export async function POST(req: NextRequest) {
       timingSafeEqual(provided, expectedB64);
 
     if (!ok) {
-      // minimal debug without leaking secrets
-      console.warn("Webhook sig mismatch", {
-        ts,
-        bodyLen: rawBody.length,
-        providedLen: provided.length,
-        enc: provided.includes("=") || /[+/]/.test(provided) ? "b64?" : "hex?",
-      });
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
-    // 4) optional replay protection (5 minutes)
+    // optional replay guard (5m)
     const skew = Math.abs(Date.now() - Number(ts));
     if (!Number(ts) || skew > 5 * 60 * 1000) {
       return NextResponse.json({ error: "Stale timestamp" }, { status: 408 });
     }
 
-    // 5) parse after verification
+    // --- parse after verify ---
     const evt = JSON.parse(rawBody);
     const type: string = evt?.event_type;
     const data: any = evt?.body || {};
     const now = new Date();
 
-    // reference from create-checkout metadata (srv=<id>|uid=<uid>)
-    const reference: string | undefined = data?.reference || data?.metadata?.reference;
-    if (!reference) return NextResponse.json({ ok: true, note: "No reference; nothing to update." }, { status: 200 });
+    // ---- reference (support multiple shapes) ----
+    const reference =
+      data?.reference ||
+      data?.metadata?.reference ||
+      data?.checkout?.reference ||
+      data?.checkout?.metadata?.reference ||
+      data?.order?.reference ||
+      data?.order?.metadata?.reference ||
+      evt?.metadata?.reference ||
+      "";
 
+    if (!reference) {
+      // Nothing we can map to a server/user — just ack success so PayNow stops retrying
+      return NextResponse.json({ ok: true, note: "No reference; nothing to update." }, { status: 200 });
+    }
+
+    // Parse "srv=123|uid=abc"
     const params = new URLSearchParams(reference.replaceAll("|", "&"));
     const serverId = Number(params.get("srv") || "");
     const userUid = params.get("uid") || "";
@@ -96,7 +95,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing serverId/userUid in reference" }, { status: 400 });
     }
 
-    // tier from product/line metadata
+    // ---- tier lookup (both subscription + one-time shapes) ----
     const tierRaw: string =
       data?.product?.metadata?.tier ||
       data?.variables?.tier ||
@@ -111,9 +110,12 @@ export async function POST(req: NextRequest) {
 
     switch (type) {
       case "ON_ORDER_COMPLETED": {
-        if (!tier) return NextResponse.json({ ok: true, note: "No tier metadata on order." }, { status: 200 });
+        if (!tier) {
+          return NextResponse.json({ ok: true, note: "Order completed without tier metadata." }, { status: 200 });
+        }
         const expiresAt = plusOneMonth(now);
 
+        // record (best-effort)
         try {
           await supabase.from("server_subscriptions").upsert(
             {
@@ -129,19 +131,21 @@ export async function POST(req: NextRequest) {
             { onConflict: "provider_subscription_id" }
           );
         } catch (e) {
-          console.error("upsert (one-time) failed", e);
+          console.error("upsert one-time failed:", e);
         }
 
         await supabase
           .from("servers")
           .update({ tier: tier as "gold" | "silver", tier_expires_at: expiresAt.toISOString() })
           .eq("id", serverId);
+
         break;
       }
 
       case "ON_SUBSCRIPTION_ACTIVATED":
       case "ON_SUBSCRIPTION_RENEWED": {
         if (!tier) return NextResponse.json({ error: "No tier metadata on product" }, { status: 400 });
+
         const gatewayExpiry: string | undefined =
           data?.current_period_end || data?.expires_at || data?.period?.end;
         const expiresAt = gatewayExpiry ? new Date(gatewayExpiry) : plusOneMonth(now);
@@ -164,6 +168,7 @@ export async function POST(req: NextRequest) {
           .from("servers")
           .update({ tier: tier as "gold" | "silver", tier_expires_at: expiresAt.toISOString() })
           .eq("id", serverId);
+
         break;
       }
 
@@ -181,8 +186,10 @@ export async function POST(req: NextRequest) {
           .from("servers")
           .update({ tier_expires_at: expiresAt.toISOString() })
           .eq("id", serverId);
+
         break;
       }
+
       default:
         break;
     }
