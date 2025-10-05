@@ -56,9 +56,15 @@ export async function POST(req: NextRequest) {
     // 1) Read RAW body (required for HMAC)
     const rawBody = await req.text();
 
-    // 2) Verify headers
-    const sig = req.headers.get("paynow-signature") || "";
-    const ts = req.headers.get("paynow-timestamp") || "";
+    // 2) Verify headers - Try multiple possible header names
+    const sig = req.headers.get("paynow-signature") || 
+                req.headers.get("PayNow-Signature") || "";
+    const ts = req.headers.get("paynow-timestamp") || 
+               req.headers.get("PayNow-Timestamp") || "";
+
+    // Log ALL headers for debugging
+    console.log("All headers:", Object.fromEntries(req.headers.entries()));
+    console.log("Raw body preview:", rawBody.substring(0, 200));
 
     if (!sig || !ts) {
       console.error("Missing signature headers");
@@ -68,23 +74,40 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3) Verify HMAC (FIXED: Added backticks for template literal)
-    const h = crypto.createHmac("sha256", secret);
-    h.update(`${ts}.${rawBody}`); // ✅ FIXED: Now properly using template literal
-    const computed = h.digest("hex");
+    // 3) Try multiple signature formats that Paynow might use
+    const signatureFormats = [
+      `${ts}.${rawBody}`,  // Format: timestamp.body
+      rawBody,              // Format: just body
+      `${rawBody}${ts}`,   // Format: body+timestamp
+      ts + rawBody,         // Format: timestamp+body (no separator)
+    ];
 
-    // Debug logging (remove in production)
-    console.log("Signature verification:", {
-      received: sig,
-      computed: computed,
-      timestamp: ts,
-      bodyLength: rawBody.length
-    });
+    let isValid = false;
+    let validFormat = "";
+    
+    for (const format of signatureFormats) {
+      const h = crypto.createHmac("sha256", secret);
+      h.update(format);
+      const computed = h.digest("hex");
+      
+      console.log(`Testing format: "${format.substring(0, 50)}..."`, {
+        computed: computed,
+        received: sig,
+        match: computed === sig
+      });
+      
+      if (timingSafeEqual(computed, sig)) {
+        isValid = true;
+        validFormat = format === rawBody ? "rawBody" : "timestamp+body";
+        console.log("✅ Signature valid with format:", validFormat);
+        break;
+      }
+    }
 
-    if (!timingSafeEqual(computed, sig)) {
-      console.error("Signature mismatch");
+    if (!isValid) {
+      console.error("Signature mismatch - tried all formats");
       return NextResponse.json(
-        { error: "Invalid signature" },
+        { error: "Invalid signature", debug: "Check server logs for details" },
         { status: 401 }
       );
     }
