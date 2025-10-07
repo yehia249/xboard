@@ -26,6 +26,7 @@ export default function UpgradeTierPage() {
 
   const [community, setCommunity] = useState<Community | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false);
 
   /**
    * Seed a stable guest UID (for testing without auth) BUT DO NOT seed an email.
@@ -60,8 +61,7 @@ export default function UpgradeTierPage() {
       const current = auth.currentUser;
       if (current) {
         uid = current.uid;
-        email =
-          (current.email || current.providerData?.[0]?.email || "").toString();
+        email = (current.email || current.providerData?.[0]?.email || "").toString();
 
         // overwrite LS with fresh identity
         if (uid) localStorage.setItem("firebase_uid", uid);
@@ -76,8 +76,7 @@ export default function UpgradeTierPage() {
         onAuthStateChanged(auth, (u) => {
           if (u) {
             const freshUid = u.uid;
-            const freshEmail =
-              (u.email || u.providerData?.[0]?.email || "").toString();
+            const freshEmail = (u.email || u.providerData?.[0]?.email || "").toString();
             if (freshUid) localStorage.setItem("firebase_uid", freshUid);
             if (freshEmail) localStorage.setItem("user_email", freshEmail);
           }
@@ -91,14 +90,12 @@ export default function UpgradeTierPage() {
     if (!uid) {
       uid =
         (typeof window !== "undefined" &&
-          (localStorage.getItem("firebase_uid") ||
-            localStorage.getItem("uid"))) ||
+          (localStorage.getItem("firebase_uid") || localStorage.getItem("uid"))) ||
         "";
     }
     if (!email) {
       email =
-        (typeof window !== "undefined" && localStorage.getItem("user_email")) ||
-        "";
+        (typeof window !== "undefined" && localStorage.getItem("user_email")) || "";
     }
 
     return { uid, email };
@@ -132,10 +129,10 @@ export default function UpgradeTierPage() {
     // Always refresh identity from Firebase first
     const { uid, email } = await getUserIdentity();
 
-    // If user is not signed in and we have no email, ask them to sign in
+    // If user is not signed in and we have no email, show modal
     if (!uid || !email) {
-      console.error("[upgrade] Missing UID or email. Aborting.");
-      alert("Please sign in again to continue.");
+      console.error("[upgrade] Missing UID or email. Prompting signup.");
+      setShowSignupPrompt(true);
       return;
     }
 
@@ -279,18 +276,13 @@ export default function UpgradeTierPage() {
         {title}
       </h2>
       <p
-        className={`text-sm mb-4 ${
-          title === "Gold" ? "text-yellow-200/90" : "text-gray-400"
-        }`}
+        className={`text-sm mb-4 ${title === "Gold" ? "text-yellow-200/90" : "text-gray-400"}`}
       >
         {subtitle}
       </p>
       <ul className="mb-5 space-y-2 text-sm text-slate-300/90">
         {perks.map((p) => (
-          <li
-            key={p}
-            className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2"
-          >
+          <li key={p} className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
             • {p}
           </li>
         ))}
@@ -334,8 +326,7 @@ export default function UpgradeTierPage() {
 
         <h1 className="text-4xl font-bold tracking-tight mb-2">Upgrade Tier</h1>
         <p className="text-gray-400 text-lg mb-10">
-          Boost{" "}
-          <span className="text-white font-medium">{community.name}</span> by
+          Boost <span className="text-white font-medium">{community.name}</span> by
           upgrading its visibility and reducing its promotion cooldown.
         </p>
 
@@ -348,11 +339,7 @@ export default function UpgradeTierPage() {
             border="border border-white/10 opacity-70"
             accentText="base"
             badgeIcon={<Clock size={14} className="text-slate-300" />}
-            perks={[
-              "Standard listing placement",
-              "Default promotion speed",
-              "Community support",
-            ]}
+            perks={["Standard listing placement", "Default promotion speed", "Community support"]}
             disabledText="Downgrade Not Allowed"
             disabled
             isCurrent={community.tier === "normal"}
@@ -363,18 +350,10 @@ export default function UpgradeTierPage() {
             subtitle="12h Cooldown"
             price="$10/mo"
             gradient="bg-gradient-to-br from-slate-800 to-slate-900"
-            border={
-              community.tier === "silver"
-                ? "border border-slate-300"
-                : "border border-slate-500"
-            }
+            border={community.tier === "silver" ? "border border-slate-300" : "border border-slate-500"}
             accentText=""
             badgeIcon={<Star size={14} className="text-slate-200" />}
-            perks={[
-              "Better listing priority",
-              "Half the cooldown time",
-              "Early access to new features",
-            ]}
+            perks={["Better listing priority", "Half the cooldown time", "Early access to new features"]}
             disabledText="Downgrade Not Allowed"
             disabled={["silver", "gold"].includes(community.tier)}
             isCurrent={community.tier === "silver"}
@@ -388,18 +367,10 @@ export default function UpgradeTierPage() {
             subtitle="6h Cooldown"
             price="$14.99/mo"
             gradient="bg-gradient-to-br from-yellow-900 via-yellow-800 to-[#1a1a1a]"
-            border={
-              community.tier === "gold"
-                ? "border border-yellow-300"
-                : "border border-yellow-400"
-            }
+            border={community.tier === "gold" ? "border border-yellow-300" : "border border-yellow-400"}
             accentText="best value"
             badgeIcon={<Crown size={14} className="text-yellow-300" />}
-            perks={[
-              "Top listing priority",
-              "Fastest promotion cooldown",
-              "Priority support",
-            ]}
+            perks={["Top listing priority", "Fastest promotion cooldown", "Priority support"]}
             disabledText="Downgrade Not Allowed"
             disabled={community.tier === "gold"}
             isCurrent={community.tier === "gold"}
@@ -420,6 +391,75 @@ export default function UpgradeTierPage() {
           </div>
         </div>
       </div>
+
+      {/* ===== Signup Prompt Modal (shows when uid/email missing) ===== */}
+      {showSignupPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-md transition-opacity"
+            onClick={() => setShowSignupPrompt(false)}
+          />
+
+          {/* Modal */}
+          <div className="relative w-full max-w-md rounded-2xl bg-neutral-950/95 border border-neutral-800 shadow-[0_8px_32px_rgba(0,0,0,0.6)] p-6 z-10 animate-[fadeIn_0.3s_ease-out,scaleIn_0.3s_ease-out] ">
+            <div className="flex flex-col items-center space-y-6">
+              {/* Icon Circle */}
+              <div className="flex items-center justify-center w-14 h-14 rounded-full bg-neutral-900 border border-neutral-800 shadow-inner mt-6">
+                <svg
+                  className="h-6 w-6 text-neutral-300"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+
+              {/* Content */}
+              <div className="text-center space-y-2 mt-2">
+                <h2 className="text-white text-2xl font-semibold">Sign up to continue</h2>
+                <p className="text-neutral-400 text-sm">
+                  Create an account to promote and discover communities.
+                </p>
+              </div>
+
+              {/* Buttons */}
+              <div className="w-full space-y-3 pt-2">
+                <button
+                  onClick={() => {
+                    const redirect = typeof window !== "undefined" ? encodeURIComponent(window.location.pathname + window.location.search) : "%2F";
+                    router.push(`/signup?redirect=${redirect}`);
+                  }}
+                  className="w-full bg-white text-black font-medium py-3 rounded-xl transition-colors hover:bg-neutral-100 focus:ring-2 focus:ring-white/30 cursor-pointer"
+                >
+                  Sign Up
+                </button>
+
+                <button
+                  onClick={() => setShowSignupPrompt(false)}
+                  className="w-full bg-neutral-900 text-neutral-300 font-medium py-3 rounded-xl border border-neutral-800 transition-colors hover:bg-neutral-800 focus:ring-2 focus:ring-neutral-700 cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Keyframes for modal animation (for the arbitrary animate-[...] classes) */}
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+          0% { transform: scale(0.98); }
+          100% { transform: scale(1); }
+        }
+      `}</style>
     </div>
   );
 }
