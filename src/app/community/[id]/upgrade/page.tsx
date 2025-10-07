@@ -19,7 +19,10 @@ export default function UpgradeTierPage() {
   const [community, setCommunity] = useState<Community | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Seed a stable guest identity if no auth is present (helps testing)
+  /**
+   * Seed a stable guest UID (for testing without auth) BUT DO NOT seed an email.
+   * Email should come from Firebase when the user signs in.
+   */
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!localStorage.getItem("uid")) {
@@ -27,39 +30,69 @@ export default function UpgradeTierPage() {
         (globalThis.crypto as any)?.randomUUID?.() ||
         `guest-${Math.random().toString(36).slice(2)}`;
       localStorage.setItem("uid", guestId);
-      // also seed a guest email so the upsert API has one
-      if (!localStorage.getItem("user_email")) {
-        localStorage.setItem("user_email", `guest-${guestId}@example.com`);
-      }
       console.info("[upgrade] seeded guest uid:", guestId);
     }
   }, []);
 
-  /** Pull UID + email from LS; if missing, try Firebase currentUser */
+  /**
+   * Always prefer Firebase identity if available.
+   * If a Firebase user is present, OVERWRITE localStorage uid/email.
+   * If no Firebase user, make sure we don't keep stale firebase_uid/user_email around.
+   */
   async function getUserIdentity(): Promise<{ uid: string; email: string }> {
-    let uid =
-      (typeof window !== "undefined" &&
-        (localStorage.getItem("firebase_uid") ||
-          localStorage.getItem("uid"))) ||
-      "";
-    let email =
-      (typeof window !== "undefined" && localStorage.getItem("user_email")) ||
-      "";
+    let uid = "";
+    let email = "";
 
-    if (!uid || !email) {
-      try {
-        const { getAuth } = await import("firebase/auth");
-        const u = getAuth().currentUser;
-        if (u) {
-          uid = uid || u.uid;
-          email =
-            email || (u.email || u.providerData[0]?.email || "").toString();
-          if (uid) localStorage.setItem("firebase_uid", uid);
-          if (email) localStorage.setItem("user_email", email);
-        }
-      } catch {
-        // Firebase not available on page—ignore and continue with LS
+    // 1) Try Firebase first
+    try {
+      const { getAuth, onAuthStateChanged } = await import("firebase/auth");
+      const auth = getAuth();
+
+      // If auth has a current user now, use it immediately
+      const current = auth.currentUser;
+      if (current) {
+        uid = current.uid;
+        email =
+          (current.email ||
+            current.providerData?.[0]?.email ||
+            "").toString();
+
+        // overwrite LS with fresh identity
+        if (uid) localStorage.setItem("firebase_uid", uid);
+        if (email) localStorage.setItem("user_email", email);
+      } else {
+        // If no current user, clear any stale identity we might have stored for Firebase
+        localStorage.removeItem("firebase_uid");
+        // do not remove generic guest uid, but DO remove email so we don't keep a stale one
+        localStorage.removeItem("user_email");
+
+        // Also listen for a future login happening while on this page and refresh LS then
+        onAuthStateChanged(auth, (u) => {
+          if (u) {
+            const freshUid = u.uid;
+            const freshEmail =
+              (u.email || u.providerData?.[0]?.email || "").toString();
+            if (freshUid) localStorage.setItem("firebase_uid", freshUid);
+            if (freshEmail) localStorage.setItem("user_email", freshEmail);
+          }
+        });
       }
+    } catch {
+      // Firebase not installed/initialized here; ignore gracefully
+    }
+
+    // 2) If we still don't have identity from Firebase, fall back to LS
+    if (!uid) {
+      uid =
+        (typeof window !== "undefined" &&
+          (localStorage.getItem("firebase_uid") ||
+            localStorage.getItem("uid"))) ||
+        "";
+    }
+    if (!email) {
+      email =
+        (typeof window !== "undefined" && localStorage.getItem("user_email")) ||
+        "";
     }
 
     return { uid, email };
@@ -67,19 +100,21 @@ export default function UpgradeTierPage() {
 
   /** Ensure a PayNow customer exists for this user, return customerId */
   async function upsertAndGetCustomerId(userUid: string, email: string) {
-    const r = await fetch("/api/paynow/upsert-customer", {
+    // IMPORTANT: path must match your folder name below
+    const r = await fetch("/api/paynow/customer-upsert", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userUid, email }), // <-- MUST send email (not "name")
+      body: JSON.stringify({ userUid, email }),
+      cache: "no-store",
     });
 
     if (!r.ok) {
-      console.error("upsert-customer failed:", await r.text());
+      console.error("customer-upsert failed:", await r.text());
       return "";
     }
     const data = await r.json();
     if (!data?.customerId) {
-      console.error("upsert-customer returned no customerId:", data);
+      console.error("customer-upsert returned no customerId:", data);
     }
     return data?.customerId || "";
   }
@@ -87,11 +122,14 @@ export default function UpgradeTierPage() {
   /** MAIN: start checkout flow for a given tier/product */
   async function startCheckout(productId: string, tier: "gold" | "silver") {
     const serverId = Number(id);
+
+    // Always refresh identity from Firebase first
     const { uid, email } = await getUserIdentity();
 
+    // If user is not signed in and we have no email, ask them to sign in
     if (!uid || !email) {
       console.error("[upgrade] Missing UID or email. Aborting.");
-      alert("Please sign in again.");
+      alert("Please sign in again to continue.");
       return;
     }
 
@@ -116,13 +154,13 @@ export default function UpgradeTierPage() {
         }),
       });
 
-      const { url, error, detail } = await r.json();
-      if (!r.ok || !url) {
-        console.error("Checkout failed:", error, detail);
+      const payload = await r.json();
+      if (!r.ok || !payload?.url) {
+        console.error("Checkout failed:", payload);
         alert("Checkout failed. See console for details.");
         return;
       }
-      window.location.href = url; // PayNow hosted checkout
+      window.location.href = payload.url; // PayNow hosted checkout
     } catch (e) {
       console.error(e);
       alert("Network error starting checkout.");
@@ -142,7 +180,7 @@ export default function UpgradeTierPage() {
   // load community data
   useEffect(() => {
     const fetchCommunity = async () => {
-      const res = await fetch(`/api/communities/${id}`);
+      const res = await fetch(`/api/communities/${id}`, { cache: "no-store" });
       const data = await res.json();
       setCommunity(data);
       setLoading(false);
@@ -335,9 +373,7 @@ export default function UpgradeTierPage() {
             disabled={["silver", "gold"].includes(community.tier)}
             isCurrent={community.tier === "silver"}
             cta="Upgrade"
-            onClick={() =>
-              startCheckout(PAYNOW_SILVER_PRODUCT_ID, "silver")
-            }
+            onClick={() => startCheckout(PAYNOW_SILVER_PRODUCT_ID, "silver")}
             active={community.tier !== "silver"}
           />
 
