@@ -101,7 +101,7 @@ export default function UpgradeTierPage() {
   /** Ensure a PayNow customer exists for this user, return customerId */
   async function upsertAndGetCustomerId(userUid: string, email: string) {
     // IMPORTANT: path must match your folder name below
-    const r = await fetch("/api/paynow/customer-upsert", {
+    const r = await fetch("/api/paynow/upsert-customer", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userUid, email }),
