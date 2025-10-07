@@ -1,3 +1,4 @@
+// app/api/paynow/customer-upsert/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -5,7 +6,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/paynow/upsert-customer
+ * POST /api/paynow/customer-upsert
  * Body: { userUid: string, email: string }
  * Returns: { customerId: string, created: boolean }
  */
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
     });
 
     // 1) Check our mapping first
-    const { data: existingMap, error: mapErr } = await supabase
+    const { data: existingMap } = await supabase
       .from("paynow_customers")
       .select("*")
       .eq("firebase_uid", userUid)
@@ -73,25 +74,22 @@ export async function POST(req: NextRequest) {
     }
 
     // 2) Try to FIND by name (email) to avoid duplicates in PayNow
-    //    /customers/lookup?name=... (docs: Lookup customer)
     const lookupUrl = `${base}/customers/lookup?name=${encodeURIComponent(email)}`;
     const lookupResp = await fetch(lookupUrl, { method: "GET", headers });
     if (lookupResp.ok) {
       const found = await lookupResp.json();
       if (found?.id) {
-        // store mapping and return
         await supabase.from("paynow_customers").insert({
           firebase_uid: userUid,
           email,
           paynow_customer_id: String(found.id),
         });
-        // also make sure the name/metadata reflect our latest email/uid
         await ensureName(String(found.id));
         return NextResponse.json(
           { customerId: String(found.id), created: false },
           { status: 200 }
         );
-    }
+      }
     }
 
     // 3) CREATE a new PayNow customer (use email as the visible "name")
@@ -99,7 +97,7 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers,
       body: JSON.stringify({
-        name: email, // this is what appears in the dashboard (Orders/Customers)
+        name: email,
         metadata: { email, uid: userUid, source: "xboard" },
       }),
     });
