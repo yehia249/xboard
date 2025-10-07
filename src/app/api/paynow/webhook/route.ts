@@ -1,9 +1,12 @@
+// app/api/webhook/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/* ---------- helpers ---------- */
 
 function timingSafeEqual(a: string, b: string) {
   const A = Buffer.from(a);
@@ -12,70 +15,129 @@ function timingSafeEqual(a: string, b: string) {
   return crypto.timingSafeEqual(A, B);
 }
 
-function plusOneMonth(from: Date) {
-  const d = new Date(from);
-  d.setMonth(d.getMonth() + 1);
-  return d;
+function plus30Days(from: Date) {
+  // strict 30 days, independent of month length
+  return new Date(from.getTime() + 30 * 24 * 60 * 60 * 1000);
 }
+
+function isExpired(d?: Date | string | null) {
+  if (!d) return true;
+  const date = typeof d === "string" ? new Date(d) : d;
+  return date.getTime() <= Date.now();
+}
+
+function getHeader(req: NextRequest, key: string) {
+  return (
+    req.headers.get(key) ||
+    req.headers.get(key.toLowerCase()) ||
+    req.headers.get(`x-${key.toLowerCase()}`) ||
+    ""
+  );
+}
+
+// Try very hard to find "tier" in payload
+function deepFindTier(obj: any, path = "evt"): string {
+  if (!obj || typeof obj !== "object") return "";
+  if (obj.tier) return obj.tier;
+  if (obj.metadata?.tier) return obj.metadata.tier;
+
+  if (Array.isArray(obj)) {
+    for (let i = 0; i < obj.length; i++) {
+      const r = deepFindTier(obj[i], `${path}[${i}]`);
+      if (r) return r;
+    }
+  }
+
+  const keys = ["lines", "order", "checkout", "product", "plan", "data", "body"];
+  for (const k of keys) {
+    if (obj[k]) {
+      const r = deepFindTier(obj[k], `${path}.${k}`);
+      if (r) return r;
+    }
+  }
+  return "";
+}
+
+function parseReference(ref: string) {
+  // we store "srv=123|uid=abc"
+  const params = new URLSearchParams(ref.replaceAll("|", "&"));
+  const serverId = Number(params.get("srv") || "");
+  const userUid = params.get("uid") || "";
+  return { serverId, userUid };
+}
+
+// choose a non-null id for one-time orders to make upsert idempotent
+function getStableOneTimeId(data: any, fallbackRef: string, timestampMs: number) {
+  return data?.order?.id || data?.id || `order:${fallbackRef}:${timestampMs}`;
+}
+
+async function ensureNormalizedServer(supabase: SupabaseClient, serverId: number) {
+  const { data: s, error } = await supabase
+    .from("servers")
+    .select("tier, tier_expires_at")
+    .eq("id", serverId)
+    .single();
+
+  if (error || !s) return;
+
+  const expired = isExpired(s.tier_expires_at);
+  if (expired && s.tier !== "normal") {
+    await supabase
+      .from("servers")
+      .update({ tier: "normal", tier_expires_at: null })
+      .eq("id", serverId);
+    console.log("⬇️  Downgraded server", serverId, "back to 'normal'");
+  }
+}
+
+/* ---------- webhook ---------- */
 
 export async function POST(req: NextRequest) {
   try {
     const secret = process.env.PAYNOW_WEBHOOK_SECRET || "";
     const supabaseUrl = process.env.SUPABASE_URL || "";
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-    if (!secret) return NextResponse.json({ error: "Missing PAYNOW_WEBHOOK_SECRET" }, { status: 500 });
-    if (!supabaseUrl || !supabaseKey) return NextResponse.json({ error: "Missing Supabase envs" }, { status: 500 });
+    if (!secret)
+      return NextResponse.json({ error: "Missing PAYNOW_WEBHOOK_SECRET" }, { status: 500 });
+    if (!supabaseUrl || !supabaseKey)
+      return NextResponse.json({ error: "Missing Supabase envs" }, { status: 500 });
 
     const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 
     // --- exact raw body for HMAC ---
     const rawBody = await req.text();
 
-    // --- headers (case-insensitive) ---
-    const sigHeader =
-      req.headers.get("PayNow-Signature") ||
-      req.headers.get("paynow-signature") ||
-      req.headers.get("x-paynow-signature") ||
-      "";
-    const ts =
-      req.headers.get("PayNow-Timestamp") ||
-      req.headers.get("paynow-timestamp") ||
-      req.headers.get("x-paynow-timestamp") ||
-      "";
+    // --- signature verify ---
+    const sigHeader = getHeader(req, "PayNow-Signature");
+    const tsHeader = getHeader(req, "PayNow-Timestamp");
     if (!sigHeader) return NextResponse.json({ error: "Missing signature" }, { status: 400 });
-    if (!ts) return NextResponse.json({ error: "Missing timestamp" }, { status: 400 });
+    if (!tsHeader) return NextResponse.json({ error: "Missing timestamp" }, { status: 400 });
 
-    // HMAC per docs: sha256(secret, `${ts}.${rawBody}`)
-    const base = `${ts}.${rawBody}`;
+    const base = `${tsHeader}.${rawBody}`;
     const expectedHex = crypto.createHmac("sha256", secret).update(base).digest("hex");
     const expectedB64 = crypto.createHmac("sha256", secret).update(base).digest("base64");
     const provided = sigHeader.replace(/^sha256=/i, "").trim();
 
-    const ok =
-      timingSafeEqual(provided, expectedHex) ||
-      timingSafeEqual(provided, expectedB64);
+    const okSig = timingSafeEqual(provided, expectedHex) || timingSafeEqual(provided, expectedB64);
+    if (!okSig) return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
 
-    if (!ok) {
-      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-    }
-
-    // optional replay guard (5m)
-    const skew = Math.abs(Date.now() - Number(ts));
-    if (!Number(ts) || skew > 5 * 60 * 1000) {
+    // Accept timestamp in seconds or ms
+    const tsNumRaw = Number(tsHeader);
+    const tsMs = tsNumRaw < 1e12 ? tsNumRaw * 1000 : tsNumRaw;
+    const skew = Math.abs(Date.now() - tsMs);
+    if (!tsNumRaw || skew > 5 * 60 * 1000) {
       return NextResponse.json({ error: "Stale timestamp" }, { status: 408 });
     }
 
-    // --- parse after verify ---
+    // parse AFTER verify
     const evt = JSON.parse(rawBody);
-    
-    // LOG THE ENTIRE WEBHOOK FOR DEBUGGING
-    console.log("🔔 PayNow Webhook received:", JSON.stringify(evt, null, 2));
-    
+    console.log("🔔 PayNow Webhook:", JSON.stringify(evt, null, 2));
+
     const type: string = evt?.event_type;
     const data: any = evt?.body || evt?.data || {};
     const now = new Date();
 
-    // ---- reference (support multiple shapes) ----
+    // reference
     const reference =
       data?.reference ||
       data?.metadata?.reference ||
@@ -87,213 +149,201 @@ export async function POST(req: NextRequest) {
       "";
 
     if (!reference) {
-      console.warn("⚠️ No reference found in webhook. Payload:", JSON.stringify(evt, null, 2));
-      return NextResponse.json({ ok: true, note: "No reference; nothing to update." }, { status: 200 });
+      console.warn("⚠️ No reference in webhook -> nothing to update");
+      return NextResponse.json({ ok: true, note: "No reference" }, { status: 200 });
     }
 
-    // Parse "srv=123|uid=abc"
-    const params = new URLSearchParams(reference.replaceAll("|", "&"));
-    const serverId = Number(params.get("srv") || "");
-    const userUid = params.get("uid") || "";
-    
-    console.log("📋 Parsed reference - serverId:", serverId, "userUid:", userUid);
-    
+    const { serverId, userUid } = parseReference(reference);
     if (!serverId || !userUid) {
-      console.error("❌ Missing serverId/userUid in reference:", reference);
       return NextResponse.json({ error: "Missing serverId/userUid in reference" }, { status: 400 });
     }
 
-    // ---- tier lookup (EXPANDED to check more locations) ----
-    let tierRaw: string = "";
-    
-    // Helper function to deeply search for tier in nested objects
-    function findTierInObject(obj: any, path: string = ""): string {
-      if (!obj || typeof obj !== "object") return "";
-      
-      // Check if current object has tier
-      if (obj.tier) {
-        console.log(`✅ Found tier at ${path}.tier:`, obj.tier);
-        return obj.tier;
-      }
-      if (obj.metadata?.tier) {
-        console.log(`✅ Found tier at ${path}.metadata.tier:`, obj.metadata.tier);
-        return obj.metadata.tier;
-      }
-      
-      // Recursively check arrays
-      if (Array.isArray(obj)) {
-        for (let i = 0; i < obj.length; i++) {
-          const result = findTierInObject(obj[i], `${path}[${i}]`);
-          if (result) return result;
-        }
-      }
-      
-      // Recursively check common nested locations
-      const keysToCheck = ['lines', 'order', 'checkout', 'product', 'data', 'body'];
-      for (const key of keysToCheck) {
-        if (obj[key]) {
-          const result = findTierInObject(obj[key], path ? `${path}.${key}` : key);
-          if (result) return result;
-        }
-      }
-      
-      return "";
-    }
-    
-    // Try structured locations first
-    const possibleTierLocations = [
-      { path: "data.product.metadata.tier", value: data?.product?.metadata?.tier },
-      { path: "data.variables.tier", value: data?.variables?.tier },
-      { path: "data.plan.metadata.tier", value: data?.plan?.metadata?.tier },
-      { path: "data.order.lines[0].metadata.tier", value: data?.order?.lines?.[0]?.metadata?.tier },
-      { path: "data.lines[0].metadata.tier", value: data?.lines?.[0]?.metadata?.tier },
-      { path: "data.checkout.lines[0].metadata.tier", value: data?.checkout?.lines?.[0]?.metadata?.tier },
-      { path: "data.metadata.tier", value: data?.metadata?.tier },
-      { path: "evt.metadata.tier", value: evt?.metadata?.tier },
-      { path: "evt.lines[0].metadata.tier", value: evt?.lines?.[0]?.metadata?.tier },
-      { path: "evt.body.lines[0].metadata.tier", value: evt?.body?.lines?.[0]?.metadata?.tier },
-    ];
-    
-    console.log("🔍 Searching for tier in structured locations...");
-    for (const location of possibleTierLocations) {
-      if (location.value) {
-        tierRaw = location.value;
-        console.log(`✅ Found tier at ${location.path}:`, tierRaw);
-        break;
-      }
-    }
-    
-    // If not found, do deep search
-    if (!tierRaw) {
-      console.log("🔍 Tier not found in structured locations, performing deep search...");
-      tierRaw = findTierInObject(evt, "evt");
-    }
-    
-    // Log if tier not found
-    if (!tierRaw) {
-      console.error("❌ Tier not found anywhere in webhook payload");
-      console.log("Full webhook payload:", JSON.stringify(evt, null, 2));
-    }
-    
-    const tier = tierRaw === "gold" || tierRaw === "silver" ? tierRaw : null;
+    // tier
+    let tier =
+      data?.product?.metadata?.tier ||
+      data?.variables?.tier ||
+      data?.plan?.metadata?.tier ||
+      data?.order?.lines?.[0]?.metadata?.tier ||
+      data?.lines?.[0]?.metadata?.tier ||
+      data?.checkout?.lines?.[0]?.metadata?.tier ||
+      data?.metadata?.tier ||
+      evt?.metadata?.tier ||
+      evt?.lines?.[0]?.metadata?.tier ||
+      evt?.body?.lines?.[0]?.metadata?.tier ||
+      deepFindTier(evt) ||
+      null;
 
+    if (tier !== "gold" && tier !== "silver") {
+      tier = null;
+    }
+
+    // subscription id (if a subscription event)
     const subscriptionId: string | undefined =
       data?.subscription_id || data?.id || data?.subscription?.id;
 
-    console.log("🎯 Processing event:", type, "| Tier:", tier, "| ServerId:", serverId);
+    console.log("🎯 Event:", type, "| Tier:", tier, "| Server:", serverId, "| User:", userUid);
 
     switch (type) {
+      /* ---------- ONE-TIME ORDERS ---------- */
       case "ON_ORDER_COMPLETED": {
         if (!tier) {
-          console.error("❌ Order completed but no tier found. Data:", JSON.stringify(data, null, 2));
-          return NextResponse.json({ ok: true, note: "Order completed without tier metadata." }, { status: 200 });
-        }
-        const expiresAt = plusOneMonth(now);
-
-        console.log("💰 Processing one-time order - tier:", tier, "expires:", expiresAt);
-
-        // record (best-effort)
-        try {
-          const { error: upsertError } = await supabase.from("server_subscriptions").upsert(
-            {
-              server_id: serverId,
-              user_id: userUid,
-              tier: tier as "gold" | "silver",
-              provider: "paynow",
-              provider_subscription_id: null,
-              status: "active",
-              started_at: now.toISOString(),
-              expires_at: expiresAt.toISOString(),
-            },
-            { onConflict: "provider_subscription_id" }
-          );
-          
-          if (upsertError) {
-            console.error("❌ Upsert subscription failed:", upsertError);
-          } else {
-            console.log("✅ Subscription record created");
-          }
-        } catch (e) {
-          console.error("❌ Upsert one-time failed:", e);
+          console.error("❌ Order completed but no tier found");
+          return NextResponse.json({ ok: true, note: "No tier on one-time order" }, { status: 200 });
         }
 
-        const { error: serverUpdateError } = await supabase
-          .from("servers")
-          .update({ tier: tier as "gold" | "silver", tier_expires_at: expiresAt.toISOString() })
-          .eq("id", serverId);
+        // 👇 DEMO OVERRIDE:
+        // If you pass demo_minutes in any metadata, we use that instead of 30 days
+        const demoMinutesRaw =
+          data?.metadata?.demo_minutes ??
+          data?.order?.metadata?.demo_minutes ??
+          data?.checkout?.metadata?.demo_minutes ??
+          evt?.metadata?.demo_minutes;
 
-        if (serverUpdateError) {
-          console.error("❌ Failed to update server tier:", serverUpdateError);
-        } else {
-          console.log("✅ Server tier updated successfully to:", tier);
-        }
+        const demoMinutes =
+          typeof demoMinutesRaw === "string" ? Number(demoMinutesRaw) : Number(demoMinutesRaw);
 
-        break;
-      }
+        const expiresAt =
+          demoMinutes && demoMinutes > 0
+            ? new Date(Date.now() + demoMinutes * 60 * 1000) // e.g., 5 → 5 minutes
+            : plus30Days(now); // default 30 days
 
-      case "ON_SUBSCRIPTION_ACTIVATED":
-      case "ON_SUBSCRIPTION_RENEWED": {
-        if (!tier) {
-          console.error("❌ Subscription event without tier. Data:", JSON.stringify(data, null, 2));
-          return NextResponse.json({ error: "No tier metadata on product" }, { status: 400 });
-        }
+        const oneTimeId = getStableOneTimeId(data, reference, tsMs);
 
-        const gatewayExpiry: string | undefined =
-          data?.current_period_end || data?.expires_at || data?.period?.end;
-        const expiresAt = gatewayExpiry ? new Date(gatewayExpiry) : plusOneMonth(now);
-
-        console.log("🔄 Processing subscription event - tier:", tier, "expires:", expiresAt);
-
-        const { error: upsertError } = await supabase.from("server_subscriptions").upsert(
+        // idempotent upsert
+        const { error: upsertErr } = await supabase.from("server_subscriptions").upsert(
           {
             server_id: serverId,
             user_id: userUid,
-            tier: tier as "gold" | "silver",
+            tier,
             provider: "paynow",
-            provider_subscription_id: subscriptionId || null,
+            provider_subscription_id: oneTimeId, // non-null
             status: "active",
             started_at: now.toISOString(),
             expires_at: expiresAt.toISOString(),
           },
           { onConflict: "provider_subscription_id" }
         );
+        if (upsertErr) console.error("❌ upsert one-time:", upsertErr);
 
-        if (upsertError) {
-          console.error("❌ Failed to upsert subscription:", upsertError);
-        } else {
-          console.log("✅ Subscription upserted successfully");
-        }
-
-        const { error: serverUpdateError } = await supabase
+        const { error: sErr } = await supabase
           .from("servers")
-          .update({ tier: tier as "gold" | "silver", tier_expires_at: expiresAt.toISOString() })
+          .update({ tier, tier_expires_at: expiresAt.toISOString() })
           .eq("id", serverId);
-
-        if (serverUpdateError) {
-          console.error("❌ Failed to update server:", serverUpdateError);
-        } else {
-          console.log("✅ Server updated successfully");
-        }
+        if (sErr) console.error("❌ update server tier:", sErr);
 
         break;
       }
 
-      case "ON_SUBSCRIPTION_CANCELED": {
-        const gatewayExpiry: string | undefined =
+      /* ---------- SUBSCRIPTIONS (ACTIVATE / RENEW) ---------- */
+      case "ON_SUBSCRIPTION_ACTIVATED":
+      case "ON_SUBSCRIPTION_RENEWED": {
+        if (!tier) {
+          return NextResponse.json(
+            { error: "No tier metadata on subscription product" },
+            { status: 400 }
+          );
+        }
+        // Prefer gateway period end if provided
+        const gatewayEndStr: string | undefined =
           data?.current_period_end || data?.expires_at || data?.period?.end;
-        const expiresAt = gatewayExpiry ? new Date(gatewayExpiry) : plusOneMonth(now);
 
-        console.log("🚫 Processing cancellation - expires:", expiresAt);
+        let expiresAt: Date;
+        if (gatewayEndStr) {
+          expiresAt = new Date(gatewayEndStr);
+        } else {
+          // extend from latest of existing expiry or now
+          const { data: existing } = await supabase
+            .from("server_subscriptions")
+            .select("expires_at")
+            .eq("provider_subscription_id", subscriptionId || "")
+            .single();
 
-        await supabase
-          .from("server_subscriptions")
-          .update({ status: "canceled", expires_at: expiresAt.toISOString() })
-          .eq("provider_subscription_id", subscriptionId || "");
+          const base = existing?.expires_at ? new Date(existing.expires_at) : now;
+          expiresAt = base > now ? plus30Days(base) : plus30Days(now);
+        }
 
-        await supabase
+        const { error: upsertErr } = await supabase.from("server_subscriptions").upsert(
+          {
+            server_id: serverId,
+            user_id: userUid,
+            tier,
+            provider: "paynow",
+            provider_subscription_id: subscriptionId || `sub:${reference}:${tsMs}`,
+            status: "active",
+            started_at: now.toISOString(),
+            expires_at: expiresAt.toISOString(),
+          },
+          { onConflict: "provider_subscription_id" }
+        );
+        if (upsertErr) console.error("❌ upsert subscription:", upsertErr);
+
+        const { error: sErr } = await supabase
           .from("servers")
-          .update({ tier_expires_at: expiresAt.toISOString() })
+          .update({ tier, tier_expires_at: expiresAt.toISOString() })
           .eq("id", serverId);
+        if (sErr) console.error("❌ update server:", sErr);
+
+        break;
+      }
+
+      /* ---------- SUBSCRIPTION CANCELED ---------- */
+      case "ON_SUBSCRIPTION_CANCELED": {
+        // 1) Try to get the period end from the gateway
+        const gatewayEndStr = data?.current_period_end || data?.expires_at || data?.period?.end;
+
+        // 2) Otherwise, use what we already know in DB (expires_at or started_at + 30d)
+        const { data: existing } = await supabase
+          .from("server_subscriptions")
+          .select("expires_at, started_at")
+          .eq("provider_subscription_id", subscriptionId || "")
+          .single();
+
+        // 3) As another fallback, look at the server’s visible expiry (if any)
+        const { data: s } = await supabase
+          .from("servers")
+          .select("tier_expires_at")
+          .eq("id", serverId)
+          .single();
+
+        let expiresAt: Date | null = null;
+
+        if (gatewayEndStr) {
+          // Gateway told us the exact end of the current period
+          expiresAt = new Date(gatewayEndStr);
+        } else if (existing?.expires_at) {
+          // Use the expiry we stored when the sub was activated/renewed
+          expiresAt = new Date(String(existing.expires_at));
+        } else if (existing?.started_at) {
+          // Infer one full cycle from the start (strict 30 days)
+          expiresAt = plus30Days(new Date(String(existing.started_at)));
+        } else if (s?.tier_expires_at) {
+          // Last resort: mirror whatever the server shows
+          expiresAt = new Date(String(s.tier_expires_at));
+        } else {
+          // We don't know any remaining time → no free extension
+          expiresAt = new Date();
+        }
+
+        // 4) Mark subscription as canceled, but keep the expiry
+        if (subscriptionId) {
+          await supabase
+            .from("server_subscriptions")
+            .update({ status: "canceled", expires_at: expiresAt.toISOString() })
+            .eq("provider_subscription_id", subscriptionId);
+        }
+
+        // 5) Keep the tier active until expiry; if already past, downgrade now
+        if (isExpired(expiresAt)) {
+          await supabase
+            .from("servers")
+            .update({ tier: "normal", tier_expires_at: null })
+            .eq("id", serverId);
+        } else {
+          await supabase
+            .from("servers")
+            .update({ tier_expires_at: expiresAt.toISOString() })
+            .eq("id", serverId);
+        }
 
         break;
       }
@@ -303,7 +353,10 @@ export async function POST(req: NextRequest) {
         break;
     }
 
-    console.log("✅ Webhook processed successfully");
+    // Final safety: if it's past due for this server, normalize now.
+    await ensureNormalizedServer(supabase, serverId);
+
+    console.log("✅ Webhook processed");
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (e: any) {
     console.error("❌ Webhook error:", e);
