@@ -1,4 +1,3 @@
-// app/api/webhook/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
@@ -22,7 +21,7 @@ function plus30Days(from: Date) {
 
 function isExpired(d?: Date | string | null) {
   if (!d) return true;
-  const date = typeof d === "string" ? new Date(d) : d;
+  const date = typeof d === 'string' ? new Date(d) : d;
   return date.getTime() <= Date.now();
 }
 
@@ -68,10 +67,17 @@ function parseReference(ref: string) {
 
 // choose a non-null id for one-time orders to make upsert idempotent
 function getStableOneTimeId(data: any, fallbackRef: string, timestampMs: number) {
-  return data?.order?.id || data?.id || `order:${fallbackRef}:${timestampMs}`;
+  return (
+    data?.order?.id ||
+    data?.id ||
+    `order:${fallbackRef}:${timestampMs}` // final fallback
+  );
 }
 
-async function ensureNormalizedServer(supabase: SupabaseClient, serverId: number) {
+async function ensureNormalizedServer(
+  supabase: SupabaseClient,
+  serverId: number
+) {
   const { data: s, error } = await supabase
     .from("servers")
     .select("tier, tier_expires_at")
@@ -97,10 +103,8 @@ export async function POST(req: NextRequest) {
     const secret = process.env.PAYNOW_WEBHOOK_SECRET || "";
     const supabaseUrl = process.env.SUPABASE_URL || "";
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-    if (!secret)
-      return NextResponse.json({ error: "Missing PAYNOW_WEBHOOK_SECRET" }, { status: 500 });
-    if (!supabaseUrl || !supabaseKey)
-      return NextResponse.json({ error: "Missing Supabase envs" }, { status: 500 });
+    if (!secret) return NextResponse.json({ error: "Missing PAYNOW_WEBHOOK_SECRET" }, { status: 500 });
+    if (!supabaseUrl || !supabaseKey) return NextResponse.json({ error: "Missing Supabase envs" }, { status: 500 });
 
     const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 
@@ -118,14 +122,15 @@ export async function POST(req: NextRequest) {
     const expectedB64 = crypto.createHmac("sha256", secret).update(base).digest("base64");
     const provided = sigHeader.replace(/^sha256=/i, "").trim();
 
-    const okSig = timingSafeEqual(provided, expectedHex) || timingSafeEqual(provided, expectedB64);
+    const okSig =
+      timingSafeEqual(provided, expectedHex) ||
+      timingSafeEqual(provided, expectedB64);
+
     if (!okSig) return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
 
-    // Accept timestamp in seconds or ms
-    const tsNumRaw = Number(tsHeader);
-    const tsMs = tsNumRaw < 1e12 ? tsNumRaw * 1000 : tsNumRaw;
-    const skew = Math.abs(Date.now() - tsMs);
-    if (!tsNumRaw || skew > 5 * 60 * 1000) {
+    const tsNum = Number(tsHeader);
+    const skew = Math.abs(Date.now() - tsNum);
+    if (!tsNum || skew > 5 * 60 * 1000) {
       return NextResponse.json({ error: "Stale timestamp" }, { status: 408 });
     }
 
@@ -191,23 +196,8 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ ok: true, note: "No tier on one-time order" }, { status: 200 });
         }
 
-        // 👇 DEMO OVERRIDE:
-        // If you pass demo_minutes in any metadata, we use that instead of 30 days
-        const demoMinutesRaw =
-          data?.metadata?.demo_minutes ??
-          data?.order?.metadata?.demo_minutes ??
-          data?.checkout?.metadata?.demo_minutes ??
-          evt?.metadata?.demo_minutes;
-
-        const demoMinutes =
-          typeof demoMinutesRaw === "string" ? Number(demoMinutesRaw) : Number(demoMinutesRaw);
-
-        const expiresAt =
-          demoMinutes && demoMinutes > 0
-            ? new Date(Date.now() + demoMinutes * 60 * 1000) // e.g., 5 → 5 minutes
-            : plus30Days(now); // default 30 days
-
-        const oneTimeId = getStableOneTimeId(data, reference, tsMs);
+        const expiresAt = plus30Days(now);
+        const oneTimeId = getStableOneTimeId(data, reference, tsNum);
 
         // idempotent upsert
         const { error: upsertErr } = await supabase.from("server_subscriptions").upsert(
@@ -238,10 +228,7 @@ export async function POST(req: NextRequest) {
       case "ON_SUBSCRIPTION_ACTIVATED":
       case "ON_SUBSCRIPTION_RENEWED": {
         if (!tier) {
-          return NextResponse.json(
-            { error: "No tier metadata on subscription product" },
-            { status: 400 }
-          );
+          return NextResponse.json({ error: "No tier metadata on subscription product" }, { status: 400 });
         }
         // Prefer gateway period end if provided
         const gatewayEndStr: string | undefined =
@@ -268,7 +255,7 @@ export async function POST(req: NextRequest) {
             user_id: userUid,
             tier,
             provider: "paynow",
-            provider_subscription_id: subscriptionId || `sub:${reference}:${tsMs}`,
+            provider_subscription_id: subscriptionId || `sub:${reference}:${tsNum}`,
             status: "active",
             started_at: now.toISOString(),
             expires_at: expiresAt.toISOString(),
@@ -289,24 +276,25 @@ export async function POST(req: NextRequest) {
       /* ---------- SUBSCRIPTION CANCELED ---------- */
       case "ON_SUBSCRIPTION_CANCELED": {
         // 1) Try to get the period end from the gateway
-        const gatewayEndStr = data?.current_period_end || data?.expires_at || data?.period?.end;
-
+        const gatewayEndStr =
+          data?.current_period_end || data?.expires_at || data?.period?.end;
+      
         // 2) Otherwise, use what we already know in DB (expires_at or started_at + 30d)
         const { data: existing } = await supabase
           .from("server_subscriptions")
           .select("expires_at, started_at")
           .eq("provider_subscription_id", subscriptionId || "")
           .single();
-
+      
         // 3) As another fallback, look at the server’s visible expiry (if any)
         const { data: s } = await supabase
           .from("servers")
           .select("tier_expires_at")
           .eq("id", serverId)
           .single();
-
+      
         let expiresAt: Date | null = null;
-
+      
         if (gatewayEndStr) {
           // Gateway told us the exact end of the current period
           expiresAt = new Date(gatewayEndStr);
@@ -323,15 +311,13 @@ export async function POST(req: NextRequest) {
           // We don't know any remaining time → no free extension
           expiresAt = new Date();
         }
-
+      
         // 4) Mark subscription as canceled, but keep the expiry
-        if (subscriptionId) {
-          await supabase
-            .from("server_subscriptions")
-            .update({ status: "canceled", expires_at: expiresAt.toISOString() })
-            .eq("provider_subscription_id", subscriptionId);
-        }
-
+        await supabase
+          .from("server_subscriptions")
+          .update({ status: "canceled", expires_at: expiresAt.toISOString() })
+          .eq("provider_subscription_id", subscriptionId || "");
+      
         // 5) Keep the tier active until expiry; if already past, downgrade now
         if (isExpired(expiresAt)) {
           await supabase
@@ -344,9 +330,10 @@ export async function POST(req: NextRequest) {
             .update({ tier_expires_at: expiresAt.toISOString() })
             .eq("id", serverId);
         }
-
+      
         break;
       }
+      
 
       default:
         console.log("ℹ️ Unhandled event type:", type);
