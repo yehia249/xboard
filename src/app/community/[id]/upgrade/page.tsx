@@ -8,8 +8,16 @@ import { ArrowLeft, Crown, Star, Clock, ShieldCheck, Zap } from "lucide-react";
 type Community = { name: string; tier: "normal" | "silver" | "gold" };
 
 export default function UpgradeTierPage() {
-  const { id } = useParams();
+  const params = useParams();
   const router = useRouter();
+
+  // normalize id from useParams (can be string | string[])
+  const rawId =
+    typeof params?.id === "string"
+      ? params.id
+      : Array.isArray(params?.id)
+      ? params.id[0]
+      : String(params?.id ?? "");
 
   // ====== Paynow product IDs ======
   const PAYNOW_GOLD_PRODUCT_ID = "478332020456427520"; // one-time product
@@ -53,9 +61,7 @@ export default function UpgradeTierPage() {
       if (current) {
         uid = current.uid;
         email =
-          (current.email ||
-            current.providerData?.[0]?.email ||
-            "").toString();
+          (current.email || current.providerData?.[0]?.email || "").toString();
 
         // overwrite LS with fresh identity
         if (uid) localStorage.setItem("firebase_uid", uid);
@@ -121,7 +127,7 @@ export default function UpgradeTierPage() {
 
   /** MAIN: start checkout flow for a given tier/product */
   async function startCheckout(productId: string, tier: "gold" | "silver") {
-    const serverId = Number(id);
+    const serverId = Number(rawId);
 
     // Always refresh identity from Firebase first
     const { uid, email } = await getUserIdentity();
@@ -180,13 +186,13 @@ export default function UpgradeTierPage() {
   // load community data
   useEffect(() => {
     const fetchCommunity = async () => {
-      const res = await fetch(`/api/communities/${id}`, { cache: "no-store" });
+      const res = await fetch(`/api/communities/${rawId}`, { cache: "no-store" });
       const data = await res.json();
       setCommunity(data);
       setLoading(false);
     };
     fetchCommunity();
-  }, [id]);
+  }, [rawId]);
 
   if (loading) {
     return (
@@ -320,7 +326,7 @@ export default function UpgradeTierPage() {
 
       <div className="mx-auto max-w-5xl px-6 py-12">
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push(`/community/${rawId}`)}
           className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10"
         >
           <ArrowLeft size={16} /> Back
@@ -330,7 +336,7 @@ export default function UpgradeTierPage() {
         <p className="text-gray-400 text-lg mb-10">
           Boost{" "}
           <span className="text-white font-medium">{community.name}</span> by
-          upgrading its tier and reducing its promotion cooldown.
+          upgrading its visibility and reducing its promotion cooldown.
         </p>
 
         <div className="grid gap-6 md:grid-cols-3">
