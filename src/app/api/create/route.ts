@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       "https://xboardz.com";
 
     const returnUrl = `${origin}/community/${serverId}`; // success redirect
-    const cancelUrl = `${origin}/upgrade/${serverId}`;   // cancel redirect
+    const cancelUrl = `${origin}/community/${serverId}/upgrade`;   // cancel redirect
 
     const reference = `srv=${serverId}|uid=${userUid}`;
     const url = `https://api.paynow.gg/v1/stores/${process.env.PAYNOW_STORE_ID}/checkouts`;
