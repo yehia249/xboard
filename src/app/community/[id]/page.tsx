@@ -9,7 +9,6 @@ import { useAuth } from "@/app/hooks/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAuth } from "firebase/auth";
 import { Check, AlertCircle, X } from "lucide-react"; // Import Lucide icons
-import "@/app/all.css"
 
 export default function CommunityDetails() {
   const { id } = useParams();
@@ -368,58 +367,74 @@ export default function CommunityDetails() {
         </button>
       </header>
 
+      {/* ===== Signup Prompt Modal (shows when uid/email missing) ===== */}
       {showSignupPrompt && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-    {/* Backdrop */}
-    <div
-      className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-      onClick={() => setShowSignupPrompt(false)}
-    />
-    
-    {/* Modal */}
-    <div className="relative w-full max-w-md rounded-2xl bg-neutral-900 p-6 shadow-2xl border border-neutral-800 z-10 animate-in fade-in duration-300">
-      <div className="flex flex-col items-center space-y-5">
-        {/* Icon Circle */}
-        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-neutral-800 mt-2">
-          <svg
-            className="h-5 w-5 text-neutral-300"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-        </div>
-        
-        {/* Content */}
-        <div className="text-center space-y-2">
-          <h2 className="text-neutral-100 text-2xl font-medium leading-tight">Sign up to continue</h2>
-          <p className="text-neutral-400 text-sm">You need an account to promote communities.</p>
-        </div>
-        
-        {/* Buttons */}
-        <div className="w-full space-y-3 pt-2">
-          <button
-            onClick={() => {
-              router.push(`/signup?redirect=/community/${id}`);
-            }}
-            className="w-full bg-neutral-100 text-neutral-900 font-medium py-3 transition-all hover:bg-white focus:ring-2 focus:ring-neutral-300 focus:ring-offset-1 focus:ring-offset-neutral-900"
-          >
-            Sign Up
-          </button>
-          
-          <button
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-md transition-opacity"
             onClick={() => setShowSignupPrompt(false)}
-            className="w-full bg-neutral-800 text-neutral-300 font-medium py-3 transition-all hover:bg-neutral-700 focus:ring-2 focus:ring-neutral-700 focus:ring-offset-1 focus:ring-offset-neutral-900"
-          >
-            Cancel
-          </button>
+          />
+
+          {/* Modal */}
+          <div className="relative w-full max-w-md rounded-2xl bg-neutral-950/95 border border-neutral-800 shadow-[0_8px_32px_rgba(0,0,0,0.6)] p-6 z-10 animate-[fadeIn_0.3s_ease-out,scaleIn_0.3s_ease-out] ">
+            <div className="flex flex-col items-center space-y-6">
+              {/* Icon Circle */}
+              <div className="flex items-center justify-center w-14 h-14 rounded-full bg-neutral-900 border border-neutral-800 shadow-inner mt-6">
+                <svg
+                  className="h-6 w-6 text-neutral-300"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+
+              {/* Content */}
+              <div className="text-center space-y-2 mt-2">
+                <h2 className="text-white text-2xl font-semibold">Sign up to continue</h2>
+                <p className="text-neutral-400 text-sm">
+                  Create an account to promote and discover communities.
+                </p>
+              </div>
+
+              {/* Buttons */}
+              <div className="w-full space-y-3 pt-2">
+                <button
+                  onClick={() => {
+                    const redirect = typeof window !== "undefined" ? encodeURIComponent(window.location.pathname + window.location.search) : "%2F";
+                    router.push(`/signup?redirect=${redirect}`);
+                  }}
+                  className="w-full bg-white text-black font-medium py-3 rounded-xl transition-colors hover:bg-neutral-100 focus:ring-2 focus:ring-white/30 cursor-pointer"
+                >
+                  Sign Up
+                </button>
+
+                <button
+                  onClick={() => setShowSignupPrompt(false)}
+                  className="w-full bg-neutral-900 text-neutral-300 font-medium py-3 rounded-xl border border-neutral-800 transition-colors hover:bg-neutral-800 focus:ring-2 focus:ring-neutral-700 cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
+
+      {/* Keyframes for modal animation (for the arbitrary animate-[...] classes) */}
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+          0% { transform: scale(0.98); }
+          100% { transform: scale(1); }
+        }
+      `}</style>
 
 
       {/* Toast Container - New Implementation */}
