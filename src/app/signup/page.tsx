@@ -69,7 +69,7 @@ function SignupForm() {
 
       const redirectPath = searchParams.get("redirect");
       router.push(redirectPath || "/dashboard");
-          } catch (error: any) {
+    } catch (error: any) {
       if (error.code === "auth/email-already-in-use") {
         setErrorMsg("This email is already registered. Please use the login page instead or try a different email address.");
       } else if (error.code === "auth/invalid-email") {
@@ -129,7 +129,7 @@ function SignupForm() {
 
       const redirectPath = searchParams.get("redirect");
       router.push(redirectPath || "/dashboard");
-          } catch (error: any) {
+    } catch (error: any) {
       if (error.code === "auth/popup-closed-by-user") {
         setErrorMsg("Google sign-in was cancelled. Please try again.");
       } else if (error.code === "auth/popup-blocked") {
@@ -149,11 +149,15 @@ function SignupForm() {
   return (
     <div className="min-h-screen w-full bg-black flex items-center justify-center">
       <form className="form relative" onSubmit={handleSignup}>
-        {/* Back to Home link in top right */}
+        {/* Back button in top right (goes to previous page) */}
         <div className="absolute top-4 right-4">
-          <Link href="/" className="text-blue-500 hover:text-blue-700">
-            Back to Home
-          </Link>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="text-blue-500 hover:text-blue-700"
+          >
+            Back
+          </button>
         </div>
         
         <div className="flex-column">
