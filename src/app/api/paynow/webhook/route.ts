@@ -13,14 +13,18 @@ function timingSafeEqual(a: string, b: string) {
   if (A.length !== B.length) return false;
   return crypto.timingSafeEqual(A, B);
 }
+
 function plus30Days(from: Date) {
+  // strict 30 days, independent of month length
   return new Date(from.getTime() + 30 * 24 * 60 * 60 * 1000);
 }
+
 function isExpired(d?: Date | string | null) {
   if (!d) return true;
-  const date = typeof d === "string" ? new Date(d) : d;
+  const date = typeof d === 'string' ? new Date(d) : d;
   return date.getTime() <= Date.now();
 }
+
 function getHeader(req: NextRequest, key: string) {
   return (
     req.headers.get(key) ||
@@ -31,21 +35,20 @@ function getHeader(req: NextRequest, key: string) {
 }
 
 // Try very hard to find "tier" in payload
-function deepFindTier(obj: any): string {
+function deepFindTier(obj: any, path = "evt"): string {
   if (!obj || typeof obj !== "object") return "";
   if (obj.tier) return obj.tier;
   if (obj.metadata?.tier) return obj.metadata.tier;
-
   if (Array.isArray(obj)) {
     for (let i = 0; i < obj.length; i++) {
-      const r = deepFindTier(obj[i]);
+      const r = deepFindTier(obj[i], `${path}[${i}]`);
       if (r) return r;
     }
   }
   const keys = ["lines", "order", "checkout", "product", "plan", "data", "body"];
   for (const k of keys) {
     if (obj[k]) {
-      const r = deepFindTier(obj[k]);
+      const r = deepFindTier(obj[k], `${path}.${k}`);
       if (r) return r;
     }
   }
@@ -69,39 +72,23 @@ function getStableOneTimeId(data: any, fallbackRef: string, timestampMs: number)
   );
 }
 
-async function ensureNormalizedServer(supabase: SupabaseClient, serverId: number) {
-  const { data: s } = await supabase
+async function ensureNormalizedServer(
+  supabase: SupabaseClient,
+  serverId: number
+) {
+  const { data: s, error } = await supabase
     .from("servers")
     .select("tier, tier_expires_at")
     .eq("id", serverId)
     .single();
-
-  if (!s) return;
-
+  if (error || !s) return;
   const expired = isExpired(s.tier_expires_at);
   if (expired && s.tier !== "normal") {
     await supabase
       .from("servers")
       .update({ tier: "normal", tier_expires_at: null })
       .eq("id", serverId);
-    console.log("⬇️  Downgraded server", serverId, "back to 'normal'");
-  }
-}
-
-// update lock table but never fail the webhook if the table isn't present
-async function setLockStatus(
-  supabase: SupabaseClient,
-  serverId: number,
-  status: "completed" | "released"
-) {
-  try {
-    await supabase
-      .from("server_upgrade_locks")
-      .update({ status, hold_until: new Date().toISOString() })
-      .eq("server_id", serverId)
-      .eq("status", "pending");
-  } catch (e) {
-    console.warn("⚠️ lock status update skipped:", (e as any)?.message || e);
+    console.log("⬇️ Downgraded server", serverId, "back to 'normal'");
   }
 }
 
@@ -118,7 +105,10 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     if (!supabaseUrl || !supabaseKey)
-      return NextResponse.json({ error: "Missing Supabase envs" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Missing Supabase envs" },
+        { status: 500 }
+      );
 
     const supabase = createClient(supabaseUrl, supabaseKey, {
       auth: { persistSession: false },
@@ -130,18 +120,26 @@ export async function POST(req: NextRequest) {
     // --- signature verify ---
     const sigHeader = getHeader(req, "PayNow-Signature");
     const tsHeader = getHeader(req, "PayNow-Timestamp");
-    if (!sigHeader) return NextResponse.json({ error: "Missing signature" }, { status: 400 });
-    if (!tsHeader) return NextResponse.json({ error: "Missing timestamp" }, { status: 400 });
+    if (!sigHeader)
+      return NextResponse.json({ error: "Missing signature" }, { status: 400 });
+    if (!tsHeader)
+      return NextResponse.json({ error: "Missing timestamp" }, { status: 400 });
 
     const base = `${tsHeader}.${rawBody}`;
-    const expectedHex = crypto.createHmac("sha256", secret).update(base).digest("hex");
-    const expectedB64 = crypto.createHmac("sha256", secret).update(base).digest("base64");
+    const expectedHex = crypto
+      .createHmac("sha256", secret)
+      .update(base)
+      .digest("hex");
+    const expectedB64 = crypto
+      .createHmac("sha256", secret)
+      .update(base)
+      .digest("base64");
     const provided = sigHeader.replace(/^sha256=/i, "").trim();
-
     const okSig =
       timingSafeEqual(provided, expectedHex) ||
       timingSafeEqual(provided, expectedB64);
-    if (!okSig) return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    if (!okSig)
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
 
     const tsNum = Number(tsHeader);
     const skew = Math.abs(Date.now() - tsNum);
@@ -151,6 +149,8 @@ export async function POST(req: NextRequest) {
 
     // parse AFTER verify
     const evt = JSON.parse(rawBody);
+    console.log("🔔 PayNow Webhook:", JSON.stringify(evt, null, 2));
+
     const type: string = evt?.event_type;
     const data: any = evt?.body || evt?.data || {};
     const now = new Date();
@@ -165,37 +165,19 @@ export async function POST(req: NextRequest) {
       data?.order?.metadata?.reference ||
       evt?.metadata?.reference ||
       "";
-
     if (!reference) {
       console.warn("⚠️ No reference in webhook -> nothing to update");
-      return NextResponse.json({ ok: true, note: "No reference" }, { status: 200 });
+      return NextResponse.json(
+        { ok: true, note: "No reference" },
+        { status: 200 }
+      );
     }
-
     const { serverId, userUid } = parseReference(reference);
     if (!serverId || !userUid) {
-      return NextResponse.json({ error: "Missing serverId/userUid in reference" }, { status: 400 });
-    }
-
-    // ---- IDEMPOTENCY: ignore duplicates ----
-    // Prefer the provider event id; fall back to order id; last resort: (type + timestamp)
-    const eventId: string =
-      String(evt?.id || data?.event_id || data?.order?.id || `${type}:${tsNum}`);
-
-    const insertEvent = await supabase
-      .from("processed_events")
-      .insert({ id: eventId, type, reference })
-      .select("id")
-      .single();
-
-    if (insertEvent.error) {
-      // 23505 = unique_violation (duplicate primary key)
-      if ((insertEvent.error as any).code === "23505") {
-        console.log("🔁 Duplicate webhook ignored:", eventId);
-        return NextResponse.json({ ok: true, duplicate: true }, { status: 200 });
-      }
-      console.error("❌ processed_events insert error:", insertEvent.error);
-      // If we can’t guarantee idempotency, bail to avoid double-applying
-      return NextResponse.json({ error: "Dedupe insert failed" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Missing serverId/userUid in reference" },
+        { status: 400 }
+      );
     }
 
     // tier
@@ -212,61 +194,61 @@ export async function POST(req: NextRequest) {
       evt?.body?.lines?.[0]?.metadata?.tier ||
       deepFindTier(evt) ||
       null;
-
-    if (tier !== "gold" && tier !== "silver") tier = null;
+    if (tier !== "gold" && tier !== "silver") {
+      tier = null;
+    }
 
     // subscription id (if a subscription event)
     const subscriptionId: string | undefined =
       data?.subscription_id || data?.id || data?.subscription?.id;
 
-    console.log("🎯 Event:", type, "| Tier:", tier, "| Server:", serverId, "| User:", userUid, "| Evt:", eventId);
+    console.log(
+      "🎯 Event:",
+      type,
+      "| Tier:",
+      tier,
+      "| Server:",
+      serverId,
+      "| User:",
+      userUid
+    );
 
     switch (type) {
       /* ---------- ONE-TIME ORDERS ---------- */
       case "ON_ORDER_COMPLETED": {
         if (!tier) {
           console.error("❌ Order completed but no tier found");
-          return NextResponse.json({ ok: true, note: "No tier on one-time order" }, { status: 200 });
+          return NextResponse.json(
+            { ok: true, note: "No tier on one-time order" },
+            { status: 200 }
+          );
         }
-
         const expiresAt = plus30Days(now);
-        const oneTimeId = getStableOneTimeId(data, reference, tsNum); // use ORDER ID when possible
+        const oneTimeId = getStableOneTimeId(data, reference, tsNum);
 
-        // idempotent upsert by provider_subscription_id (order id)
-        const { error: upsertErr } = await supabase.from("server_subscriptions").upsert(
-          {
-            server_id: serverId,
-            user_id: userUid,
-            tier,
-            provider: "paynow",
-            provider_subscription_id: oneTimeId,
-            status: "active",
-            started_at: now.toISOString(),
-            expires_at: expiresAt.toISOString(),
-          },
-          { onConflict: "provider_subscription_id" }
-        );
+        // idempotent upsert
+        const { error: upsertErr } = await supabase
+          .from("server_subscriptions")
+          .upsert(
+            {
+              server_id: serverId,
+              user_id: userUid,
+              tier,
+              provider: "paynow",
+              provider_subscription_id: oneTimeId, // non-null
+              status: "active",
+              started_at: now.toISOString(),
+              expires_at: expiresAt.toISOString(),
+            },
+            { onConflict: "provider_subscription_id" }
+          );
         if (upsertErr) console.error("❌ upsert one-time:", upsertErr);
-
-        // Prevent accidental “double extension”: set to the later of current expiry vs new expiry
-        const { data: s0 } = await supabase
-          .from("servers")
-          .select("tier_expires_at")
-          .eq("id", serverId)
-          .single();
-
-        const current = s0?.tier_expires_at ? new Date(String(s0.tier_expires_at)) : null;
-        const finalExpiry = current && current > expiresAt ? current : expiresAt;
 
         const { error: sErr } = await supabase
           .from("servers")
-          .update({ tier, tier_expires_at: finalExpiry.toISOString() })
+          .update({ tier, tier_expires_at: expiresAt.toISOString() })
           .eq("id", serverId);
         if (sErr) console.error("❌ update server tier:", sErr);
-
-        // ✓ release/complete lock for this server
-        await setLockStatus(supabase, serverId, "completed");
-
         break;
       }
 
@@ -274,72 +256,68 @@ export async function POST(req: NextRequest) {
       case "ON_SUBSCRIPTION_ACTIVATED":
       case "ON_SUBSCRIPTION_RENEWED": {
         if (!tier) {
-          return NextResponse.json({ error: "No tier metadata on subscription product" }, { status: 400 });
+          return NextResponse.json(
+            { error: "No tier metadata on subscription product" },
+            { status: 400 }
+          );
         }
+        // Prefer gateway period end if provided
         const gatewayEndStr: string | undefined =
           data?.current_period_end || data?.expires_at || data?.period?.end;
-
         let expiresAt: Date;
         if (gatewayEndStr) {
           expiresAt = new Date(gatewayEndStr);
         } else {
+          // extend from latest of existing expiry or now
           const { data: existing } = await supabase
             .from("server_subscriptions")
             .select("expires_at")
             .eq("provider_subscription_id", subscriptionId || "")
             .single();
-
-          const base = existing?.expires_at ? new Date(existing.expires_at) : now;
+          const base = existing?.expires_at
+            ? new Date(existing.expires_at)
+            : now;
           expiresAt = base > now ? plus30Days(base) : plus30Days(now);
         }
 
-        const { error: upsertErr } = await supabase.from("server_subscriptions").upsert(
-          {
-            server_id: serverId,
-            user_id: userUid,
-            tier,
-            provider: "paynow",
-            provider_subscription_id: subscriptionId || `sub:${reference}:${tsNum}`,
-            status: "active",
-            started_at: now.toISOString(),
-            expires_at: expiresAt.toISOString(),
-          },
-          { onConflict: "provider_subscription_id" }
-        );
+        const { error: upsertErr } = await supabase
+          .from("server_subscriptions")
+          .upsert(
+            {
+              server_id: serverId,
+              user_id: userUid,
+              tier,
+              provider: "paynow",
+              provider_subscription_id:
+                subscriptionId || `sub:${reference}:${tsNum}`,
+              status: "active",
+              started_at: now.toISOString(),
+              expires_at: expiresAt.toISOString(),
+            },
+            { onConflict: "provider_subscription_id" }
+          );
         if (upsertErr) console.error("❌ upsert subscription:", upsertErr);
-
-        const { data: s0 } = await supabase
-          .from("servers")
-          .select("tier_expires_at")
-          .eq("id", serverId)
-          .single();
-
-        const current = s0?.tier_expires_at ? new Date(String(s0.tier_expires_at)) : null;
-        const finalExpiry = current && current > expiresAt ? current : expiresAt;
 
         const { error: sErr } = await supabase
           .from("servers")
-          .update({ tier, tier_expires_at: finalExpiry.toISOString() })
+          .update({ tier, tier_expires_at: expiresAt.toISOString() })
           .eq("id", serverId);
         if (sErr) console.error("❌ update server:", sErr);
-
-        // ✓ release/complete lock
-        await setLockStatus(supabase, serverId, "completed");
-
         break;
       }
 
       /* ---------- SUBSCRIPTION CANCELED ---------- */
       case "ON_SUBSCRIPTION_CANCELED": {
+        // 1) Try to get the period end from the gateway
         const gatewayEndStr =
           data?.current_period_end || data?.expires_at || data?.period?.end;
-
+        // 2) Otherwise, use what we already know in DB (expires_at or started_at + 30d)
         const { data: existing } = await supabase
           .from("server_subscriptions")
           .select("expires_at, started_at")
           .eq("provider_subscription_id", subscriptionId || "")
           .single();
-
+        // 3) As another fallback, look at the server’s visible expiry (if any)
         const { data: s } = await supabase
           .from("servers")
           .select("tier_expires_at")
@@ -347,18 +325,30 @@ export async function POST(req: NextRequest) {
           .single();
 
         let expiresAt: Date | null = null;
+        if (gatewayEndStr) {
+          // Gateway told us the exact end of the current period
+          expiresAt = new Date(gatewayEndStr);
+        } else if (existing?.expires_at) {
+          // Use the expiry we stored when the sub was activated/renewed
+          expiresAt = new Date(String(existing.expires_at));
+        } else if (existing?.started_at) {
+          // Infer one full cycle from the start (strict 30 days)
+          expiresAt = plus30Days(new Date(String(existing.started_at)));
+        } else if (s?.tier_expires_at) {
+          // Last resort: mirror whatever the server shows
+          expiresAt = new Date(String(s.tier_expires_at));
+        } else {
+          // We don't know any remaining time → no free extension
+          expiresAt = new Date();
+        }
 
-        if (gatewayEndStr) expiresAt = new Date(gatewayEndStr);
-        else if (existing?.expires_at) expiresAt = new Date(String(existing.expires_at));
-        else if (existing?.started_at) expiresAt = plus30Days(new Date(String(existing.started_at)));
-        else if (s?.tier_expires_at) expiresAt = new Date(String(s.tier_expires_at));
-        else expiresAt = new Date();
-
+        // 4) Mark subscription as canceled, but keep the expiry
         await supabase
           .from("server_subscriptions")
           .update({ status: "canceled", expires_at: expiresAt.toISOString() })
           .eq("provider_subscription_id", subscriptionId || "");
 
+        // 5) Keep the tier active until expiry; if already past, downgrade now
         if (isExpired(expiresAt)) {
           await supabase
             .from("servers")
@@ -370,10 +360,6 @@ export async function POST(req: NextRequest) {
             .update({ tier_expires_at: expiresAt.toISOString() })
             .eq("id", serverId);
         }
-
-        // ✓ free the lock if someone canceled during a pending upgrade
-        await setLockStatus(supabase, serverId, "released");
-
         break;
       }
 
@@ -382,12 +368,16 @@ export async function POST(req: NextRequest) {
         break;
     }
 
+    // Final safety: if it's past due for this server, normalize now.
     await ensureNormalizedServer(supabase, serverId);
 
     console.log("✅ Webhook processed");
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (e: any) {
     console.error("❌ Webhook error:", e);
-    return NextResponse.json({ error: e?.message || "Webhook error" }, { status: 500 });
+    return NextResponse.json(
+      { error: e?.message || "Webhook error" },
+      { status: 500 }
+    );
   }
 }
