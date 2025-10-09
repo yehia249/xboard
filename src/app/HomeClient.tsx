@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef, useLayoutEffect, Suspense } from "react";
@@ -410,6 +409,29 @@ function CommunityPageContentInner() {
 
   const isMobile = window.innerWidth <= 768;
   const isDesktop = window.innerWidth > 1200;
+
+  // ---------- Skeleton Card (loading placeholder, no spinner) ----------
+  const SkeletonCard = () => (
+    <div className="server-card skeleton-card" aria-hidden="true">
+      <div className="image-container">
+        <div className="skeleton skeleton-image" />
+      </div>
+
+      <div className="card-content" style={{ paddingTop: 0 }}>
+        <div className="skeleton skeleton-line title" />
+        <div className="skeleton skeleton-line" />
+        <div className="skeleton skeleton-line short" />
+
+        <div className="tags" style={{ paddingTop: 8 }}>
+          <span className="skeleton skeleton-pill" />
+          <span className="skeleton skeleton-pill" />
+          <span className="skeleton skeleton-pill long" />
+        </div>
+
+        <a className="join-link skeleton skeleton-button" />
+      </div>
+    </div>
+  );
   
   return (
     <div
@@ -966,7 +988,14 @@ function CommunityPageContentInner() {
 
         {/* Community Server List */}
         <div className="server-list" >
-          {loading ? null  : error ? (
+          {loading ? (
+            // ---------- Skeleton Grid while loading ----------
+            <>
+              {Array.from({ length: 9 }).map((_, i) => (
+                <SkeletonCard key={`skeleton-${i}`} />
+              ))}
+            </>
+          ) : error ? (
             <p>Error: {error}</p>
           ) : communities.length === 0 ? (
             <div className="error-content" style={{ display: 'flex', justifyContent: 'center',  width: isMobile ? '100%' : isDesktop ? '320%' : '200%' 
@@ -1183,7 +1212,7 @@ function CommunityPageContentInner() {
         `}</style>
 
         {/* Pagination UI */}
-        {totalPages > 1 && (
+        {totalPages > 1 && !loading && (
           <div
             className="pagination"
             style={{
