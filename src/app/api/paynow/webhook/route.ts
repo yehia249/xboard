@@ -88,6 +88,23 @@ async function ensureNormalizedServer(supabase: SupabaseClient, serverId: number
   }
 }
 
+// update lock table but never fail the webhook if the table isn't present
+async function setLockStatus(
+  supabase: SupabaseClient,
+  serverId: number,
+  status: "completed" | "released"
+) {
+  try {
+    await supabase
+      .from("server_upgrade_locks")
+      .update({ status, hold_until: new Date().toISOString() })
+      .eq("server_id", serverId)
+      .eq("status", "pending");
+  } catch (e) {
+    console.warn("⚠️ lock status update skipped:", (e as any)?.message || e);
+  }
+}
+
 /* ---------- webhook ---------- */
 
 export async function POST(req: NextRequest) {
@@ -247,6 +264,9 @@ export async function POST(req: NextRequest) {
           .eq("id", serverId);
         if (sErr) console.error("❌ update server tier:", sErr);
 
+        // ✓ release/complete lock for this server
+        await setLockStatus(supabase, serverId, "completed");
+
         break;
       }
 
@@ -303,6 +323,9 @@ export async function POST(req: NextRequest) {
           .eq("id", serverId);
         if (sErr) console.error("❌ update server:", sErr);
 
+        // ✓ release/complete lock
+        await setLockStatus(supabase, serverId, "completed");
+
         break;
       }
 
@@ -347,6 +370,10 @@ export async function POST(req: NextRequest) {
             .update({ tier_expires_at: expiresAt.toISOString() })
             .eq("id", serverId);
         }
+
+        // ✓ free the lock if someone canceled during a pending upgrade
+        await setLockStatus(supabase, serverId, "released");
+
         break;
       }
 
