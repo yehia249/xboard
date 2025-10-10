@@ -10,10 +10,7 @@ export const dynamic = "force-dynamic";
  * Body: { userUid: string }
  * Verifies subscription belongs to the user's paynow_customer_id, then cancels it.
  */
-export async function POST(
-  req: Request,
-  context: { params: { id: string } }
-) {
+export async function POST(req: Request) {
   try {
     const PAYNOW_API_KEY = process.env.PAYNOW_API_KEY;
     const PAYNOW_STORE_ID = process.env.PAYNOW_STORE_ID;
@@ -30,8 +27,14 @@ export async function POST(
       return NextResponse.json({ error: "Missing Supabase envs" }, { status: 500 });
     }
 
+    // Extract subscriptionId from the URL path instead of using the route context
+    const url = new URL(req.url);
+    // /api/paynow/subscriptions/:id/cancel -> grab the segment after "subscriptions"
+    const parts = url.pathname.split("/").filter(Boolean);
+    const subsIdx = parts.indexOf("subscriptions");
+    const subscriptionId = subsIdx >= 0 ? parts[subsIdx + 1] : "";
+
     const { userUid } = await req.json();
-    const subscriptionId = context.params.id;
 
     if (!userUid || !subscriptionId) {
       return NextResponse.json({ error: "Missing userUid/subscriptionId" }, { status: 400 });
@@ -49,7 +52,10 @@ export async function POST(
       .maybeSingle();
 
     if (mapErr) {
-      return NextResponse.json({ error: "Mapping lookup failed", detail: mapErr.message }, { status: 500 });
+      return NextResponse.json(
+        { error: "Mapping lookup failed", detail: mapErr.message },
+        { status: 500 }
+      );
     }
     if (!mapping?.paynow_customer_id) {
       return NextResponse.json({ error: "No PayNow account for user" }, { status: 403 });
@@ -77,14 +83,17 @@ export async function POST(
     const subCustomerId = sub?.customer?.id || sub?.customer_id;
 
     if (String(subCustomerId) !== String(mapping.paynow_customer_id)) {
-      return NextResponse.json({ error: "Subscription does not belong to this user" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Subscription does not belong to this user" },
+        { status: 403 }
+      );
     }
 
     // Cancel the subscription
-    const cancelResp = await fetch(`${base}/subscriptions/${subscriptionId}/cancel`, {
-      method: "POST",
-      headers,
-    });
+    const cancelResp = await fetch(
+      `${base}/subscriptions/${subscriptionId}/cancel`,
+      { method: "POST", headers }
+    );
 
     if (cancelResp.status === 204) {
       return NextResponse.json({ ok: true }, { status: 200 });
