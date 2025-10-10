@@ -912,7 +912,7 @@ function DashboardContent() {
     }
   };
 
-  // Use real subs unless debug flag is on and there are none
+  // Use real subs unless debug flag is on and there are none    
   const subsForUI: PayNowSub[] =
     DEBUG_FORCE_SUBS && subscriptions.length === 0 ? MOCK_SUBS : subscriptions;
 
