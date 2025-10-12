@@ -1164,14 +1164,7 @@ function DashboardContent() {
       </div>
       
       <div className="dashboard-buttons">
-        <Link href="/" className="homeBtn" passHref>
-        <div className="sign">
-            <svg viewBox="0 0 576 512">
-            <path d="M280.4 148.3L96 300.1V464c0 8.8 7.2 16 16 16l112-.3c8.8 0 16-7.2 16-16V368c0-8.8 7.2-16 16-16h64c8.8 0 16 7.2 16 16v95.6c0 8.8 7.2 16 16 16l112 .3c8.8 0 16-7.2 16-16V300L295.7 148.3c-8.6-7-21-7-29.6 0zM571.6 251.5L488 182.6V44c0-6.6-5.4-12-12-12h-56c-6.6 0-12 5.4-12 12v72.6L318.5 43c-18.9-15.5-46.1-15.5-65 0L4.3 251.5c-5.1 4.2-5.8 11.7-1.6 16.8l25.5 30.5c4.2 5.1 11.7 5.8 16.8 1.6L64 278.6V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V278.6l19 21.9c4.2 4.2 11.7 3.6 15.9-1.5l25.5-30.5c4.2-5.1 3.5-12.6-1.6-16.8z"/>
-            </svg>
-          </div>
-          <div className="text">Home</div>
-        </Link>
+
         <button onClick={logout} className="LogoutBtn">
           <div className="sign">
             <svg viewBox="0 0 512 512">

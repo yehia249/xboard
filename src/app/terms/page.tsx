@@ -1,4 +1,3 @@
-// app/guidelines/page.tsx
 "use client";
 
 import "@/app/all.css";
@@ -9,14 +8,12 @@ import Link from "next/link";
 import { useAuth } from "@/app/hooks/AuthContext";
 import Footer from "@/app/components/footer";
 
+const LAST_UPDATED = "October 11, 2025";
 
-
-
-export default function GuidelinesPage() {
+export default function TermsPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  // Handle Post Community button click
   const handlePostCommunity = () => {
     if (user) {
       router.push("/dashboard");
@@ -74,7 +71,6 @@ export default function GuidelinesPage() {
             />
           </Link>
 
-          {/* "Post your Community" Button */}
           <button
             id="postabutton"
             className="postabutton"
@@ -87,27 +83,63 @@ export default function GuidelinesPage() {
       </div>
 
       <main className="max-w-3xl mx-auto px-6 py-16 text-white">
-      <h1 className="text-3xl font-extrabold mb-2 !mt-8">Community Guidelines</h1>
-        <p className="text-lg text-gray-300 mb-5">
-          We want to promote and inspire X community building that is respectful, inclusive, and aligned with the values of the broader X (formerly Twitter) platform. To do this, we’ve created a few core guidelines that help shape what is allowed on XBoard.
+      <h1 className="text-3xl font-extrabold mb-2 !mt-8">Terms of Service</h1>
+      <p className="text-sm text-gray-400 mb-8">Last updated: {LAST_UPDATED}</p>
+
+        <p className="text-gray-300 mb-6 leading-7">
+          By using <strong>XBoard</strong>, you agree to follow these Terms and our Privacy Policy. If you do not agree, please do not use the Service. These Terms are written to set clear expectations in plain language, so you know what applies while browsing, posting, or managing your account. Nothing here changes the basic idea: if you continue using the platform, you’re acknowledging these ground rules and proceeding with that understanding in mind.
         </p>
 
-
-        <h2 className="text-2xl font-bold mb-4">Follow the X (Twitter) Community Guidelines</h2>
-
-        <p className="text-lg text-gray-300 mb-5">
-          We ask that you also respect the official X rules and policies. While XBoard is not affiliated with X Corp., we do moderate content based on the general expectations of what is appropriate on the X platform.
+        <h2 className="text-2xl font-bold mb-3">Accounts</h2>
+        <p className="text-gray-300 mb-6 leading-7">
+          You are responsible for maintaining the confidentiality of your account credentials and for all activity under your account. We may suspend or terminate accounts that violate these Terms. This is a standard approach meant to keep things orderly—when your login details are handled carefully, your experience stays predictable, and if something goes off track, action can be taken to restore normal use and preserve the overall integrity of the Service.
         </p>
 
-        <a
-          href="https://help.twitter.com/en/rules-and-policies/twitter-rules"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm font-medium text-blue-400 hover:underline"
-        >
-          Read the official X Community Guidelines →
-        </a>
+        <h2 className="text-2xl font-bold mb-3">User Content</h2>
+        <p className="text-gray-300 mb-6 leading-7">
+          You may post communities, media, and descriptions on XBoard. You must own or have permission to use the content you upload. We may remove content that violates laws, rights, or our standards. The point here is simple: share material you’re allowed to share, and expect routine moderation so listings remain usable and aligned with the basic expectations of a public platform.
+        </p>
+
+        <h2 className="text-2xl font-bold mb-3">Payments and Subscriptions</h2>
+        <p className="text-gray-300 mb-6 leading-7">
+          Payments are securely handled by third-party processors. Subscription features activate upon payment confirmation. Renewals or refunds are governed by the checkout provider’s terms. In practice, this means payment steps follow the normal flow you’re familiar with elsewhere, and any timing or billing specifics follow the rules shown at checkout, keeping everything straightforward and consistent.
+        </p>
+
+        <h2 className="text-2xl font-bold mb-3">Intellectual Property</h2>
+        <p className="text-gray-300 mb-6 leading-7">
+          All logos, code, and designs of XBoard belong to us. You may not copy, modify, or redistribute our materials without consent. This is just a clear reminder that the platform’s branding and build are not for reuse, and that the usual permission-first approach applies whenever you want to reference or incorporate any part of it.
+        </p>
+
+        <h2 className="text-2xl font-bold mb-3">Prohibited Use</h2>
+        <p className="text-gray-300 mb-6 leading-7">
+          You may not use XBoard for illegal, fraudulent, or abusive purposes, including spam, manipulation of listings, or misuse of the payment system. The intention is to keep activity normal and respectful, so regular users can find and share communities without noise, disruption, or interference.
+        </p>
+
+        <h2 className="text-2xl font-bold mb-3">Disclaimer</h2>
+        <p className="text-gray-300 mb-6 leading-7">
+          XBoard is provided “as is” and without warranties. We do not guarantee uninterrupted or error-free operation and are not liable for any data loss. This is the typical statement that services include so expectations stay realistic; the platform aims to run smoothly, but it cannot promise perfection at all times.
+        </p>
+
+        <h2 className="text-2xl font-bold mb-3">Limitation of Liability</h2>
+        <p className="text-gray-300 mb-6 leading-7">
+          To the fullest extent allowed by law, XBoard will not be responsible for indirect, incidental, or consequential damages arising from use of the Service. In other words, the scope of responsibility is limited in a standard, widely understood way, reflecting the practical reality of operating an online platform used by many different people.
+        </p>
+
+        <h2 className="text-2xl font-bold mb-3">Indemnification</h2>
+        <p className="text-gray-300 mb-6 leading-7">
+          You agree to indemnify and hold harmless XBoard from claims, damages, or losses related to your use of the Service or breach of these Terms. This simply means that if issues arise from how an account is used, the account holder is expected to take responsibility for that use.
+        </p>
+
+        <h2 className="text-2xl font-bold mb-3">Changes</h2>
+        <p className="text-gray-300 mb-6 leading-7">
+          We may update these Terms as the platform evolves. Continued use of XBoard means you accept any updated Terms. If adjustments are made, they are intended to reflect the same core ideas in a refreshed form, and your ongoing use indicates you’re moving forward under the updated wording.
+        </p>
       </main>
+
+      {/* Footer */}
+      <div className="mt-16">
+        <Footer />
+      </div>
     </>
   );
 }
