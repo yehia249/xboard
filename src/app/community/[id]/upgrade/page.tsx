@@ -193,29 +193,7 @@ export default function UpgradeTierPage() {
 
   if (loading) {
     return (
-      <div className="relative min-h-screen bg-[#0b0b0c] text-white">
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute -top-24 -left-24 h-80 w-80 rounded-full blur-3xl opacity-20 bg-gradient-to-br from-white/10 to-slate-500/10" />
-          <div className="absolute -bottom-24 -right-24 h-80 w-80 rounded-full blur-3xl opacity-20 bg-gradient-to-tr from-slate-400/10 to-white/10" />
-        </div>
-        <div className="mx-auto max-w-5xl px-6 py-12">
-          <div className="mb-6 h-4 w-24 rounded bg-white/10 animate-pulse" />
-          <div className="h-9 w-48 rounded bg-white/10 animate-pulse mb-3" />
-          <div className="h-4 w-80 rounded bg-white/10 animate-pulse mb-10" />
-          <div className="grid gap-6 md:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur"
-              >
-                <div className="h-6 w-24 rounded bg-white/10 animate-pulse mb-3" />
-                <div className="h-4 w-32 rounded bg-white/10 animate-pulse mb-6" />
-                <div className="h-9 w-full rounded bg-white/10 animate-pulse" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+null
     );
   }
 
