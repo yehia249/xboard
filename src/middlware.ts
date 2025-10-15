@@ -3,19 +3,19 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(req: NextRequest) {
-  const url = req.nextUrl;
   const host = req.headers.get("host") || "";
+  const accept = req.headers.get("accept") || "";
 
-  // 301 redirect www → non-www (canonical host)
-  if (host.startsWith("www.")) {
-    url.host = host.replace(/^www\./, "");
-    return NextResponse.redirect(url, 301);
+  // Keep www working, but tell bots not to index HTML pages on www
+  if (host.startsWith("www.") && accept.includes("text/html")) {
+    const res = NextResponse.next();
+    res.headers.set("X-Robots-Tag", "noindex, follow");
+    return res;
   }
 
   return NextResponse.next();
 }
 
-// run on all paths
 export const config = {
-  matcher: ["/:path*"],
+  matcher: ["/:path*"], // apply to all paths
 };
