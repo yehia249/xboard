@@ -1,9 +1,8 @@
-// app/page.tsx (Server Component)
+// src/app/page.tsx (Server Component)
 import HomeClient from "./HomeClient";
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 
-// ✅ Viewport defined separately (App Router best practice)
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -31,7 +30,7 @@ export const metadata: Metadata = {
   publisher: "XBoard",
   metadataBase: new URL("https://xboardz.com"),
   alternates: {
-    canonical: "https://xboardz.com/",
+    canonical: "https://xboardz.com",
   },
   formatDetection: {
     email: false,
@@ -42,11 +41,11 @@ export const metadata: Metadata = {
     title: "XBoard – Discover & Promote X (Twitter) Communities",
     description:
       "XBoard – Discover & Promote X (Twitter) Communities across gaming, crypto, tech, and more.",
-    url: "https://xboardz.com/", // ✅ make URL style consistent with canonical
+    url: "https://xboardz.com",
     siteName: "XBoard",
     images: [
       {
-        url: "https://xboardz.com/xboard-banner.png", // Ensure image is optimized 1200x630
+        url: "https://xboardz.com/xboard-banner.png",
         width: 1200,
         height: 630,
         alt: "XBoard - Discover X Communities",
@@ -85,9 +84,10 @@ export default function Page() {
   const ld = {
     "@context": "https://schema.org",
     "@type": "WebPage",
+    name: "XBoard – Discover & Promote X (Twitter) Communities",
     description:
       "XBoard – Discover & Promote X (Twitter) Communities across gaming, crypto, tech, and more.",
-    url: "https://xboardz.com/", // ✅ match the trailing slash style
+    url: "https://xboardz.com",
     publisher: {
       "@type": "Organization",
       name: "XBoard",
@@ -106,12 +106,10 @@ export default function Page() {
 
   return (
     <>
-      {/* ✅ Visible H1 for SEO (screen-reader only is OK if you keep visible headings elsewhere) */}
       <h1 className="sr-only">
         XBoard – Discover & Promote X (Twitter) Communities across gaming, crypto, tech, and more.
       </h1>
       <HomeClient />
-      {/* ✅ Proper JSON-LD injection */}
       <Script
         id="ld-home"
         type="application/ld+json"

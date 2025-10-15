@@ -19,7 +19,6 @@ export const metadata: Metadata = {
   description: "Discover X communities",
 };
 
-// ✅ viewport must be its own export (not inside metadata)
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,

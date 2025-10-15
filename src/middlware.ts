@@ -1,15 +1,15 @@
-// src/middleware.ts (NOT src/app/middleware.ts)
+// src/middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(req: NextRequest) {
   const host = req.headers.get("host") || "";
+  const url = req.nextUrl.clone();
   
-  // Add noindex to www subdomain
+  // Redirect www to non-www (301 permanent redirect)
   if (host.startsWith("www.")) {
-    const res = NextResponse.next();
-    res.headers.set("X-Robots-Tag", "noindex, follow");
-    return res;
+    url.host = host.replace("www.", "");
+    return NextResponse.redirect(url, { status: 301 });
   }
   
   return NextResponse.next();
@@ -17,9 +17,6 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except static assets
-     */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
