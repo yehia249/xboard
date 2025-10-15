@@ -1,17 +1,18 @@
 // app/page.tsx (Server Component)
 import HomeClient from "./HomeClient";
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 
-// ✅ Fix for Next.js warning: viewport should be defined separately
+// ✅ Viewport defined separately (App Router best practice)
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
 };
 
 export const metadata: Metadata = {
-  title: "Sign Up on XBoard – Discover & Promote Top X (Twitter) Communities",
+  title: "XBoard – Discover & Promote Top X (Twitter) Communities",
   description:
-    "Sign up on XBoard today and explore the best X (Twitter) communities in crypto, gaming, tech, and more. Connect and promote your favorites now!",
+    "XBoard – Discover & Promote X (Twitter) Communities in crypto, gaming, tech, and more. Connect and promote your favorites now!",
   keywords: [
     "X communities",
     "Twitter communities",
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
   publisher: "XBoard",
   metadataBase: new URL("https://xboardz.com"),
   alternates: {
-    canonical: "https://xboardz.com/signup",
+    canonical: "https://xboardz.com/",
   },
   formatDetection: {
     email: false,
@@ -38,10 +39,10 @@ export const metadata: Metadata = {
     telephone: false,
   },
   openGraph: {
-    title: "Sign Up on XBoard – Discover & Promote X (Twitter) Communities",
+    title: "XBoard – Discover & Promote X (Twitter) Communities",
     description:
-      "Sign up to XBoard and discover thousands of X (Twitter) communities across gaming, crypto, tech, and more.",
-    url: "https://xboardz.com/signup",
+      "XBoard – Discover & Promote X (Twitter) Communities across gaming, crypto, tech, and more.",
+    url: "https://xboardz.com/", // ✅ make URL style consistent with canonical
     siteName: "XBoard",
     images: [
       {
@@ -56,7 +57,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sign Up on XBoard – Discover & Promote X (Twitter) Communities",
+    title: "XBoard – Discover & Promote Top X (Twitter) Communities",
     description:
       "Join XBoard and explore the best X (Twitter) communities. Promote your favorites and connect with others.",
     images: ["https://xboardz.com/xboard-banner.png"],
@@ -79,42 +80,46 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   verification: {
-    google: "your-google-verification-code", // Replace with actual code
-  },
-  other: {
-    "application/ld+json": JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "WebPage",
-      name: "Sign Up on XBoard",
-      description:
-        "Sign up on XBoard to discover and promote the best X (Twitter) communities.",
-      url: "https://xboardz.com/signup",
-      publisher: {
-        "@type": "Organization",
-        name: "XBoard",
-        url: "https://xboardz.com",
-        logo: {
-          "@type": "ImageObject",
-          url: "https://xboardz.com/xboard-banner.png",
-        },
-      },
-      potentialAction: {
-        "@type": "SearchAction",
-        target: "https://xboardz.com/search?q={search_term_string}",
-        "query-input": "required name=search_term_string",
-      },
-    }),
+    google: "kj_OaLZLrnEXi4BWclsrsZk91Y0-XrjUbWdRuPDngcI", // Replace with actual code
   },
 };
 
 export default function Page() {
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    description:
+      "XBoard – Discover & Promote X (Twitter) Communities across gaming, crypto, tech, and more.",
+    url: "https://xboardz.com/", // ✅ match the trailing slash style
+    publisher: {
+      "@type": "Organization",
+      name: "XBoard",
+      url: "https://xboardz.com",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://xboardz.com/xboard-banner.png",
+      },
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://xboardz.com/search?q={search_term_string}",
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <>
-      {/* ✅ Visible H1 for SEO */}
+      {/* ✅ Visible H1 for SEO (screen-reader only is OK if you keep visible headings elsewhere) */}
       <h1 className="sr-only">
-        Sign Up to Discover and Promote X (Twitter) Communities on XBoard
+        XBoard – Discover & Promote X (Twitter) Communities across gaming, crypto, tech, and more.
       </h1>
       <HomeClient />
+      {/* ✅ Proper JSON-LD injection */}
+      <Script
+        id="ld-home"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
+      />
     </>
   );
 }
