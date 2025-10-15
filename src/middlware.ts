@@ -1,21 +1,27 @@
-// src/middleware.ts
+// src/middleware.ts  (or middleware.ts at project root)
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(req: NextRequest) {
-  const host = req.headers.get("host") || "";
-  const accept = req.headers.get("accept") || "";
+const STATIC_EXT = /\.(css|js|mjs|png|jpe?g|webp|gif|svg|ico|json|xml|txt|map|woff2?|ttf|otf)$/i;
 
-  // Keep www working, but tell bots not to index HTML pages on www
-  if (host.startsWith("www.") && accept.includes("text/html")) {
-    const res = NextResponse.next();
-    res.headers.set("X-Robots-Tag", "noindex, follow");
-    return res;
+export function middleware(req: NextRequest) {
+  const url = req.nextUrl;
+  const host = req.headers.get("host") || "";
+
+  // Only touch the www host; leave apex alone
+  if (host.startsWith("www.")) {
+    // Skip obvious static assets to avoid unnecessary headers
+    if (!STATIC_EXT.test(url.pathname)) {
+      const res = NextResponse.next();
+      res.headers.set("X-Robots-Tag", "noindex, follow");
+      return res;
+    }
   }
 
   return NextResponse.next();
 }
 
+// Apply to all paths
 export const config = {
-  matcher: ["/:path*"], // apply to all paths
+  matcher: ["/:path*"],
 };
