@@ -5,12 +5,11 @@ import type { NextRequest } from "next/server";
 export function middleware(req: NextRequest) {
   const host = req.headers.get("host") || "";
   
-  // Redirect www to apex domain
+  // Add noindex to www subdomain
   if (host.startsWith("www.")) {
-    const newUrl = req.nextUrl.clone();
-    newUrl.host = host.replace(/^www\./, "");
-    
-    return NextResponse.redirect(newUrl, 301); // Permanent redirect
+    const res = NextResponse.next();
+    res.headers.set("X-Robots-Tag", "noindex, follow");
+    return res;
   }
   
   return NextResponse.next();
@@ -19,11 +18,7 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization)
-     * - favicon.ico (favicon)
-     * - public files (images, etc.)
+     * Match all request paths except static assets
      */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
