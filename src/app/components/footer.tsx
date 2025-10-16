@@ -37,6 +37,16 @@ export default function Footer() {
           >
             Guidelines
           </a>
+
+          {/* ✅ Added FAQ link */}
+          <a
+            href="/faq"
+            className="transition-opacity text-base text-gray-300 hover:opacity-90"
+            style={{ textDecoration: "none" }}
+          >
+            FAQ
+          </a>
+
           <a
             href="/privacy"
             className="transition-opacity text-base text-gray-300 hover:opacity-90"
