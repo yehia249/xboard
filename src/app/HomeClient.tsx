@@ -436,7 +436,15 @@ function CommunityPageContentInner() {
   return (
     <div
       className="community-page"
-      style={{  position: "relative", width: "100%", margin: 0, padding: 0 }}
+      style={{  
+        position: "relative",
+        width: "100%",
+        margin: 0,
+        padding: 0,
+        minHeight: "100vh",            // ✨ fill the viewport height
+        display: "flex",               // ✨ flex column layout
+        flexDirection: "column",
+      }}
     >
 
       {/* Toast Container */}
@@ -517,7 +525,7 @@ function CommunityPageContentInner() {
         }}
       >
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}>
-          {/* Logo SVG */}
+  {/* Logo SVG */}
   <div
     style={{ width: "50px", height: "auto" }}
     dangerouslySetInnerHTML={{
@@ -874,7 +882,7 @@ function CommunityPageContentInner() {
       </div>
 
       {/* Main Content */}
-      <div style={{ paddingTop: "1rem" }}>
+      <div style={{ paddingTop: "1rem", flex: 1, display: "flex", flexDirection: "column" }}>
         <div
           className="x-header"
           style={{
@@ -1309,10 +1317,10 @@ function CommunityPageContentInner() {
             </div>
           </div>
         )}
-
-        {/* Footer */}
-        <Footer />
       </div>
+
+      {/* Footer now outside the main content, last element of the flex column */}
+      <Footer />
     </div>
   );
 }

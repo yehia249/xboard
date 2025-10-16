@@ -7,6 +7,8 @@ export default function Footer() {
       style={{
         background: "linear-gradient(to bottom, black, #1a1a1a)",
         padding: "2.5rem 1rem",
+        marginTop: "auto",          // ✨ ensure it sticks to bottom inside flex column
+        width: "100%",              // ✨ guarantee full width
       }}
     >
       <div className="container mx-auto flex flex-col items-center text-white">

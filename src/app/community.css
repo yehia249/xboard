@@ -36,24 +36,24 @@
     0 15px 15px -5px rgba(0, 0, 0, 0.08);
 }
 
-/* Silver tier - Diamond dust sparkle effect */
+/* ===== TIER VARIANTS (NO COLORED OUTLINES) ===== */
+
+/* Silver tier - keep interior effects, remove colored outline */
 .silver-tier {
-  border: 1px solid rgba(168, 216, 240, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05) !important; /* neutral like base */
+  outline: none !important;
   background: linear-gradient(to bottom, #1b2023, #1a1f22);
-  box-shadow: 
+  box-shadow:
     0 15px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04),
-    inset 0 0 40px -15px rgba(168, 216, 240, 0.06);
+    0 10px 10px -5px rgba(0, 0, 0, 0.04); /* neutral only */
 }
 
-/* Sparkle particles overlay for silver */
+/* Sparkle particles overlay for silver (pulled in from edges so it doesn't read as a border) */
 .silver-tier::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 8px; /* was full-bleed; prevents edge glow from looking like a border */
+  border-radius: inherit;
   background-image:
     radial-gradient(circle at 20% 30%, rgba(168, 216, 240, 0.4) 1px, transparent 1px),
     radial-gradient(circle at 60% 70%, rgba(168, 216, 240, 0.3) 1px, transparent 1px),
@@ -71,24 +71,16 @@
 }
 
 @keyframes silver-sparkle {
-  0%, 100% {
-    opacity: 0.3;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.02);
-  }
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.02); }
 }
 
-/* Diagonal gradient overlay for depth */
+/* Diagonal gradient overlay for depth (also inset to avoid border effect) */
 .silver-tier::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 8px; /* inset like ::before */
+  border-radius: inherit;
   background: linear-gradient(
     135deg,
     transparent 0%,
@@ -99,44 +91,42 @@
   z-index: 1;
 }
 
-/* FIXED: apply to children without :not(::before/::after) */
+/* Keep content above overlays */
 .silver-tier > * {
   position: relative;
   z-index: 2;
 }
 
+/* Hover: keep neutral shadows, no silver outline */
 .silver-tier:hover {
-  border-color: rgba(168, 216, 240, 0.3);
-  box-shadow: 
+  border-color: rgba(255, 255, 255, 0.05) !important;
+  box-shadow:
     0 25px 35px -5px rgba(0, 0, 0, 0.15),
-    0 15px 15px -5px rgba(0, 0, 0, 0.08),
-    inset 0 0 50px -15px rgba(168, 216, 240, 0.1),
-    0 0 25px -8px rgba(168, 216, 240, 0.15);
+    0 15px 15px -5px rgba(0, 0, 0, 0.08);
 }
 
-/* Gold tier */
+/* Gold tier - keep interior feel, remove colored outline */
 .gold-tier {
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.05) !important; /* neutral like base */
+  outline: none !important;
   background: linear-gradient(to bottom, #1b2023, #1a1f22);
-  box-shadow: 
+  box-shadow:
     0 15px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04),
-    inset 0 0 40px -15px rgba(212, 175, 55, 0.08);
+    0 10px 10px -5px rgba(0, 0, 0, 0.04); /* neutral only */
 }
 
-/* FIXED: apply to children without :not(::before/::after) */
+/* Keep content above any overlays (for consistency) */
 .gold-tier > * {
   position: relative;
   z-index: 2;
 }
 
+/* Hover: keep neutral shadows, no gold outline */
 .gold-tier:hover {
-  border-color: rgba(212, 175, 55, 0.35);
-  box-shadow: 
+  border-color: rgba(255, 255, 255, 0.05) !important;
+  box-shadow:
     0 25px 35px -5px rgba(0, 0, 0, 0.15),
-    0 15px 15px -5px rgba(0, 0, 0, 0.08),
-    inset 0 0 50px -15px rgba(212, 175, 55, 0.12),
-    0 0 25px -8px rgba(212, 175, 55, 0.2);
+    0 15px 15px -5px rgba(0, 0, 0, 0.08);
 }
 
 /* Image styling */
@@ -152,40 +142,6 @@
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
-}
-
-/* Silver tier image accent - subtle top glow */
-.silver-tier .image-container::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(168, 216, 240, 0.5) 25%, 
-    rgba(168, 216, 240, 0.8) 50%, 
-    rgba(168, 216, 240, 0.5) 75%, 
-    transparent 100%);
-  z-index: 10;
-}
-
-/* Gold tier image accent - subtle top glow */
-.gold-tier .image-container::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(212, 175, 55, 0.5) 25%, 
-    rgba(212, 175, 55, 0.9) 50%, 
-    rgba(212, 175, 55, 0.5) 75%, 
-    transparent 100%);
-  z-index: 10;
 }
 
 /* Card content container */
@@ -210,32 +166,36 @@
   color: #f0f0f0;
 }
 
-/* Silver tier title - icy gradient */
+/* Silver tier title - icy gradient with animation */
 .silver-tier h3 {
-  background: linear-gradient(135deg, 
-    #a8d8f0 0%, 
-    #d6eeff 30%, 
-    #ffffff 50%, 
-    #d6eeff 70%, 
-    #a8d8f0 100%);
+  background: linear-gradient(135deg, #a8d8f0 0%, #d6eeff 15%, #ffffff 30%, #d6eeff 45%, #a8d8f0 60%, #d6eeff 75%, #ffffff 90%, #a8d8f0 100%);
+  background-size: 200% 200%;
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
   filter: drop-shadow(0 1px 3px rgba(168, 216, 240, 0.3));
+  animation: silver-text-move 6s ease-in-out infinite;
 }
 
-/* Gold tier title - rich gold gradient */
+@keyframes silver-text-move {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Gold tier title - rich gold gradient with animation */
 .gold-tier h3 {
-  background: linear-gradient(135deg, 
-    #d4af37 0%, 
-    #f5d76e 30%, 
-    #fff4d6 50%, 
-    #f5d76e 70%, 
-    #d4af37 100%);
+  background: linear-gradient(135deg, #d4af37 0%, #f5d76e 15%, #fff4d6 30%, #f5d76e 45%, #d4af37 60%, #f5d76e 75%, #fff4d6 90%, #d4af37 100%);
+  background-size: 200% 200%;
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
   filter: drop-shadow(0 1px 3px rgba(212, 175, 55, 0.35));
+  animation: gold-text-move 6s ease-in-out infinite;
+}
+
+@keyframes gold-text-move {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 .server-card p {
@@ -302,9 +262,7 @@
   background: linear-gradient(135deg, #c8e6fb 0%, #e8f5ff 100%);
   color: #0a1621;
   border: 1px solid rgba(168, 216, 240, 0.3);
-  box-shadow: 
-    0 4px 12px rgba(168, 216, 240, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(168, 216, 240, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .silver-tier .join-link::before {
@@ -314,23 +272,16 @@
   left: -75%;
   width: 50%;
   height: 100%;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(255, 255, 255, 0.5) 50%, 
-    transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.5) 50%, transparent 100%);
   transform: skewX(-20deg);
   transition: left 0.6s ease;
 }
 
-.silver-tier .join-link:hover::before {
-  left: 125%;
-}
+.silver-tier .join-link:hover::before { left: 125%; }
 
 .silver-tier .join-link:hover {
   transform: translateY(-2px);
-  box-shadow: 
-    0 6px 16px rgba(168, 216, 240, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: 0 6px 16px rgba(168, 216, 240, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
   border-color: rgba(168, 216, 240, 0.4);
 }
 
@@ -339,9 +290,7 @@
   background: linear-gradient(135deg, #e8c965 0%, #f5e5a8 50%, #e8c965 100%);
   color: #0a0e10;
   border: 1px solid rgba(212, 175, 55, 0.3);
-  box-shadow: 
-    0 4px 12px rgba(212, 175, 55, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .gold-tier .join-link::before {
@@ -351,23 +300,16 @@
   left: -75%;
   width: 50%;
   height: 100%;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(255, 255, 255, 0.6) 50%, 
-    transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.6) 50%, transparent 100%);
   transform: skewX(-20deg);
   transition: left 0.6s ease;
 }
 
-.gold-tier .join-link:hover::before {
-  left: 125%;
-}
+.gold-tier .join-link:hover::before { left: 125%; }
 
 .gold-tier .join-link:hover {
   transform: translateY(-2px);
-  box-shadow: 
-    0 6px 16px rgba(212, 175, 55, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
   border-color: rgba(212, 175, 55, 0.4);
 }
 
@@ -383,8 +325,7 @@
 }
 
 /* Modal overlay styles */
-.edit-modal-overlay,
-.delete-modal-overlay {
+.edit-modal-overlay, .delete-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -398,8 +339,7 @@
 }
 
 /* Base modal styles */
-.edit-modal,
-.delete-modal {
+.edit-modal, .delete-modal {
   background-color: #1b2023;
   border-radius: 16px;
   padding: 24px;
@@ -409,28 +349,19 @@
     0 10px 10px -5px rgba(0, 0, 0, 0.05);
 }
 
-.edit-modal {
-  width: 400px;
-  max-width: 90%;
-}
-
-.delete-modal {
-  width: 350px;
-  max-width: 90%;
-  text-align: center;
-}
+.edit-modal { width: 400px; max-width: 90%; }
+.delete-modal { width: 350px; max-width: 90%; text-align: center; }
 
 /* Silver tier modal */
 .silver-tier-modal {
   border: 1px solid rgba(168, 216, 240, 0.2);
-  box-shadow: 
+  box-shadow:
     0 15px 25px -5px rgba(0, 0, 0, 0.2),
     0 10px 10px -5px rgba(0, 0, 0, 0.05),
     inset 0 0 40px -15px rgba(168, 216, 240, 0.08);
 }
 
-.silver-tier-modal h2,
-.silver-tier-modal h3 {
+.silver-tier-modal h2, .silver-tier-modal h3 {
   background: linear-gradient(135deg, #a8d8f0 0%, #d6eeff 50%, #a8d8f0 100%);
   background-clip: text;
   -webkit-background-clip: text;
@@ -440,14 +371,13 @@
 /* Gold tier modal */
 .gold-tier-modal {
   border: 1px solid rgba(212, 175, 55, 0.25);
-  box-shadow: 
+  box-shadow:
     0 15px 25px -5px rgba(0, 0, 0, 0.2),
     0 10px 10px -5px rgba(0, 0, 0, 0.05),
     inset 0 0 40px -15px rgba(212, 175, 55, 0.1);
 }
 
-.gold-tier-modal h2,
-.gold-tier-modal h3 {
+.gold-tier-modal h2, .gold-tier-modal h3 {
   background: linear-gradient(135deg, #d4af37 0%, #f5d76e 50%, #d4af37 100%);
   background-clip: text;
   -webkit-background-clip: text;
@@ -455,18 +385,14 @@
 }
 
 /* Modal content styles */
-.edit-modal h2,
-.delete-modal h3 {
+.edit-modal h2, .delete-modal h3 {
   margin-top: 0;
   margin-bottom: 8px;
 }
 
-.edit-modal .form-group {
-  margin-bottom: 16px;
-}
+.edit-modal .form-group { margin-bottom: 16px; }
 
-.edit-modal textarea,
-.edit-modal input[type="text"] {
+.edit-modal textarea, .edit-modal input[type="text"] {
   width: 100%;
   padding: 8px;
   border-radius: 6px;
@@ -517,9 +443,7 @@
   cursor: pointer;
 }
 
-.confirm-btn:hover {
-  background-color: rgba(255, 59, 48, 0.2);
-}
+.confirm-btn:hover { background-color: rgba(255, 59, 48, 0.2); }
 
 /* Normal tier cancel button */
 .normal-tier-modal .cancel-btn {
@@ -531,9 +455,7 @@
   cursor: pointer;
 }
 
-.normal-tier-modal .cancel-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
+.normal-tier-modal .cancel-btn:hover { background-color: rgba(255, 255, 255, 0.2); }
 
 /* Silver tier cancel button */
 .silver-tier-modal .cancel-btn {
@@ -545,9 +467,7 @@
   cursor: pointer;
 }
 
-.silver-tier-modal .cancel-btn:hover {
-  background-color: rgba(168, 216, 240, 0.2);
-}
+.silver-tier-modal .cancel-btn:hover { background-color: rgba(168, 216, 240, 0.2); }
 
 /* Gold tier cancel button */
 .gold-tier-modal .cancel-btn {
@@ -559,9 +479,7 @@
   cursor: pointer;
 }
 
-.gold-tier-modal .cancel-btn:hover {
-  background-color: rgba(212, 175, 55, 0.2);
-}
+.gold-tier-modal .cancel-btn:hover { background-color: rgba(212, 175, 55, 0.2); }
 
 /* Edit button styles */
 .server-card .edit-btn {
@@ -615,413 +533,204 @@
 
 /* Responsive styles */
 @media (max-width: 1200px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px;
     width: 80%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 62px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 62px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 1080px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px;
     width: 80%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 48px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 48px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 970px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px;
     width: 80%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 40px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 40px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 910px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px;
     width: 95%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 36px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 36px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 873px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px;
     width: 80%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 32px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 32px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 825px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px;
     width: 80%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 28px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 28px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 797px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px;
     width: 95%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 25px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 25px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 772px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px;
     width: 95%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 22px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 22px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 768px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
     padding: 24px;
     width: 90%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 40px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 40px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 720px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: 1fr;
     gap: 16px;
     padding: 24px;
     width: 70%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 75px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 75px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 677px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: 1fr;
     gap: 16px;
     padding: 24px;
     width: 90%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 98px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 98px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 580px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: 1fr;
     gap: 16px;
     padding: 24px;
     width: 80%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 75px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 75px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 525px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: 1fr;
     gap: 16px;
     padding: 24px;
     width: 90%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 70px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 70px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 475px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: 1fr;
     gap: 16px;
     padding: 24px;
     width: 90%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 57px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 57px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 460px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: 1fr;
     gap: 16px;
     padding: 24px;
     width: 95%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 75px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 75px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 435px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: 1fr;
     gap: 16px;
     padding: 24px;
     width: 90%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 47px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 47px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 405px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: 1fr;
     gap: 16px;
     padding: 24px;
     width: 90%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 38px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 38px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 369px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: 1fr;
     gap: 16px;
     padding: 24px;
     width: 90%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 30px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 30px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 @media (max-width: 355px) {
-  .server-list, 
-  .communities-grid {
+  .server-list, .communities-grid {
     grid-template-columns: 1fr;
     gap: 16px;
     padding: 24px;
     width: 90%;
   }
-  
-  .server-card .edit-btn {
-    padding: 8px 25px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
+  .server-card .edit-btn { padding: 8px 25px; margin-left: 2em; margin-bottom: 1.45855em; }
+  .server-card .delete-btn { padding: 12px 0; width: calc(100% - 48px); margin: 0 24px 24px 24px; }
 }
 
 /* Skeleton (shimmer) styles */
@@ -1044,45 +753,13 @@
   border-radius: 10px;
 }
 
-.skeleton-card {
-  pointer-events: none;
-}
-
-.skeleton-image {
-  width: 100%;
-  height: 200px;
-  border-radius: 0;
-}
-
-.skeleton-line {
-  height: 14px;
-  margin: 12px 24px;
-  opacity: 0.9;
-}
-
-.skeleton-line.title {
-  height: 22px;
-  margin-top: 20px;
-  margin-bottom: 8px;
-  width: 60%;
-}
-
-.skeleton-line.short {
-  width: 35%;
-}
-
-.skeleton-pill {
-  display: inline-block;
-  height: 22px;
-  width: 64px;
-  margin-right: 8px;
-  border-radius: 999px;
-}
-
-.skeleton-pill.long {
-  width: 96px;
-}
-
+.skeleton-card { pointer-events: none; }
+.skeleton-image { width: 100%; height: 200px; border-radius: 0; }
+.skeleton-line { height: 14px; margin: 12px 24px; opacity: 0.9; }
+.skeleton-line.title { height: 22px; margin-top: 20px; margin-bottom: 8px; width: 60%; }
+.skeleton-line.short { width: 35%; }
+.skeleton-pill { display: inline-block; height: 22px; width: 64px; margin-right: 8px; border-radius: 999px; }
+.skeleton-pill.long { width: 96px; }
 .skeleton-button {
   height: 44px !important;
   margin-top: auto;
