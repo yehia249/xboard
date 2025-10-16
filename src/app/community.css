@@ -15,7 +15,7 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   position: relative;
   width: 100%;
-  border-radius: 16px; /* Softer rounded corners */
+  border-radius: 16px;
   overflow: hidden;
   background: linear-gradient(to bottom, #1b2023, #1b2023);
   box-shadow: 
@@ -26,7 +26,7 @@
   color: #fff;
   transition: all 0.3s ease;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  min-height: 400px; /* Ensure consistent minimum height */
+  min-height: 400px;
 }
 
 .server-card:hover {
@@ -34,6 +34,109 @@
   box-shadow: 
     0 25px 35px -5px rgba(0, 0, 0, 0.15),
     0 15px 15px -5px rgba(0, 0, 0, 0.08);
+}
+
+/* Silver tier - Diamond dust sparkle effect */
+.silver-tier {
+  border: 1px solid rgba(168, 216, 240, 0.2);
+  background: linear-gradient(to bottom, #1b2023, #1a1f22);
+  box-shadow: 
+    0 15px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04),
+    inset 0 0 40px -15px rgba(168, 216, 240, 0.06);
+}
+
+/* Sparkle particles overlay for silver */
+.silver-tier::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(168, 216, 240, 0.4) 1px, transparent 1px),
+    radial-gradient(circle at 60% 70%, rgba(168, 216, 240, 0.3) 1px, transparent 1px),
+    radial-gradient(circle at 80% 20%, rgba(168, 216, 240, 0.5) 1px, transparent 1px),
+    radial-gradient(circle at 30% 80%, rgba(168, 216, 240, 0.3) 1px, transparent 1px),
+    radial-gradient(circle at 90% 60%, rgba(168, 216, 240, 0.4) 1px, transparent 1px),
+    radial-gradient(circle at 15% 60%, rgba(168, 216, 240, 0.3) 1px, transparent 1px),
+    radial-gradient(circle at 70% 40%, rgba(168, 216, 240, 0.5) 1px, transparent 1px),
+    radial-gradient(circle at 40% 15%, rgba(168, 216, 240, 0.4) 1px, transparent 1px);
+  background-size: 100% 100%;
+  animation: silver-sparkle 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.6;
+}
+
+@keyframes silver-sparkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+/* Diagonal gradient overlay for depth */
+.silver-tier::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(168, 216, 240, 0.03) 40%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* FIXED: apply to children without :not(::before/::after) */
+.silver-tier > * {
+  position: relative;
+  z-index: 2;
+}
+
+.silver-tier:hover {
+  border-color: rgba(168, 216, 240, 0.3);
+  box-shadow: 
+    0 25px 35px -5px rgba(0, 0, 0, 0.15),
+    0 15px 15px -5px rgba(0, 0, 0, 0.08),
+    inset 0 0 50px -15px rgba(168, 216, 240, 0.1),
+    0 0 25px -8px rgba(168, 216, 240, 0.15);
+}
+
+/* Gold tier */
+.gold-tier {
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: linear-gradient(to bottom, #1b2023, #1a1f22);
+  box-shadow: 
+    0 15px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04),
+    inset 0 0 40px -15px rgba(212, 175, 55, 0.08);
+}
+
+/* FIXED: apply to children without :not(::before/::after) */
+.gold-tier > * {
+  position: relative;
+  z-index: 2;
+}
+
+.gold-tier:hover {
+  border-color: rgba(212, 175, 55, 0.35);
+  box-shadow: 
+    0 25px 35px -5px rgba(0, 0, 0, 0.15),
+    0 15px 15px -5px rgba(0, 0, 0, 0.08),
+    inset 0 0 50px -15px rgba(212, 175, 55, 0.12),
+    0 0 25px -8px rgba(212, 175, 55, 0.2);
 }
 
 /* Image styling */
@@ -51,7 +154,41 @@
   transition: transform 0.3s ease;
 }
 
-/* Card content container - this will grow to fill available space */
+/* Silver tier image accent - subtle top glow */
+.silver-tier .image-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(168, 216, 240, 0.5) 25%, 
+    rgba(168, 216, 240, 0.8) 50%, 
+    rgba(168, 216, 240, 0.5) 75%, 
+    transparent 100%);
+  z-index: 10;
+}
+
+/* Gold tier image accent - subtle top glow */
+.gold-tier .image-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(212, 175, 55, 0.5) 25%, 
+    rgba(212, 175, 55, 0.9) 50%, 
+    rgba(212, 175, 55, 0.5) 75%, 
+    transparent 100%);
+  z-index: 10;
+}
+
+/* Card content container */
 .card-content {
   display: flex;
   flex-direction: column;
@@ -68,49 +205,37 @@
   position: relative;
 }
 
-/* Normal tier title - no gradient, plain white */
+/* Normal tier title */
 .normal-tier h3 {
   color: #f0f0f0;
 }
 
-/* Silver tier title - diamond blue gradient */
+/* Silver tier title - icy gradient */
 .silver-tier h3 {
-  background: linear-gradient(90deg, #a8d8f0 0%, #e6f5fc 50%, #a8d8f0 100%);
+  background: linear-gradient(135deg, 
+    #a8d8f0 0%, 
+    #d6eeff 30%, 
+    #ffffff 50%, 
+    #d6eeff 70%, 
+    #a8d8f0 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  filter: drop-shadow(0 1px 3px rgba(168, 216, 240, 0.3));
 }
 
-/* Gold tier title - gold gradient */
+/* Gold tier title - rich gold gradient */
 .gold-tier h3 {
-  background: linear-gradient(90deg, #f8e9a1 0%, #f0f0f0 50%, #f8e9a1 100%);
+  background: linear-gradient(135deg, 
+    #d4af37 0%, 
+    #f5d76e 30%, 
+    #fff4d6 50%, 
+    #f5d76e 70%, 
+    #d4af37 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-}
-
-/* Style line under the title for silver tier */
-.silver-tier h3::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 24px;
-  width: 30px;
-  height: 2px;
-  background: linear-gradient(90deg, rgba(168, 216, 240, 0.8), rgba(168, 216, 240, 0.1));
-}
-
-/* Style line under the title for gold tier */
-.gold-tier h3::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 24px;
-  width: 30px;
-  height: 2px;
-  background: linear-gradient(90deg, rgba(212, 175, 55, 0.7), rgba(212, 175, 55, 0.1));
+  filter: drop-shadow(0 1px 3px rgba(212, 175, 55, 0.35));
 }
 
 .server-card p {
@@ -127,8 +252,8 @@
   flex-wrap: wrap;
   gap: 8px;
   padding: 0 24px 16px 24px;
-  flex-grow: 1; /* This will push the join button to the bottom */
-  align-content: flex-start; /* Align tags to the top of their container */
+  flex-grow: 1;
+  align-content: flex-start;
 }
 
 .server-card .tag {
@@ -139,25 +264,25 @@
   font-size: 0.7rem;
   font-weight: 500;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  height: fit-content; /* Prevent tags from stretching */
+  height: fit-content;
 }
 
-/* Join/Action button base styles - now at bottom */
+/* Join/Action button base styles */
 .server-card .join-link,
 .server-card .delete-btn {
   display: block;
   width: calc(100% - 48px);
-  margin: 0 24px 24px 24px; /* Remove top margin, keep bottom */
+  margin: 0 24px 24px 24px;
   padding: 12px 0;
   border-radius: 30px;
   text-align: center;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   cursor: pointer;
   text-decoration: none;
   position: relative;
   overflow: hidden;
-  margin-top: auto; /* This pushes the button to the bottom */
+  margin-top: auto;
 }
 
 /* Normal tier button */
@@ -172,40 +297,81 @@
   transform: translateY(-2px);
 }
 
-/* Silver tier button with diamond blue shine effect */
+/* Silver tier button - glass morphism with shine */
 .silver-tier .join-link {
-  background-color: #d6eeff;
-  color: #1b2023;
-  border: none;
-  /* Diamond blue shine effect */
-  background-image: linear-gradient(to right, transparent, rgba(230, 245, 252, 0.5), transparent);
-  background-size: 200% 100%;
-  background-position: right center;
+  background: linear-gradient(135deg, #c8e6fb 0%, #e8f5ff 100%);
+  color: #0a1621;
+  border: 1px solid rgba(168, 216, 240, 0.3);
+  box-shadow: 
+    0 4px 12px rgba(168, 216, 240, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.silver-tier .join-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.5) 50%, 
+    transparent 100%);
+  transform: skewX(-20deg);
+  transition: left 0.6s ease;
+}
+
+.silver-tier .join-link:hover::before {
+  left: 125%;
 }
 
 .silver-tier .join-link:hover {
-  background-color: #b8e0fb;
   transform: translateY(-2px);
-  /* Animate diamond shine effect */
-  background-position: left center;
-  transition: background-position 1s ease, background-color 0.2s, transform 0.2s;
+  box-shadow: 
+    0 6px 16px rgba(168, 216, 240, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border-color: rgba(168, 216, 240, 0.4);
 }
 
-/* Gold tier button */
+/* Gold tier button - metallic shine */
 .gold-tier .join-link {
-  background: linear-gradient(90deg, #f5d76e, #f0e68c, #f5d76e);
-  color: #121212;
-  border: none;
-  position: relative;
-  z-index: 1;
+  background: linear-gradient(135deg, #e8c965 0%, #f5e5a8 50%, #e8c965 100%);
+  color: #0a0e10;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 
+    0 4px 12px rgba(212, 175, 55, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.gold-tier .join-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.6) 50%, 
+    transparent 100%);
+  transform: skewX(-20deg);
+  transition: left 0.6s ease;
+}
+
+.gold-tier .join-link:hover::before {
+  left: 125%;
 }
 
 .gold-tier .join-link:hover {
   transform: translateY(-2px);
-  background: linear-gradient(90deg, #f5d76e, #fff8dc, #f5d76e);
+  box-shadow: 
+    0 6px 16px rgba(212, 175, 55, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border-color: rgba(212, 175, 55, 0.4);
 }
 
-/* Delete button styles - same for all tiers */
+/* Delete button styles */
 .server-card .delete-btn {
   background-color: rgba(255, 59, 48, 0.1);
   color: rgba(255, 59, 48, 0.9);
@@ -254,27 +420,35 @@
   text-align: center;
 }
 
-/* Silver tier specific modal styles */
+/* Silver tier modal */
 .silver-tier-modal {
   border: 1px solid rgba(168, 216, 240, 0.2);
+  box-shadow: 
+    0 15px 25px -5px rgba(0, 0, 0, 0.2),
+    0 10px 10px -5px rgba(0, 0, 0, 0.05),
+    inset 0 0 40px -15px rgba(168, 216, 240, 0.08);
 }
 
 .silver-tier-modal h2,
 .silver-tier-modal h3 {
-  background: linear-gradient(90deg, #a8d8f0 0%, #e6f5fc 50%, #a8d8f0 100%);
+  background: linear-gradient(135deg, #a8d8f0 0%, #d6eeff 50%, #a8d8f0 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
 }
 
-/* Gold tier specific modal styles */
+/* Gold tier modal */
 .gold-tier-modal {
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  box-shadow: 
+    0 15px 25px -5px rgba(0, 0, 0, 0.2),
+    0 10px 10px -5px rgba(0, 0, 0, 0.05),
+    inset 0 0 40px -15px rgba(212, 175, 55, 0.1);
 }
 
 .gold-tier-modal h2,
 .gold-tier-modal h3 {
-  background: linear-gradient(90deg, #f8e9a1 0%, #f0f0f0 50%, #f8e9a1 100%);
+  background: linear-gradient(135deg, #d4af37 0%, #f5d76e 50%, #d4af37 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -389,11 +563,7 @@
   background-color: rgba(212, 175, 55, 0.2);
 }
 
-
-
-/* Add this CSS rule to give the edit button a grey outline */
-
-/* Edit button styles - add grey outline to match delete button */
+/* Edit button styles */
 .server-card .edit-btn {
   display: inline-block;
   padding: 8px 48px;
@@ -415,32 +585,35 @@
   transform: translateY(-1px);
 }
 
-/* If you want tier-specific edit button styling: */
-
 /* Silver tier edit button */
 .silver-tier .edit-btn {
-  background-color: rgba(168, 216, 240, 0.05);
-  color: rgba(168, 216, 240, 0.9);
-  border: 1px solid rgba(168, 216, 240, 0.2);
+  background: linear-gradient(135deg, rgba(168, 216, 240, 0.1) 0%, rgba(168, 216, 240, 0.05) 100%);
+  color: rgba(200, 230, 250, 1);
+  border: 1px solid rgba(168, 216, 240, 0.25);
+  box-shadow: 0 2px 6px rgba(168, 216, 240, 0.1);
 }
 
 .silver-tier .edit-btn:hover {
-  background-color: rgba(168, 216, 240, 0.1);
-  border-color: rgba(168, 216, 240, 0.3);
+  background: linear-gradient(135deg, rgba(168, 216, 240, 0.15) 0%, rgba(168, 216, 240, 0.08) 100%);
+  border-color: rgba(168, 216, 240, 0.35);
+  box-shadow: 0 3px 10px rgba(168, 216, 240, 0.15);
 }
 
 /* Gold tier edit button */
 .gold-tier .edit-btn {
-  background-color: rgba(212, 175, 55, 0.05);
-  color: rgba(212, 175, 55, 0.9);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(212, 175, 55, 0.06) 100%);
+  color: rgba(245, 215, 110, 1);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  box-shadow: 0 2px 6px rgba(212, 175, 55, 0.12);
 }
 
 .gold-tier .edit-btn:hover {
-  background-color: rgba(212, 175, 55, 0.1);
-  border-color: rgba(212, 175, 55, 0.3);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.18) 0%, rgba(212, 175, 55, 0.1) 100%);
+  border-color: rgba(212, 175, 55, 0.35);
+  box-shadow: 0 3px 10px rgba(212, 175, 55, 0.18);
 }
-/* Add this to your existing @media (max-width: 1200px) section */
+
+/* Responsive styles */
 @media (max-width: 1200px) {
   .server-list, 
   .communities-grid {
@@ -449,7 +622,6 @@
     width: 80%;
   }
   
-  /* Keep edit and delete buttons the same size as normal viewport */
   .server-card .edit-btn {
     padding: 8px 62px;
     margin-left: 2em;
@@ -463,8 +635,6 @@
   }
 }
 
-
-/* Add this to your existing @media (max-width: 1200px) section */
 @media (max-width: 1080px) {
   .server-list, 
   .communities-grid {
@@ -473,7 +643,6 @@
     width: 80%;
   }
   
-  /* Keep edit and delete buttons the same size as normal viewport */
   .server-card .edit-btn {
     padding: 8px 48px;
     margin-left: 2em;
@@ -487,8 +656,6 @@
   }
 }
 
-
-/* Add this to your existing @media (max-width: 1200px) section */
 @media (max-width: 970px) {
   .server-list, 
   .communities-grid {
@@ -497,7 +664,6 @@
     width: 80%;
   }
   
-  /* Keep edit and delete buttons the same size as normal viewport */
   .server-card .edit-btn {
     padding: 8px 40px;
     margin-left: 2em;
@@ -511,7 +677,6 @@
   }
 }
 
-/* Add this to your existing @media (max-width: 1200px) section */
 @media (max-width: 910px) {
   .server-list, 
   .communities-grid {
@@ -520,7 +685,6 @@
     width: 95%;
   }
   
-  /* Keep edit and delete buttons the same size as normal viewport */
   .server-card .edit-btn {
     padding: 8px 36px;
     margin-left: 2em;
@@ -534,11 +698,6 @@
   }
 }
 
-
-
-
-
-/* Add this to your existing @media (max-width: 1200px) section */
 @media (max-width: 873px) {
   .server-list, 
   .communities-grid {
@@ -547,7 +706,6 @@
     width: 80%;
   }
   
-  /* Keep edit and delete buttons the same size as normal viewport */
   .server-card .edit-btn {
     padding: 8px 32px;
     margin-left: 2em;
@@ -561,9 +719,6 @@
   }
 }
 
-
-
-/* Add this to your existing @media (max-width: 1200px) section */
 @media (max-width: 825px) {
   .server-list, 
   .communities-grid {
@@ -572,7 +727,6 @@
     width: 80%;
   }
   
-  /* Keep edit and delete buttons the same size as normal viewport */
   .server-card .edit-btn {
     padding: 8px 28px;
     margin-left: 2em;
@@ -586,7 +740,6 @@
   }
 }
 
-/* Add this to your existing @media (max-width: 1200px) section */
 @media (max-width: 797px) {
   .server-list, 
   .communities-grid {
@@ -595,7 +748,6 @@
     width: 95%;
   }
   
-  /* Keep edit and delete buttons the same size as normal viewport */
   .server-card .edit-btn {
     padding: 8px 25px;
     margin-left: 2em;
@@ -609,7 +761,6 @@
   }
 }
 
-/* Add this to your existing @media (max-width: 1200px) section */
 @media (max-width: 772px) {
   .server-list, 
   .communities-grid {
@@ -618,204 +769,8 @@
     width: 95%;
   }
   
-  /* Keep edit and delete buttons the same size as normal viewport */
   .server-card .edit-btn {
     padding: 8px 22px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
-}
-
-/* Add this to your existing @media (max-width: 768px) section */
-@media (max-width: 768px) {
-  .server-list, 
-  .communities-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 24px;
-    width: 90%;
-  }
-  
-  /* Keep edit and delete buttons the same size as normal viewport */
-  .server-card .edit-btn {
-    padding: 8px 118px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
-}
-
-/* Add this to your existing @media (max-width: 768px) section */
-@media (max-width: 677px) {
-  .server-list, 
-  .communities-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 24px;
-    width: 90%;
-  }
-  
-  /* Keep edit and delete buttons the same size as normal viewport */
-  .server-card .edit-btn {
-    padding: 8px 98px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
-}
-
-
-
-/* Add this to your existing @media (max-width: 768px) section */
-@media (max-width: 525) {
-  .server-list, 
-  .communities-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 24px;
-    width: 90%;
-  }
-  
-  /* Keep edit and delete buttons the same size as normal viewport */
-  .server-card .edit-btn {
-    padding: 8px 70px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
-}
-
-
-/* Add this to your existing @media (max-width: 768px) section */
-@media (max-width: 475) {
-  .server-list, 
-  .communities-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 24px;
-    width: 90%;
-  }
-  
-  /* Keep edit and delete buttons the same size as normal viewport */
-  .server-card .edit-btn {
-    padding: 8px 57px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
-}
-
-/* Add this to your existing @media (max-width: 768px) section */
-@media (max-width: 435) {
-  .server-list, 
-  .communities-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 24px;
-    width: 90%;
-  }
-  
-  /* Keep edit and delete buttons the same size as normal viewport */
-  .server-card .edit-btn {
-    padding: 8px 47px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
-}
-
-/* Add this to your existing @media (max-width: 768px) section */
-@media (max-width: 405) {
-  .server-list, 
-  .communities-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 24px;
-    width: 90%;
-  }
-  
-  /* Keep edit and delete buttons the same size as normal viewport */
-  .server-card .edit-btn {
-    padding: 8px 38px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
-}
-
-/* Add this to your existing @media (max-width: 768px) section */
-@media (max-width: 369) {
-  .server-list, 
-  .communities-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 24px;
-    width: 90%;
-  }
-  
-  /* Keep edit and delete buttons the same size as normal viewport */
-  .server-card .edit-btn {
-    padding: 8px 30px;
-    margin-left: 2em;
-    margin-bottom: 1.45855em;
-  }
-  
-  .server-card .delete-btn {
-    padding: 12px 0;
-    width: calc(100% - 48px);
-    margin: 0 24px 24px 24px;
-  }
-}
-
-/* Add this to your existing @media (max-width: 768px) section */
-@media (max-width: 355) {
-  .server-list, 
-  .communities-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 24px;
-    width: 90%;
-  }
-  
-  /* Keep edit and delete buttons the same size as normal viewport */
-  .server-card .edit-btn {
-    padding: 8px 25px;
     margin-left: 2em;
     margin-bottom: 1.45855em;
   }
@@ -836,7 +791,6 @@
     width: 90%;
   }
   
-  /* Keep edit and delete buttons the same size as normal viewport */
   .server-card .edit-btn {
     padding: 8px 40px;
     margin-left: 2em;
@@ -859,9 +813,30 @@
     width: 70%;
   }
   
-  /* Keep edit and delete buttons the same size as normal viewport */
   .server-card .edit-btn {
     padding: 8px 75px;
+    margin-left: 2em;
+    margin-bottom: 1.45855em;
+  }
+  
+  .server-card .delete-btn {
+    padding: 12px 0;
+    width: calc(100% - 48px);
+    margin: 0 24px 24px 24px;
+  }
+}
+
+@media (max-width: 677px) {
+  .server-list, 
+  .communities-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 24px;
+    width: 90%;
+  }
+  
+  .server-card .edit-btn {
+    padding: 8px 98px;
     margin-left: 2em;
     margin-bottom: 1.45855em;
   }
@@ -882,9 +857,52 @@
     width: 80%;
   }
   
-  /* Keep edit and delete buttons the same size as normal viewport */
   .server-card .edit-btn {
     padding: 8px 75px;
+    margin-left: 2em;
+    margin-bottom: 1.45855em;
+  }
+  
+  .server-card .delete-btn {
+    padding: 12px 0;
+    width: calc(100% - 48px);
+    margin: 0 24px 24px 24px;
+  }
+}
+
+@media (max-width: 525px) {
+  .server-list, 
+  .communities-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 24px;
+    width: 90%;
+  }
+  
+  .server-card .edit-btn {
+    padding: 8px 70px;
+    margin-left: 2em;
+    margin-bottom: 1.45855em;
+  }
+  
+  .server-card .delete-btn {
+    padding: 12px 0;
+    width: calc(100% - 48px);
+    margin: 0 24px 24px 24px;
+  }
+}
+
+@media (max-width: 475px) {
+  .server-list, 
+  .communities-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 24px;
+    width: 90%;
+  }
+  
+  .server-card .edit-btn {
+    padding: 8px 57px;
     margin-left: 2em;
     margin-bottom: 1.45855em;
   }
@@ -905,7 +923,6 @@
     width: 95%;
   }
   
-  /* Keep edit and delete buttons the same size as normal viewport */
   .server-card .edit-btn {
     padding: 8px 75px;
     margin-left: 2em;
@@ -919,7 +936,95 @@
   }
 }
 
-/* -------------------- SKELETON (shimmer) styles -------------------- */
+@media (max-width: 435px) {
+  .server-list, 
+  .communities-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 24px;
+    width: 90%;
+  }
+  
+  .server-card .edit-btn {
+    padding: 8px 47px;
+    margin-left: 2em;
+    margin-bottom: 1.45855em;
+  }
+  
+  .server-card .delete-btn {
+    padding: 12px 0;
+    width: calc(100% - 48px);
+    margin: 0 24px 24px 24px;
+  }
+}
+
+@media (max-width: 405px) {
+  .server-list, 
+  .communities-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 24px;
+    width: 90%;
+  }
+  
+  .server-card .edit-btn {
+    padding: 8px 38px;
+    margin-left: 2em;
+    margin-bottom: 1.45855em;
+  }
+  
+  .server-card .delete-btn {
+    padding: 12px 0;
+    width: calc(100% - 48px);
+    margin: 0 24px 24px 24px;
+  }
+}
+
+@media (max-width: 369px) {
+  .server-list, 
+  .communities-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 24px;
+    width: 90%;
+  }
+  
+  .server-card .edit-btn {
+    padding: 8px 30px;
+    margin-left: 2em;
+    margin-bottom: 1.45855em;
+  }
+  
+  .server-card .delete-btn {
+    padding: 12px 0;
+    width: calc(100% - 48px);
+    margin: 0 24px 24px 24px;
+  }
+}
+
+@media (max-width: 355px) {
+  .server-list, 
+  .communities-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 24px;
+    width: 90%;
+  }
+  
+  .server-card .edit-btn {
+    padding: 8px 25px;
+    margin-left: 2em;
+    margin-bottom: 1.45855em;
+  }
+  
+  .server-card .delete-btn {
+    padding: 12px 0;
+    width: calc(100% - 48px);
+    margin: 0 24px 24px 24px;
+  }
+}
+
+/* Skeleton (shimmer) styles */
 @keyframes skeleton-shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }

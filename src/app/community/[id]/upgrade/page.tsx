@@ -268,14 +268,14 @@ null
       {disabled ? (
         <button
           disabled
-          className="w-full cursor-not-allowed rounded-md bg-gray-700/70 px-4 py-2 font-medium text-white"
+          className="w-full cursor-default rounded-md bg-gray-700/70 px-4 py-2 font-medium text-white"
         >
           {isCurrent ? "Current Tier" : disabledText}
         </button>
       ) : (
         <button
           onClick={onClick}
-          className={`w-full rounded-md px-4 py-2 font-semibold transition-transform active:scale-[0.99] ${
+          className={`w-full rounded-md px-4 py-2 font-semibold transition-transform active:scale-[0.99] cursor-pointer ${
             title === "Gold"
               ? "bg-yellow-400 text-black hover:brightness-105"
               : "bg-gradient-to-r from-slate-300 to-slate-100 text-black hover:from-slate-200 hover:to-white"
