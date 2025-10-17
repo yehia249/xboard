@@ -284,13 +284,7 @@ function SignupForm() {
   );
 }
 
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Sign Up – XBoard",
-  robots: { index: false, follow: true, googleBot: { index: false, follow: true } },
-  alternates: { canonical: "https://xboardz.com/" },
-};
 
 export default function Signup() {
   return (
