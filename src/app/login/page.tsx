@@ -5,15 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import React, { useLayoutEffect } from 'react';
 import Link from "next/link";
-import "../loginform.css"; // Import your CSS file
-// src/app/login/page.tsx
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Sign In – XBoard",
-  robots: { index: false, follow: true, googleBot: { index: false, follow: true } },
-  alternates: { canonical: "https://xboardz.com/" },
-};
 
 
 // Initialize Firebase Auth and Supabase client
