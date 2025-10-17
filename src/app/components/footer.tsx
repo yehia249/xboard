@@ -7,8 +7,8 @@ export default function Footer() {
       style={{
         background: "linear-gradient(to bottom, black, #1a1a1a)",
         padding: "2.5rem 1rem",
-        marginTop: "auto",          // ✨ ensure it sticks to bottom inside flex column
-        width: "100%",              // ✨ guarantee full width
+        marginTop: "auto",
+        width: "100%",
       }}
     >
       <div className="container mx-auto flex flex-col items-center text-white">
@@ -28,39 +28,16 @@ export default function Footer() {
         {/* Section title */}
         <h3 className="font-bold text-2xl mb-5">Resources</h3>
 
-        {/* Links styled like clean text */}
-        <nav className="flex flex-col items-center space-y-2">
-          <a
-            href="/guidelines"
-            className="transition-opacity text-base text-gray-300 hover:opacity-90"
-            style={{ textDecoration: "none" }}
-          >
-            Guidelines
-          </a>
-
-          {/* ✅ Added FAQ link */}
-          <a
-            href="/faq"
-            className="transition-opacity text-base text-gray-300 hover:opacity-90"
-            style={{ textDecoration: "none" }}
-          >
-            FAQ
-          </a>
-
-          <a
-            href="/privacy"
-            className="transition-opacity text-base text-gray-300 hover:opacity-90"
-            style={{ textDecoration: "none" }}
-          >
-            Privacy
-          </a>
-          <a
-            href="/terms"
-            className="transition-opacity text-base text-gray-300 hover:opacity-90"
-            style={{ textDecoration: "none" }}
-          >
-            Terms
-          </a>
+        {/* Horizontal links */}
+        <nav
+          role="navigation"
+          aria-label="Footer navigation"
+          className="footer-nav flex flex-wrap items-center justify-center gap-6"
+        >
+          <a href="/guidelines">Guidelines</a>
+          <a href="/faq">FAQ</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
         </nav>
 
         {/* Legal disclaimer */}
@@ -75,6 +52,27 @@ export default function Footer() {
           <p>© 2025 Xboard. All rights reserved.</p>
         </div>
       </div>
+
+      {/* Scoped hard reset so links never appear blue or underlined */}
+      <style jsx>{`
+        .footer-nav a {
+          color: #d1d5db;            /* gray-300 */
+          text-decoration: none;
+          transition: color 150ms ease;
+        }
+        .footer-nav a:visited {
+          color: #d1d5db;            /* prevent purple visited */
+        }
+        .footer-nav a:hover,
+        .footer-nav a:focus {
+          color: #f5f5f5;            /* near-white on hover */
+          text-decoration: none;
+          outline: none;
+        }
+        .footer-nav a:active {
+          color: #ffffff;
+        }
+      `}</style>
     </footer>
   );
 }
