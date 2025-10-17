@@ -25,75 +25,93 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing user or community ID" }, { status: 400 });
   }
 
-  // ✅ Check last promotion by user (6-hour cooldown across all)
-  const { data: lastPromotion } = await supabase
+  // ✅ Personal cooldown (UNLIMITED boosts, but min 1 hour between any two boosts by the same user)
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  const { data: lastPromotion, error: lastUserErr } = await supabase
     .from("promotions")
     .select("promoted_at")
     .eq("user_id", user_id)
     .order("promoted_at", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
-  if (lastPromotion) {
+  if (lastUserErr) {
+    // Not fatal — but you can log if needed
+    // console.error("Error fetching last user promotion:", lastUserErr);
+  }
+
+  if (lastPromotion?.promoted_at) {
     const lastTime = new Date(lastPromotion.promoted_at).getTime();
-    const now = Date.now();
-    const sixHours = 6 * 60 * 60 * 1000;
-    if (now - lastTime < sixHours) {
-      return NextResponse.json({ error: "Wait 6 hours between promotions" }, { status: 403 });
+    const nowTs = Date.now();
+    const elapsed = nowTs - lastTime;
+
+    if (elapsed < ONE_HOUR_MS) {
+      const remainingSec = Math.ceil((ONE_HOUR_MS - elapsed) / 1000);
+      return NextResponse.json(
+        {
+          error: "Cooldown active. Please wait before boosting again.",
+          secondsRemaining: remainingSec,
+          nextEligibleAt: new Date(nowTs + (ONE_HOUR_MS - elapsed)).toISOString(),
+          reason: "user_personal_cooldown",
+        },
+        { status: 429 } // rate limited
+      );
     }
   }
 
-  // ✅ Check daily limit (4 boosts max)
-  const now = new Date();
-  const utcMidnight = new Date(Date.UTC(
-    now.getUTCFullYear(),
-    now.getUTCMonth(),
-    now.getUTCDate(),
-    0, 0, 0
-  ));
+  // ❌ REMOVED: Daily limit (4 boosts max)
+  // -- Entire block deleted to allow unlimited daily boosts --
 
-  const { data: dailyPromotions } = await supabase
-    .from("promotions")
-    .select("*")
-    .eq("user_id", user_id)
-    .gte("promoted_at", utcMidnight.toISOString());
-
-  if ((dailyPromotions?.length || 0) >= 4) {
-    return NextResponse.json({ error: "You’ve used all 4 daily boosts" }, { status: 403 });
-  }
-
-  // ✅ Get tier of community
-  const { data: serverTier } = await supabase
+  // ✅ Get tier of community (this controls the COMMUNITY-SIDE cooldown)
+  const { data: serverTier, error: tierErr } = await supabase
     .from("servers")
     .select("tier")
     .eq("id", community_id)
     .single();
 
-  if (!serverTier) {
+  if (tierErr || !serverTier) {
     return NextResponse.json({ error: "Community not found" }, { status: 404 });
   }
 
-  // ✅ Determine cooldown
-  let cooldownMs = 24 * 60 * 60 * 1000; // default 24h
+  // ✅ Determine community-level cooldown (kept as-is; change these if you want 4/2/1 hrs)
+  // Current behavior you had: normal 24h, silver 12h, gold 6h
+  // If you want 4/2/1 instead, change the mapping below accordingly.
+  let cooldownMs = 24 * 60 * 60 * 1000; // normal
   if (serverTier.tier === "silver") cooldownMs = 12 * 60 * 60 * 1000;
   if (serverTier.tier === "gold") cooldownMs = 6 * 60 * 60 * 1000;
 
-  // ✅ Check last promotion time of this community
-  const { data: lastBoost } = await supabase
+  // ✅ Check last promotion time of THIS community (site-wide anti-spam)
+  const { data: lastBoost, error: lastCommErr } = await supabase
     .from("promotions")
     .select("promoted_at")
     .eq("community_id", community_id)
     .order("promoted_at", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
-  if (lastBoost) {
+  if (lastCommErr) {
+    // Not fatal — but log if you want
+    // console.error("Error fetching community last boost:", lastCommErr);
+  }
+
+  if (lastBoost?.promoted_at) {
     const last = new Date(lastBoost.promoted_at).getTime();
-    const now = Date.now();
-    if (now - last < cooldownMs) {
-      return NextResponse.json({
-        error: `This community was already promoted recently. Wait ${(cooldownMs - (now - last)) / (60 * 60 * 1000)} more hours.`,
-      }, { status: 403 });
+    const nowTs = Date.now();
+    const elapsed = nowTs - last;
+
+    if (elapsed < cooldownMs) {
+      const remainingMs = cooldownMs - elapsed;
+      const remainingSec = Math.ceil(remainingMs / 1000);
+      return NextResponse.json(
+        {
+          error: "This community was already promoted recently.",
+          secondsRemaining: remainingSec,
+          nextEligibleAt: new Date(nowTs + remainingMs).toISOString(),
+          reason: "community_cooldown",
+        },
+        { status: 429 }
+      );
     }
   }
 
@@ -102,6 +120,8 @@ export async function POST(req: Request) {
     {
       user_id,
       community_id,
+      // promoted_at should default to now() in DB; include if your schema doesn't:
+      // promoted_at: new Date().toISOString(),
     },
   ]);
 
@@ -109,21 +129,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
-  // ✅ Increment promote_count
-  const { data: serverData, error: fetchError } = await supabase
+
+  const { data: serverData } = await supabase
     .from("servers")
     .select("promote_count")
     .eq("id", community_id)
     .single();
 
-  if (!fetchError) {
-    const currentCount = serverData?.promote_count ?? 0;
-
-    await supabase
-      .from("servers")
-      .update({ promote_count: currentCount + 1 })
-      .eq("id", community_id);
-  }
+  const currentCount = serverData?.promote_count ?? 0;
+  await supabase
+    .from("servers")
+    .update({ promote_count: currentCount + 1 })
+    .eq("id", community_id);
 
   return NextResponse.json({ message: "Community promoted!" });
 }

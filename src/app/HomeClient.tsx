@@ -65,12 +65,19 @@ function CommunityPageContentInner() {
   // State to control visibility of the promo card
   const [showPromoCard, setShowPromoCard] = useState(true);
   const FlameIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2C12 2 4 8 8 16C10.5 20 12 22 12 22C12 22 13.5 20 16 16C20 8 12 2 12 2Z" />
-      <path d="M12 11a1 1 0 0 1-1 1 1 1 0 0 0 0 2 3 3 0 0 0 3-3 3 3 0 0 0-1-2.24" />
+    <svg
+      width="24"
+      height="27"
+      viewBox="0 0 20 24"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="white"
+      aria-hidden="true"
+    >
+
+
     </svg>
   );
+  
   
   const ClockIcon = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -109,11 +116,20 @@ function CommunityPageContentInner() {
     }, 500);
   };
 
+  
+
   // State for user promotion info: last promotion time and how many boosts used today.
   const [userPromoInfo, setUserPromoInfo] = useState<{
     userLastPromotion: string | null;
-    dailyPromotionCount: number;
-  }>({ userLastPromotion: null, dailyPromotionCount: 0 });
+    canBoostNow: boolean;
+    secondsRemaining: number;    // 0 means ready
+    nextEligibleAt: string | null;
+  }>({
+    userLastPromotion: null,
+    canBoostNow: true,
+    secondsRemaining: 0,
+    nextEligibleAt: null,
+  });
 
   // State for community promotions
   const [communityPromotions, setCommunityPromotions] = useState<{ [key: number]: string }>({});
@@ -146,7 +162,23 @@ function CommunityPageContentInner() {
           return;
         }
         const data = await res.json();
-        setUserPromoInfo(data);
+
+        // derive nextEligibleAt if API didn't send it
+        const last = data.userLastPromotion ? new Date(data.userLastPromotion).getTime() : null;
+        const derivedNextEligibleAtMs = last ? last + PERSONAL_COOLDOWN_MS : null;
+        
+        const nowMs = Date.now();
+        const nextMs = (data.nextEligibleAt ? new Date(data.nextEligibleAt).getTime() : derivedNextEligibleAtMs);
+        const derivedSecondsRemaining = nextMs ? Math.max(0, Math.floor((nextMs - nowMs) / 1000)) : 0;
+        
+        setUserPromoInfo({
+          userLastPromotion: data.userLastPromotion ?? null,
+          canBoostNow: nextMs ? nowMs >= nextMs : true,
+          secondsRemaining: typeof data.secondsRemaining === "number" ? data.secondsRemaining : derivedSecondsRemaining,
+          nextEligibleAt: nextMs ? new Date(nextMs).toISOString() : null,
+        });
+        
+        
       } catch (err) {
         console.error("Error fetching user promotion info:", err);
       }
@@ -218,7 +250,6 @@ function CommunityPageContentInner() {
       root.appendChild(style);
     }
   }, [showSignupPrompt]);
-
   const handlePromote = async (community_id: number) => {
     try {
       const auth = getAuth();
@@ -226,28 +257,36 @@ function CommunityPageContentInner() {
       if (!token) {
         shakeButton(community_id);
         addToast("error", "Create an account to promote communities");
-        setTimeout(() => setShowSignupPrompt(true), 600); // open isolated modal
+        setTimeout(() => setShowSignupPrompt(true), 600);
         return;
-      }      
-
-      // Check for user cooldown
-      if (userPromoInfo.userLastPromotion) {
-        const userCooldown = getCountdown(userPromoInfo.userLastPromotion, 6 * 60 * 60 * 1000);
-        if (userCooldown) {
-          addToast('warning', `Wait ${userCooldown.hours}h ${userCooldown.minutes}m before promoting again`);
-          shakeButton(community_id);
-          return;
-        }
       }
-
+  
+      // ✅ FIXED: Calculate eligibility in real-time using current timestamp
+      const canBoostNow = userPromoInfo.nextEligibleAt 
+        ? now >= new Date(userPromoInfo.nextEligibleAt).getTime()
+        : true;
+  
+      const secondsRemaining = userPromoInfo.nextEligibleAt
+        ? Math.max(0, Math.floor((new Date(userPromoInfo.nextEligibleAt).getTime() - now) / 1000))
+        : 0;
+  
+      // Check for user cooldown with live calculation
+      if (!canBoostNow || secondsRemaining > 0) {
+        const h = Math.floor(secondsRemaining / 3600);
+        const m = Math.floor((secondsRemaining % 3600) / 60);
+        addToast('warning', `Wait ${h}h ${m}m before promoting again`);
+        shakeButton(community_id);
+        return;
+      }
+  
       // Check if community is on cooldown
       const currentCommunity = communities.find(c => c.id === community_id);
       const tier = currentCommunity?.tier || "normal";
-
+  
       let cooldownMs = 24 * 60 * 60 * 1000;
       if (tier === "silver") cooldownMs = 12 * 60 * 60 * 1000;
       if (tier === "gold") cooldownMs = 6 * 60 * 60 * 1000;
-
+  
       if (communityPromotions[community_id]) {
         const communityCooldown = getCountdown(communityPromotions[community_id], cooldownMs);
         if (communityCooldown) {
@@ -256,14 +295,7 @@ function CommunityPageContentInner() {
           return;
         }
       }
-
-      // Check if daily limit reached
-      if (userPromoInfo.dailyPromotionCount >= 4) {
-        addToast('warning', 'You\'ve used all your daily boosts');
-        shakeButton(community_id);
-        return;
-      }
-
+  
       const res = await fetch("/api/promote", {
         method: "POST",
         headers: {
@@ -273,31 +305,54 @@ function CommunityPageContentInner() {
         body: JSON.stringify({ community_id }),
       });
       const data = await res.json();
-
+  
       if (!res.ok) {
-        console.error("Promotion error:", data.error);
-        addToast('error', data.error || 'Failed to promote community');
+        // If backend sent structured cooldown info
+        if (res.status === 429 && data?.reason === "user_personal_cooldown") {
+          setUserPromoInfo((prev) => ({
+            ...prev,
+            canBoostNow: false,
+            secondsRemaining: typeof data.secondsRemaining === "number" ? data.secondsRemaining : prev.secondsRemaining,
+            nextEligibleAt: data.nextEligibleAt ?? prev.nextEligibleAt,
+          }));
+          const s = data.secondsRemaining ?? 0;
+          const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+          addToast('warning', `Wait ${h}h ${m}m before promoting again`);
+          shakeButton(community_id);
+          return;
+        }
+        if (res.status === 429 && data?.reason === "community_cooldown") {
+          const s = data.secondsRemaining ?? 0;
+          const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+          addToast('info', `This community was already promoted. Wait ${h}h ${m}m`);
+          shakeButton(community_id);
+          return;
+        }
+        console.error("Promotion error:", data?.error);
+        addToast('error', data?.error || 'Failed to promote community');
         shakeButton(community_id);
         return;
       }
-
+  
       // on success, update your UI state
       const nowISO = new Date().toISOString();
       setCommunityPromotions((prev) => ({ ...prev, [community_id]: nowISO }));
       setUserPromoInfo((prev) => ({
+        ...prev,
         userLastPromotion: nowISO,
-        dailyPromotionCount: prev.dailyPromotionCount + 1,
+        canBoostNow: false,
+        secondsRemaining: 60 * 60, // 1 hour
+        nextEligibleAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
       }));
-      
+  
       addToast('success', 'Community successfully promoted!');
-
+  
     } catch (err) {
       console.error("Unexpected error promoting:", err);
       addToast('error', 'An unexpected error occurred');
       shakeButton(community_id);
     }
   };
-
   // A useLayoutEffect to force a one-time page refresh on the first load.
   useLayoutEffect(() => {
     const key = "refreshed-login-page";
@@ -402,14 +457,30 @@ function CommunityPageContentInner() {
   }
 
   // Calculate the user's 6-hour cooldown and the number of promotions left today.
-  const userCooldown = userPromoInfo.userLastPromotion
-    ? getCountdown(userPromoInfo.userLastPromotion, 6 * 60 * 60 * 1000)
-    : null;
-  const dailyPromosLeft = 4 - (userPromoInfo.dailyPromotionCount || 0);
+// Build a countdown from secondsRemaining so the UI ticks every second
+// Derive remaining seconds live from nextEligibleAt (survives refresh)
+const secondsLeft =
+  userPromoInfo.nextEligibleAt
+    ? Math.max(0, Math.floor((new Date(userPromoInfo.nextEligibleAt).getTime() - now) / 1000))
+    : Math.max(0, userPromoInfo.secondsRemaining || 0);
+
+const userCooldown = secondsLeft > 0
+  ? {
+      hours: Math.floor(secondsLeft / 3600),
+      minutes: Math.floor((secondsLeft % 3600) / 60),
+      seconds: secondsLeft % 60,
+    }
+  : null;
+
+
+  
 
   const isMobile = window.innerWidth <= 768;
   const isDesktop = window.innerWidth > 1200;
 
+  // top of file, under other consts
+const PERSONAL_COOLDOWN_MS = 60 * 60 * 1000; // 1h (use 6 * 60 * 60 * 1000 if it's 6h)
+  
   // ---------- Skeleton Card (loading placeholder, no spinner) ----------
   const SkeletonCard = () => (
     <div className="server-card skeleton-card" aria-hidden="true">
@@ -525,20 +596,7 @@ function CommunityPageContentInner() {
         }}
       >
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}>
-  {/* Logo SVG */}
-  <div
-    style={{ width: "50px", height: "auto" }}
-    dangerouslySetInnerHTML={{
-      __html: `<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 548.62 583"><defs><style>.cls-1{fill:#fff;}</style></defs><path class="cls-1" d="M1000.34,702.68c-11.44-10.48-22.58-20.76-33.8-31-4.9-4.46-5.27-4.26-10.15.33C922,704.34,887.08,736,848,762.66c-21.8,14.87-44.34,28.47-70.2,35.23-14.62,3.83-29.45,5.53-44.34,1.37-23.41-6.52-42.93-30.21-46-54.14-2.89-22.77,2.93-43.91,10.74-64.71,12.21-32.52,30.34-61.82,50.29-90a849.21,849.21,0,0,1,60.26-75.23c3.18-3.56,3-5.77-.09-9.18-26.83-29.69-52.35-60.47-74.41-93.93-17.47-26.48-33.19-53.92-42-84.69-6.08-21.29-8.2-42.83-.68-64.23,8.33-23.72,24.56-39.11,49.78-43,15.72-2.44,31.14,1.11,46.1,6.07,30,10,56.76,26.19,82.36,44.43,31,22.1,59.29,47.44,86.32,74.2,5.22,5.17,5.49,5.24,10.68,0,29.26-29.73,60-57.82,94.51-81.41,24.86-17,50.72-32,80-40.13,13.86-3.83,27.93-6.23,42.32-3,27.11,6.12,42.38,24.19,48.4,50.16,6.2,26.71.61,52.5-9.28,77.53-15.33,38.81-38,73.19-63.64,105.83-14.3,18.24-29.57,35.64-45.15,52.78-4.17,4.58-4.19,5.39-.16,10,31,35.15,60.56,71.42,84.7,111.74,15.2,25.37,28.14,51.79,34.23,81,4,19.29,3.81,38.23-4.29,56.68-9.12,20.77-25.61,31-47.33,34.46-27.54,4.38-51.4-5.77-74.48-18.67-35.8-20-67.81-45.29-98.6-72.19-2.51-2.19-5-4.4-7.77-6.84m-159-261.5c32.22,38.67,66.21,75.76,101.2,111.92,2.51,2.6,3.66,4.57.4,7.31-10.5,8.8-19.6,19-29.44,28.5-4.64,4.46-9.18,9-14,13.76l-34.92-37.26c-6.78-7.23-6.91-7.34-13.36.19A917,917,0,0,0,779.41,661c-10.11,15.49-19.64,31.35-26.71,48.53-2.46,6-5.07,12-5.32,18.6-.29,7.6,3.65,10.63,11,9a73.78,73.78,0,0,0,16.31-6.15c24.69-12.19,46.18-29.09,67.37-46.36,36.59-29.82,70.47-62.62,103.87-95.92,50.28-50.11,99.83-100.91,144.88-155.87,24.21-29.54,46.86-60.21,65.67-93.52,8.17-14.47,16-29.2,18.85-46,1.49-8.79-4-14.35-12.76-12.39-18.2,4.09-33.94,13.49-49.34,23.45-25.13,16.24-48,35.36-69.83,55.73-42.76,39.93-83.25,82.11-122.72,125.29-1.29,1.41-2.2,3.39-4.84,3.68-14-14-27.45-28.79-40.67-43.76-2.44-2.76-.58-4.45,1.14-6.35q17.46-19.25,34.89-38.51c4.17-4.62,4.18-5.47-.22-9.89-30.16-30.28-61.89-58.73-97.47-82.57C797,296.9,780,286.75,760.37,282c-9.86-2.38-14.56,2.47-12.56,12.57,2.3,11.59,7.14,22.18,12.74,32.4,22.43,40.95,50.39,78,80.79,114.19M1153,675.45c-14.11-23.63-30.09-45.94-47-67.6-11.28-14.43-22.59-28.84-35-42.35-4.06-4.42-6.16-4.42-9.92-.55q-23.32,24-46.6,48c-5.25,5.42-5.15,7,.34,12.23,17.16,16.27,34.49,32.35,52.56,47.6,23,19.46,46.56,38.28,72.76,53.42,8.24,4.76,16.82,8.79,26.14,11,6,1.41,10.74-2.83,9.84-8.88a67,67,0,0,0-2.15-9.71C1169.29,703.4,1161.42,689.69,1153,675.45Z" transform="translate(-686.74 -218.68)"/>`,
-    }}
-  />
-  {/* Text SVG */}
-  <div
-    style={{ width: "150px", height: "auto" }}
-    dangerouslySetInnerHTML={{
-      __html: `<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800.11 213.36"><defs><style>.cls-1{fill:#fff;}</style></defs><path class="cls-1" d="M709.65,519V401.55c0-6.6,0-6.62,6.63-6.59,17.82.07,35.65-.44,53.44.72,26.31,1.73,46.95,19.11,49.84,45.12,1,8.9,1.11,17.57-1.32,26.17A43.91,43.91,0,0,1,804,489.34c-2.4,2-4.67,4.12-7.64,6.77,7.4,3.3,13.22,7.51,17.72,13.49,9.21,12.25,11.65,26.21,10.66,41a71.26,71.26,0,0,1-1.88,12.78c-4.84,19.05-23.53,34.9-43.39,36.92-21.93,2.23-43.92.51-65.88,1-4.16.1-3.86-2.71-3.86-5.4q0-30,0-60V519m38.62-2q0,19,0,37.94c0,13.74,0,13.74,13.89,12.7,13.38-1,20.76-6.9,23-20,2.38-14-1.52-26.24-14.79-31.35a43.08,43.08,0,0,0-17.56-3c-2.07.09-4.13,0-4.51,3.68M779.66,441c-2.52-6.06-7.18-9.46-13.48-10.63-4.07-.76-8.2-1.24-12.29-1.86s-5.69.85-5.62,5.15q.3,21,0,41.95c0,3.9,1.19,5.6,5.14,5.11,1.15-.15,2.35.1,3.49-.06,15.23-2.08,21.52-4.2,24.42-19.26A35.78,35.78,0,0,0,779.66,441Z" transform="translate(-559.45 -392.26)"/><path class="cls-1" d="M1286.89,601.35c-15.32,0-30.15-.14-45,.1-4.65.08-6.37-1.12-6.36-6.09q.26-97.5.09-195c0-4.29,1.16-5.87,5.63-5.79,14.67.23,29.34-.17,44,.15,30.42.65,52.4,14.22,64.16,42.91a133.71,133.71,0,0,1,9.88,49.06c.18,11.49.49,23-.07,34.47-.8,16.26-4.29,32-12.74,46.17-13.31,22.36-33.52,32.93-59.61,34m-11.59-42,0,5c0,2.29,1.09,3.29,3.44,3.15,19-1.11,32.75-7,38.06-30.89,3.51-15.8,2.7-31.75,2.81-47.68a113.15,113.15,0,0,0-4.21-31c-5-18.12-17.57-28.39-33.89-28.66-5.3-.08-6.33,1.88-6.31,6.7C1275.38,476.76,1275.3,517.57,1275.3,559.34Z" transform="translate(-559.45 -392.26)"/><path class="cls-1" d="M953.58,570.45c-8.8,17.54-21.17,30.54-40.89,34-25.82,4.52-48.4-3.73-62.79-26.8-8.94-14.32-13.54-30.24-16.27-46.8-2.5-15.2-2.54-30.54-1.82-45.81,1-20.35,4.47-40.33,13.59-58.85,10.06-20.43,26.15-31.95,49.29-33.69,24.56-1.85,43,7.68,55.9,28.32,7.06,11.29,10.92,23.81,13.76,36.71,4.26,19.34,4.71,39,3.81,58.57a129.66,129.66,0,0,1-14.58,54.37m-80.33-78.93c0,9.82-.4,19.67.24,29.44.69,10.73,1.46,21.54,5.51,31.74s12.45,17.3,20.84,16.82c10.48-.6,16.28-7.39,19.83-16.52a106.45,106.45,0,0,0,6.8-35c.61-17.75,1.13-35.58-1.84-53.24-1.51-9-2.81-18.11-7.5-26.17-7.79-13.38-24.74-13.69-33.18-.71a40.05,40.05,0,0,0-4.67,10.43A150.58,150.58,0,0,0,873.25,491.52Z" transform="translate(-559.45 -392.26)"/><path class="cls-1" d="M1211,601.36c-7.5,0-14.5-.2-21.49.07-3.81.15-5.61-1.2-6.8-4.81-6.93-21-14.23-41.9-21-62.94-1.63-5-4-6.85-9.29-6.47-4,.29-5.1,1.74-5.07,5.49.12,19.16,0,38.32,0,57.49,0,11.17,0,11.17-11,11.16h-21c-6.65,0-6.68,0-6.68-6.53q0-42.24,0-84.48v-109c0-6.67,0-6.69,6.48-6.7,15.5,0,31-.37,46.49.1,18.35.56,35.19,5.27,47.58,20.22,7,8.5,10.16,18.66,11.8,29.24,2.33,15.1,1.81,30.17-2.64,44.92-3.54,11.77-10.1,21.35-21,27.47-3.34,1.87-3.73,3.79-2.34,7.21,9.27,22.81,18.37,45.69,27.49,68.56,1,2.59,2.51,5,2.7,8.38-4.59,1.19-9.22.3-14.25.6m-30.94-160.83c-5.41-11.4-21.55-12.88-29.63-12.12-2.24.21-2.38,2.1-2.4,3.77-.24,19.15-.42,38.3-.66,57.45,0,2.91,1.1,4.37,4.18,4,3.63-.4,7.32-.46,10.9-1.12,9.16-1.68,16.18-6.3,18.88-15.67C1184.77,464.93,1185.11,453,1180.05,440.53Z" transform="translate(-559.45 -392.26)"/><path class="cls-1" d="M664,523.16c12.29,25.82,24.6,51.22,35.74,76.91-2,1.66-3.52,1.28-5,1.28-11.5,0-23-.09-34.49.08-3.48.05-5.33-1-6.74-4.37-7.39-17.47-15.06-34.83-22.62-52.22-.73-1.66-1.19-3.46-3.17-5.26-3.78,8.52-7.48,16.78-11.12,25.08q-7.22,16.47-14.34,33c-.8,1.85-1.41,3.73-4,3.72-12.81,0-25.61,0-38.22,0-1.2-2-.15-3.24.44-4.52,14.17-30.69,28.27-61.41,42.66-92,2-4.18,2-7.47.16-11.64-13.72-30.51-27.22-61.12-40.77-91.71-.65-1.48-1.16-3-1.63-4.3,1.13-1.83,2.58-1.48,3.84-1.5,12-.22,24-.1,36-.7,5.36-.27,7.61,1.85,9.4,6.54,5.69,14.92,11.8,29.69,17.78,44.5.74,1.83,1.64,3.6,2.64,5.77,2.44-1.8,3.06-4.27,3.94-6.48q9.21-23.21,18.28-46.46c.8-2.06,1.53-4.08,4.34-4.06,12.33.08,24.66.09,37,.17a6.22,6.22,0,0,1,1.82.59c.27,3-1.2,5.32-2.21,7.71C681,433,668,462.54,654.43,491.84c-2,4.3-2.29,7.86.14,12.14C658,510.05,660.75,516.53,664,523.16Z" transform="translate(-559.45 -392.26)"/><path class="cls-1" d="M1007.78,571.64c-1.62,8.89-3.11,17.39-4.6,25.88-.47,2.71-2,3.87-4.83,3.83q-14.75-.18-29.48,0c-3.74,0-4.45-1.53-3.72-5q9.2-43.34,18.16-86.69c7.46-35.89,15-71.76,22.25-107.69,1-4.78,2.67-6.57,7.73-6.43,12.81.38,25.64.27,38.46.05,4.06-.07,5.88,1.2,6.74,5.29,7.83,37.16,15.86,74.28,23.82,111.41q8.87,41.36,17.69,82.72c.38,1.76.6,3.56.93,5.55-2.62,1.35-5.3.77-7.87.79-8.82.07-17.65-.13-26.48.1-3.75.1-5.33-1.33-6-4.93-1.82-9.94-4.06-19.81-5.81-29.77-.59-3.4-2.18-4.44-5.34-4.42-11.83.07-23.65.1-35.48,0-6.74-.06-4.63,5.57-6.18,9.35m24.51-121.07c-1.37,0-.91,1.18-1,1.84q-4.5,24-8.91,48c-1.61,8.77-3.13,17.56-4.82,27.13,9.65,0,18.58.12,27.51-.08,2.39-.06,2.48-2,2.06-4.15C1042.2,499.21,1037.39,475.13,1032.29,450.57Z" transform="translate(-559.45 -392.26)"/></svg>`,
-    }}
-  />
+
         </Link>
 
         {/* "Post your Community" Button */}
@@ -662,186 +720,265 @@ function CommunityPageContentInner() {
         shadowRootEl
       )}
 
-      {user && (
-        <>
-          {/* Floating Promo Card */}
-          <div
-            style={{
-              position: "fixed",
-              bottom: showPromoCard ? "1.5rem" : "-6rem",
-              right: "1.5rem",
-              zIndex: 10000,
-              backdropFilter: "blur(12px)",
-              backgroundColor: "rgba(24, 24, 27, 0.9)",
-              borderRadius: "1rem",
-              padding: "1.25rem",
-              width: "320px",
-              color: "#fff",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.35)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              transition: "all 0.4s ease",
-              opacity: showPromoCard ? 1 : 0,
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 600 }}>
+{user && (
+  <>
+    {/* Floating Promo Card */}
+    {(() => {
+      const totalSeconds = Math.floor(PERSONAL_COOLDOWN_MS / 1000);
+      const progress = userCooldown
+        ? Math.min(1, Math.max(0, (totalSeconds - secondsLeft) / totalSeconds))
+        : 1;
+
+      return (
+        <div
+          style={{
+            position: "fixed",
+            bottom: showPromoCard ? "1.5rem" : "-6rem",
+            right: "1.5rem",
+            zIndex: 10000,
+            backdropFilter: "blur(12px)",
+            background: "rgba(18,18,20,0.9)",
+            borderRadius: "16px",
+            padding: "14px",
+            width: "320px",
+            color: "#fff",
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.35)",
+            border: "1px solid rgba(255, 255, 255, 0.08)",
+            transition: "all 0.4s ease",
+            opacity: showPromoCard ? 1 : 0,
+            fontFamily: "Inter, ui-sans-serif, system-ui",
+          }}
+        >
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600 }}>
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  display: "grid",
+                  placeItems: "center",
+                }}
+              >
                 <FlameIcon />
-                Boosts Left: <strong>{dailyPromosLeft}</strong> / 4
               </div>
-              <button
-                onClick={() => setShowPromoCard(false)}
-                style={{
-                  background: "transparent",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                  color: "#fff",
-                  fontSize: "0.75rem",
-                  padding: "0.25rem 0.6rem",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  transition: "background 0.2s ease",
-                }}
-              >
-                Hide
-              </button>
+              <span>Promotional Boosts</span>
             </div>
 
-            {/* Progress Bar */}
-            <div
+            <button
+              onClick={() => setShowPromoCard(false)}
               style={{
-                width: "100%",
-                height: "8px",
-                borderRadius: "4px",
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
-                overflow: "hidden",
-                marginBottom: "1rem",
+                background: "transparent",
+                border: "1px solid rgba(255,255,255,0.18)",
+                color: "#fff",
+                fontSize: 12,
+                padding: "6px 10px",
+                borderRadius: 8,
+                cursor: "pointer",
               }}
             >
-              <div
-                style={{
-                  width: `${(dailyPromosLeft / 4) * 100}%`,
-                  height: "100%",
-                  background: "linear-gradient(90deg, #FF6B6B, #FFB347)",
-                  transition: "width 0.4s ease",
-                }}
-              />
-            </div>
-
-            {/* Cooldown */}
-            {userCooldown && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.6rem",
-                  background: "rgba(255,255,255,0.05)",
-                  padding: "0.6rem 0.8rem",
-                  borderRadius: "8px",
-                  fontSize: "0.85rem",
-                }}
-              >
-                <ClockIcon />
-                <div>
-                  <span style={{ opacity: 0.8 }}>Next boost in:</span>
-                  <div style={{ fontWeight: "bold", marginTop: "0.1rem" }}>
-                    {`${userCooldown.hours.toString().padStart(2, "0")}:${userCooldown.minutes
-                      .toString()
-                      .padStart(2, "0")}:${userCooldown.seconds.toString().padStart(2, "0")}`}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <p
-              style={{
-                fontSize: "0.85rem",
-                color: "rgb(249, 249, 249)", 
-                marginTop: "0.25rem",
-                textAlign: "center",
-              }}
-            >
-              Promote your favourite community using boosts to increase its visibility.
-            </p>
-
-            <p style={{ 
-              fontSize: "0.75rem", 
-              color: "rgba(249, 249, 249, 0.83)", 
-              marginBottom: "0",
-              marginTop: "-1rem",
-              textAlign: "center"
-            }}>
-              Boosts reset daily at midnight
-            </p>
+              Hide
+            </button>
           </div>
 
-          {/* Mini floating icon button */}
-          {!showPromoCard && (
-            <button
-              onClick={() => setShowPromoCard(true)}
+          {/* Status / Timer */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              background: "rgba(255,255,255,0.04)",
+              padding: "10px 12px",
+              borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.06)",
+            }}
+          >
+            <div
               style={{
-                position: "fixed",
-                bottom: "1.5rem",
-                right: "1.5rem",
-                width: "50px",
-                height: "50px",
-                borderRadius: "50%",
-                background: "rgba(24, 24, 27, 0.9)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                boxShadow: "0 4px 20px rgba(0, 0, 0, 0.25)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                zIndex: 9999,
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                display: "grid",
+                placeItems: "center",
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                flexShrink: 0,
               }}
             >
-              <FlameIcon />
+              <ClockIcon />
+            </div>
+
+            <div style={{ display: "grid", gap: 2, flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>
+                {userCooldown ? "Next boost in" : "Ready to boost"}
+              </div>
               <div
                 style={{
-                  position: "absolute",
-                  top: "-5px",
-                  right: "-5px",
-                  background: "#FF6B6B",
-                  color: "#fff",
-                  borderRadius: "999px",
-                  fontSize: "0.7rem",
-                  fontWeight: "bold",
-                  width: "18px",
-                  height: "18px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: "2px solid rgba(24,24,27,0.9)",
+                  fontWeight: 700,
+                  letterSpacing: 0.4,
+                  fontVariantNumeric: "tabular-nums",
+                  whiteSpace: "nowrap",
                 }}
               >
-                {dailyPromosLeft}
+                {userCooldown
+                  ? `${userCooldown.hours.toString().padStart(2, "0")}:${userCooldown.minutes
+                      .toString()
+                      .padStart(2, "0")}:${userCooldown.seconds.toString().padStart(2, "0")}`
+                  : "00:00:00"}
               </div>
-            </button>
-          )}
+            </div>
 
-          {/* Tab at bottom right edge */}
-          {!showPromoCard && (
+            {/* Ready pill */}
+            {!userCooldown && (
+              <div
+                style={{
+                  padding: "4px 8px",
+                  fontSize: 12,
+                  borderRadius: 999,
+                  background: "rgba(46, 204, 113, 0.18)",
+                  border: "1px solid rgba(46, 204, 113, 0.35)",
+                  color: "rgb(171, 243, 191)",
+                  fontWeight: 600,
+                }}
+              >
+                Ready
+              </div>
+            )}
+          </div>
+
+          {/* Cooldown Progress */}
+          <div style={{ marginTop: 12 }}>
             <div
-              onClick={() => setShowPromoCard(true)}
               style={{
-                position: "fixed",
-                bottom: 0,
-                right: "1.5rem",
-                background: "rgba(24, 24, 27, 0.9)",
-                color: "#fff",
-                padding: "0.3rem 1rem",
-                borderTopLeftRadius: "10px",
-                borderTopRightRadius: "10px",
-                fontSize: "0.9rem",
-                cursor: "pointer",
-                zIndex: 10001,
+                height: 8,
+                width: "100%",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.06)",
+                overflow: "hidden",
+                border: "1px solid rgba(255,255,255,0.06)",
+                position: "relative",
               }}
             >
-              Show Boosts
+              <div
+                style={{
+                  width: `${Math.round(progress * 100)}%`,
+                  height: "100%",
+                  borderRadius: 999,
+                  background:
+                    "linear-gradient(90deg, rgba(255,138,0,0.9), rgba(255,73,28,0.95))",
+                  transition: "width 0.9s linear", // smooth tick every second
+                }}
+              />
+              {/* Animated sheen while cooling down */}
+              {userCooldown && (
+                <div className="cooldown-sheen" />
+              )}
             </div>
-          )}
-        </>
-      )}
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 11,
+                opacity: 0.65,
+                marginTop: 6,
+              }}
+            >
+              <span>0%</span>
+              <span>100%</span>
+            </div>
+          </div>
+
+          {/* Copy */}
+          <p
+            style={{
+              fontSize: 13,
+              color: "rgb(230,230,233)",
+              marginTop: 12,
+              marginBottom: 0,
+              textAlign: "center",
+              lineHeight: 1.4,
+            }}
+          >
+            Promote your community to increase its visibility!
+          </p>
+        </div>
+      );
+    })()}
+
+    {/* Mini floating icon button */}
+    {!showPromoCard && (
+      <button
+        onClick={() => setShowPromoCard(true)}
+        style={{
+          position: "fixed",
+          bottom: "1.5rem",
+          right: "1.5rem",
+          width: 52,
+          height: 52,
+          borderRadius: "50%",
+          background: "rgba(18,18,20,0.92)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "0 6px 22px rgba(0, 0, 0, 0.35)",
+          display: "grid",
+          placeItems: "center",
+          cursor: "pointer",
+          zIndex: 9999,
+        }}
+      >
+        <FlameIcon />
+      </button>
+    )}
+
+    {/* Edge tab */}
+    {!showPromoCard && (
+      <div
+        onClick={() => setShowPromoCard(true)}
+        style={{
+          position: "fixed",
+          bottom: 0,
+          right: "1.5rem",
+          background: "rgba(18,18,20,0.92)",
+          color: "#fff",
+          padding: "6px 12px",
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+          fontSize: 13,
+          cursor: "pointer",
+          zIndex: 10001,
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "none",
+        }}
+      >
+        Show Boosts
+      </div>
+    )}
+
+    {/* Local styles for sheen animation */}
+    <style jsx>{`
+      .cooldown-sheen {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 40%;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.22) 50%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        animation: sheen 2.2s infinite;
+        pointer-events: none;
+      }
+      @keyframes sheen {
+        0% { left: -40%; }
+        100% { left: 100%; }
+      }
+    `}</style>
+  </>
+)}
+
 
       {/* Navigation Container */}
       <div

@@ -9,9 +9,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "XBoard – Discover & Promote Top X (Twitter) Communities",
+  title: "Xboard – Discover & Promote Top X (Twitter) Communities",
   description:
-    "XBoard – Discover & Promote X (Twitter) Communities in crypto, gaming, tech, and more. Connect and promote your favorites now!",
+    "Xboard – Discover & Promote X (Twitter) Communities in crypto, gaming, tech, and more. Connect and promote your favorites now!",
   keywords: [
     "X communities",
     "Twitter communities",
@@ -23,32 +23,26 @@ export const metadata: Metadata = {
     "crypto communities",
     "gaming communities",
     "tech communities",
-    "XBoard sign up",
+    "Xboard sign up",
   ],
-  authors: [{ name: "XBoard Team", url: "https://xboardz.com" }],
-  creator: "XBoard",
-  publisher: "XBoard",
+  authors: [{ name: "Xboard Team", url: "https://xboardz.com" }],
+  creator: "Xboard",
+  publisher: "Xboard",
   metadataBase: new URL("https://xboardz.com"),
-  alternates: {
-    canonical: "https://xboardz.com",
-  },
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
+  alternates: { canonical: "https://xboardz.com" },
+  formatDetection: { email: false, address: false, telephone: false },
   openGraph: {
-    title: "XBoard – Discover & Promote X (Twitter) Communities",
+    title: "Xboard – Discover & Promote X (Twitter) Communities",
     description:
-      "XBoard – Discover & Promote X (Twitter) Communities across gaming, crypto, tech, and more.",
+      "Xboard – Discover & Promote X (Twitter) Communities across gaming, crypto, tech, and more.",
     url: "https://xboardz.com",
-    siteName: "XBoard",
+    siteName: "Xboard", // <- align with desired site name
     images: [
       {
         url: "https://xboardz.com/xboard-banner.png",
         width: 1200,
         height: 630,
-        alt: "XBoard - Discover X Communities",
+        alt: "Xboard - Discover X Communities",
       },
     ],
     locale: "en_US",
@@ -56,9 +50,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "XBoard – Discover & Promote Top X (Twitter) Communities",
+    title: "Xboard – Discover & Promote Top X (Twitter) Communities",
     description:
-      "Join XBoard and explore the best X (Twitter) communities. Promote your favorites and connect with others.",
+      "Join Xboard and explore the best X (Twitter) communities. Promote your favorites and connect with others.",
     images: ["https://xboardz.com/xboard-banner.png"],
     creator: "@xboardz",
     site: "@xboardz",
@@ -74,23 +68,21 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
-  },
+  icons: { icon: "/favicon.ico", apple: "/apple-touch-icon.png" },
 };
 
 export default function Page() {
-  const ld = {
+  // --- Keep your existing WebPage JSON-LD
+  const webPage = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "XBoard – Discover & Promote X (Twitter) Communities",
+    name: "Xboard – Discover & Promote X (Twitter) Communities",
     description:
-      "XBoard – Discover & Promote X (Twitter) Communities across gaming, crypto, tech, and more.",
+      "Xboard – Discover & Promote X (Twitter) Communities across gaming, crypto, tech, and more.",
     url: "https://xboardz.com",
     publisher: {
       "@type": "Organization",
-      name: "XBoard",
+      name: "Xboard",
       url: "https://xboardz.com",
       logo: {
         "@type": "ImageObject",
@@ -104,17 +96,30 @@ export default function Page() {
     },
   };
 
+  // --- ADD this WebSite JSON-LD (this is what powers the Google “site name”)
+  const webSite = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Xboard",                 // <- the name you want to appear in Search
+    alternateName: ["XBoard", "Xboardz"], // helpful variants if Google needs them
+    url: "https://xboardz.com",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://xboardz.com/search?q={search_term_string}",
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <>
       <h1 className="sr-only">
-        XBoard – Discover & Promote X (Twitter) Communities across gaming, crypto, tech, and more.
+        Xboard – Discover & Promote X (Twitter) Communities across gaming, crypto, tech, and more.
       </h1>
       <HomeClient />
-      <Script
-        id="ld-home"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
-      />
+      <Script id="ld-website" type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSite) }} />
+      <Script id="ld-webpage" type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPage) }} />
     </>
   );
 }
