@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import React, { useLayoutEffect } from 'react';
 import Link from "next/link";
+import "../loginform.css";
+
 
 
 

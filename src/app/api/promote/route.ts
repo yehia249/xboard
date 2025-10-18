@@ -74,12 +74,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Community not found" }, { status: 404 });
   }
 
-  // ✅ Determine community-level cooldown (kept as-is; change these if you want 4/2/1 hrs)
-  // Current behavior you had: normal 24h, silver 12h, gold 6h
-  // If you want 4/2/1 instead, change the mapping below accordingly.
-  let cooldownMs = 24 * 60 * 60 * 1000; // normal
-  if (serverTier.tier === "silver") cooldownMs = 12 * 60 * 60 * 1000;
-  if (serverTier.tier === "gold") cooldownMs = 6 * 60 * 60 * 1000;
+  // ✅ Community-level cooldown mapping (UPDATED to 4/2/1 hours)
+  // normal: 4h, silver: 2h, gold: 1h
+  let cooldownMs = 4 * 60 * 60 * 1000; // normal
+  if (serverTier.tier === "silver") cooldownMs = 2 * 60 * 60 * 1000;
+  if (serverTier.tier === "gold") cooldownMs = 1 * 60 * 60 * 1000;
 
   // ✅ Check last promotion time of THIS community (site-wide anti-spam)
   const { data: lastBoost, error: lastCommErr } = await supabase
@@ -128,7 +127,6 @@ export async function POST(req: Request) {
   if (insertError) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
-
 
   const { data: serverData } = await supabase
     .from("servers")
