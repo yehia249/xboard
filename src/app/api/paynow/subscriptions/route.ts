@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   try {
     const PAYNOW_API_KEY = process.env.PAYNOW_API_KEY;   // EXACT header for Management API
-    const PAYNOW_STORE_ID = process.env.PAYNOW_STORE_ID; // e.g., "411486491630370816"
+    const PAYNOW_STORE_ID = process.env.PAYNOW_STORE_ID; // e.g., ""
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
