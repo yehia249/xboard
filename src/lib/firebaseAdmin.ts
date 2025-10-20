@@ -1,40 +1,34 @@
-import admin from "firebase-admin";
+// src/lib/firebaseAdmin.ts
+// SERVER-ONLY. Never import from client components or middleware.
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: "xboard-b365a",
-      clientEmail: "firebase-adminsdk-fbsvc@xboard-b365a.iam.gserviceaccount.com",
-      privateKey: `-----BEGIN PRIVATE KEY-----
-MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDEcdpnwU/emmB0
-Y85HzTlOjYVaK2ovhsdtmALfsKkjIlN/PjnGO/N88hVRGK5b74crcsJ0Z1Gdfu/Z
-F1w4BbXspskdLaH33pVVgjWSgp2C/pcHQtcLiuW1i9tZAZc3GpfRuhIShHE2ML4p
-rtm2K2sfmh7gIIncU5edUzseqpCtvFZFiH5szZWkLn8A3RDX8xW3SW0creurJ6WO
-r6l2J+5yNp/D9YGikgz0pLj2WTqCdPGePMadIh7ZdM62PxrSNZkEwV032AyMOqK8
-gGtKjOQIociZD/v1uJ3zIm6rEDDfT8Bug44PDn4rL3Oapayp433HeiZLpdTGJv4g
-uMtmPqdbAgMBAAECggEAG5mCEvkQ903UkWWtsgl+V1qrdVYLhC6OebJVbQd4AUyt
-qH9Imgu1k5oQ2U+mEkVJRhcd2kGN25qIU4WPBPv1vxBWdI1YZ+fThAEC9S5Ot6cn
-TEjdcmy1sK0RSKRgPMi1XdejpGBhO44w7tBMcZC7azmPGZ7YtPuK80/3SsFctFvg
-r9DWnr0zazjO8yTvuuF9TnOCirRjEjlvNWl0k8b7Big5YB6z9trIHLTW09dQRAzQ
-NjP+zrnj81ekD4ySw0ozLxgAm5N0VNoBwVB+MjiLzyWwh4z5cxFm1NZGFjWkE18a
-QQ0h+anVkt3HfrYzT1GaIuTsOxRgWix83pq6oGxzUQKBgQD2LsghAI9Mnp1b0IN9
-vutQ1imPJO3K4+YHurXBJxLhsTtZ25j0uaJmbsEU3fyQYOh39vo0DKus2FCh2XxW
-lZ1FPQ0NN/f2mvcOoFym5Uq1PCgBGsqg7GPAxEnAfgZrIMpFGVmG7rtGb53kp0p5
-UWkfZ6JUIogplf1/aICa8LlqSQKBgQDMR077Viw6PMSYi9o7QUFMH6ro3qybe8Hg
-vEKooj5oVTOFqNIGUarisYgp8CLxV75iKNDeGBM+hohUJICkfVSdLk96yAk8khqN
-aOWMb6xaH8vj6REDERx2xNl4YePLhIKjQz0zrBYcDJ9wx7ITJ2iGalK3M3NyffDI
-/OdjORMkgwKBgFhqCsQXgF+jI56i72aM19RrZfeb6q8QVD/4ZWheUSCvV0J5ZKCX
-vuSM6FlHNHrh4vuavtdMqadk9Oh7xHUQPLBuMa7KqApwM0SUgVILTV5zoWZsKdPL
-sjO8C0TPvhxhZWOVrBqSyL2OPqWtE0ko3NlDjgArer18udM1Q+Lhi6XJAoGBAJqK
-Z+ok6xiz2Fc/lj21xFx+qKG7tAF8wtPuGM/SzjvIGU5IxXsaVZlijYyMqyLCKrm/
- /yPGOujWhlSBuQC4AEdZPa+5naNBNO0+KkrwQQd9fpZRQBl93HbNvWghRmA1Q0+Y
-ErkAu0lFE2oS6VksOxtVXHZUakZ3mK21Bqg+CYlZAoGAO5tezhxQyFn/NOsbe21k
-TqZ9O6YCUFzRpowOsCu1DjM3N8DwPuHDNFuyxgv/fTIksAK3oUata49vDU3C2CKn
-IGZzW9lz/9ID3LBUNEx6Z70042JjYeoA+R+F0tE629mzMzLx4h+S9ysUd5DbYIEP
-zfMTNLBjVWy1r5ZFAjPFVrQ=
------END PRIVATE KEY-----`,
-    }),
-  });
+import { initializeApp, cert, getApps, getApp, type App } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
+
+// Read env and normalize private key newlines
+const projectId = process.env.FIREBASE_PROJECT_ID;
+const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+
+if (!projectId || !clientEmail || !privateKey) {
+  console.error("Missing Firebase Admin credentials:");
+  console.error("  FIREBASE_PROJECT_ID:", projectId ? "✓" : "✗");
+  console.error("  FIREBASE_CLIENT_EMAIL:", clientEmail ? "✓" : "✗");
+  console.error("  FIREBASE_PRIVATE_KEY:", privateKey ? "✓" : "✗");
+  throw new Error("Missing Firebase Admin env vars. Check your .env.local");
 }
 
-export { admin };
+let adminApp: App;
+
+try {
+  adminApp = getApps().length
+    ? getApp()
+    : initializeApp({
+        credential: cert({ projectId, clientEmail, privateKey }),
+      });
+} catch {
+  // Handle HMR duplicate-initialization race
+  adminApp = getApp();
+}
+
+export const adminAuth = getAuth(adminApp);
+export { adminApp };

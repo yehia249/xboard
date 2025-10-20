@@ -1,6 +1,6 @@
 // src/app/signup/SignupClient.tsx
 "use client";
-import { useState, Suspense } from "react";
+import { useState, Suspense, useLayoutEffect } from "react";
 import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
@@ -9,11 +9,11 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import "../loginform.css";
 
+
 const auth = getAuth();
 const googleProvider = new GoogleAuthProvider();
-const supabaseUrl = "https://hazcjgslrdoxjdwenrnw.supabase.co";
-const supabaseAnonKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhhemNqZ3NscmRveGpkd2Vucm53Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3ODI3MzUsImV4cCI6MjA1OTM1ODczNX0.kJVZiQb6JArkYWDfCoQ0fhBIriULDiIUAZ5e4S49j0g";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 function SignupForm() {
@@ -27,6 +27,17 @@ function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+    // A useLayoutEffect to force a one-time page refresh on the first load.
+    useLayoutEffect(() => {
+      const key = "refreshed-login-page";
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, "true");
+        window.location.replace(window.location.href);
+      }
+      return () => sessionStorage.removeItem(key);
+    }, []);
+
+  
   const handleSignup = async (event: React.FormEvent) => {
     event.preventDefault();
     setErrorMsg("");

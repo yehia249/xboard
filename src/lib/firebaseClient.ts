@@ -1,7 +1,7 @@
 // src/lib/firebaseClient.ts
 "use client";
 
-import { initializeApp, getApps, getApp } from "firebase/app";
+import { initializeApp, getApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
@@ -13,5 +13,9 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+// Ensure exactly one app (survives HMR and hard refresh)
+const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
+// Export a single auth instance to be reused everywhere
 export const auth = getAuth(app);
+export { app };

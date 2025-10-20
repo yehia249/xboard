@@ -1,23 +1,21 @@
+// src/app/login/page.tsx
 "use client";
 import { useState } from "react";
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import React, { useLayoutEffect } from 'react';
 import Link from "next/link";
 import "../loginform.css";
 
-
-
+import { auth } from "@/lib/firebaseClient"; // ✅ use initialized client app
 
 // Initialize Firebase Auth and Supabase client
-const auth = getAuth(); // Assumes Firebase is initialized in a config file
+// const auth = getAuth(); // ❌ removed; we import the initialized auth above
 const googleProvider = new GoogleAuthProvider();
-const supabaseUrl = "https://hazcjgslrdoxjdwenrnw.supabase.co";
-const supabaseAnonKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhhemNqZ3NscmRveGpkd2Vucm53Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3ODI3MzUsImV4cCI6MjA1OTM1ODczNX0.kJVZiQb6JArkYWDfCoQ0fhBIriULDiIUAZ5e4S49j0g";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 
 export default function Login() {
   // States for form inputs and UI feedback
@@ -27,6 +25,16 @@ export default function Login() {
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+    // A useLayoutEffect to force a one-time page refresh on the first load.
+    useLayoutEffect(() => {
+      const key = "refreshed-login-page";
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, "true");
+        window.location.replace(window.location.href);
+      }
+      return () => sessionStorage.removeItem(key);
+    }, []);
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
