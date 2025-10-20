@@ -1,6 +1,6 @@
 // /app/api/upgrade-tier/route.ts
 import { NextResponse } from "next/server";
-import { admin } from "@/lib/firebaseAdmin";
+import { adminAuth } from "@/lib/firebaseAdmin";
 import { supabase } from "@/lib/supabase";
 
 export async function POST(req: Request) {
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    await admin.auth().verifyIdToken(token);
+    await adminAuth.verifyIdToken(token);
   } catch (err) {
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
