@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     const { userUid, email } = await req.json();
 
     // --- envs
-    const PAYNOW_API_KEY = process.env.PAYNOW_API_KEY;          // "APIKey pnapi_v1_..."
+    const PAYNOW_API_KEY = process.env.PAYNOW_API_KEY;          // ""
     const PAYNOW_STORE_ID = process.env.PAYNOW_STORE_ID;        // e.g. ""
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
