@@ -10,10 +10,12 @@ export const metadata: Metadata = {
   title: "Xboard",
   description: "Discover X communities",
   metadataBase: new URL("https://xboardz.com"),
-  alternates: { canonical: "https://xboardz.com/" }, // fixed: add trailing slash
+  alternates: { canonical: "https://xboardz.com/" },
   openGraph: {
     siteName: "Xboard",
   },
+  // If you add a manifest file, declaring it here (and in page.tsx) keeps things consistent.
+  manifest: "/site.webmanifest",
 };
 
 export const viewport: Viewport = {
