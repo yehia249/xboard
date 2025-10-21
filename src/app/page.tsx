@@ -29,14 +29,14 @@ export const metadata: Metadata = {
   creator: "Xboard",
   publisher: "Xboard",
   metadataBase: new URL("https://xboardz.com"),
-  alternates: { canonical: "https://xboardz.com" },
+  alternates: { canonical: "https://xboardz.com/" }, // fixed: add trailing slash
   formatDetection: { email: false, address: false, telephone: false },
   openGraph: {
     title: "Xboard – Discover & Promote X (Twitter) Communities",
     description:
       "Xboard – Discover & Promote X (Twitter) Communities across gaming, crypto, tech, and more.",
-    url: "https://xboardz.com",
-    siteName: "Xboard", // <- align with desired site name
+    url: "https://xboardz.com/", // fixed: add trailing slash
+    siteName: "Xboard",
     images: [
       {
         url: "https://xboardz.com/xboard-banner.png",
@@ -79,11 +79,11 @@ export default function Page() {
     name: "Xboard – Discover & Promote X (Twitter) Communities",
     description:
       "Xboard – Discover & Promote X (Twitter) Communities across gaming, crypto, tech, and more.",
-    url: "https://xboardz.com",
+    url: "https://xboardz.com/",
     publisher: {
       "@type": "Organization",
       name: "Xboard",
-      url: "https://xboardz.com",
+      url: "https://xboardz.com/",
       logo: {
         "@type": "ImageObject",
         url: "https://xboardz.com/xboard-banner.png",
@@ -96,13 +96,13 @@ export default function Page() {
     },
   };
 
-  // --- ADD this WebSite JSON-LD (this is what powers the Google “site name”)
+  // --- ADD this WebSite JSON-LD
   const webSite = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Xboard",                 // <- the name you want to appear in Search
-    alternateName: ["XBoard", "Xboardz"], // helpful variants if Google needs them
-    url: "https://xboardz.com",
+    name: "Xboard",
+    alternateName: ["XBoard", "Xboardz"],
+    url: "https://xboardz.com/",
     potentialAction: {
       "@type": "SearchAction",
       target: "https://xboardz.com/search?q={search_term_string}",

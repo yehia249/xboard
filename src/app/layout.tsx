@@ -1,4 +1,3 @@
-// src/app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -11,7 +10,7 @@ export const metadata: Metadata = {
   title: "Xboard",
   description: "Discover X communities",
   metadataBase: new URL("https://xboardz.com"),
-  alternates: { canonical: "https://xboardz.com" },
+  alternates: { canonical: "https://xboardz.com/" }, // fixed: add trailing slash
   openGraph: {
     siteName: "Xboard",
   },
