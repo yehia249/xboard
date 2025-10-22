@@ -191,15 +191,10 @@ export default function UpgradeTierPage() {
     fetchCommunity();
   }, [rawId]);
 
-  if (loading) {
-    return (
-null
-    );
-  }
-
+  if (loading) return null;
   if (!community) return <div className="text-white p-10">Community not found.</div>;
 
-  // ---- Tier Card ----
+  // ---- Shared Tier Card (Desktop/Tablet) ----
   const TierCard = ({
     title,
     subtitle,
@@ -240,7 +235,7 @@ null
       <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs text-slate-200">
         {badgeIcon}
         <span className="font-medium">{title}</span>
-        <span className="opacity-70">• {accentText}</span>
+        {!!accentText && <span className="opacity-70">• {accentText}</span>}
       </div>
       <h2
         className={`text-xl font-semibold mb-1 ${
@@ -253,9 +248,7 @@ null
       >
         {title}
       </h2>
-      <p
-        className={`text-sm mb-4 ${title === "Gold" ? "text-yellow-200/90" : "text-gray-400"}`}
-      >
+      <p className={`text-sm mb-4 ${title === "Gold" ? "text-yellow-200/90" : "text-gray-400"}`}>
         {subtitle}
       </p>
       <ul className="mb-5 space-y-2 text-sm text-slate-300/90">
@@ -287,6 +280,90 @@ null
     </div>
   );
 
+  // ---- Ultra-Compact Mobile Card (phones only, shown via sm:hidden) ----
+  const MobileTierCard = ({
+    title,
+    subtitle,
+    price,
+    gradient,
+    border,
+    accentText,
+    badgeIcon,
+    perks, // we’ll still show 3 but with tighter line-height
+    disabledText,
+    cta,
+    onClick,
+    isCurrent,
+    disabled,
+  }: {
+    title: "Normal" | "Silver" | "Gold";
+    subtitle: string;
+    price: string;
+    gradient: string;
+    border: string;
+    accentText?: string;
+    badgeIcon: React.ReactNode;
+    perks: string[];
+    disabledText: string;
+    cta?: string;
+    onClick?: () => void;
+    isCurrent?: boolean;
+    disabled?: boolean;
+  }) => (
+    <div className={`rounded-xl ${border} ${gradient} p-4 shadow-lg`}>
+      <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] px-2 py-0.5 text-[10px] text-slate-200">
+        {badgeIcon}
+        <span className="font-medium">{title}</span>
+        {!!accentText && <span className="opacity-70">• {accentText}</span>}
+      </div>
+
+      <div className="flex items-baseline justify-between">
+        <h3
+          className={`text-[15px] font-semibold ${
+            title === "Gold"
+              ? "text-yellow-300"
+              : title === "Silver"
+              ? "text-slate-100"
+              : "text-white"
+          }`}
+        >
+          {title}
+        </h3>
+        <span className={`text-[11px] ${title === "Gold" ? "text-yellow-200/90" : "text-gray-400"}`}>
+          {subtitle}
+        </span>
+      </div>
+
+      <ul className="mt-2 mb-3 space-y-1.5 text-[11px] leading-snug text-slate-300/90">
+        {perks.map((p) => (
+          <li key={p} className="rounded-md border border-white/10 bg-white/[0.03] px-2 py-1">
+            • {p}
+          </li>
+        ))}
+      </ul>
+
+      {disabled ? (
+        <button
+          disabled
+          className="w-full cursor-default rounded-md bg-gray-700/70 px-3 py-2 text-[12px] font-medium text-white"
+        >
+          {isCurrent ? "Current Tier" : disabledText}
+        </button>
+      ) : (
+        <button
+          onClick={onClick}
+          className={`w-full rounded-md px-3 py-2 text-[12px] font-semibold ${
+            title === "Gold"
+              ? "bg-yellow-400 text-black"
+              : "bg-gradient-to-r from-slate-300 to-slate-100 text-black"
+          } active:scale-[0.99]`}
+        >
+          {cta} {price && <span className="opacity-80">• {price}</span>}
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <div className="relative min-h-screen bg-[#0b0b0c] text-white font-sans">
       <div className="absolute inset-0 -z-10 overflow-hidden">
@@ -294,78 +371,142 @@ null
         <div className="absolute -bottom-24 -right-24 h-80 w-80 rounded-full blur-3xl opacity-20 bg-gradient-to-tr from-slate-400/10 to-white/10" />
       </div>
 
-      <div className="mx-auto max-w-5xl px-6 py-12">
+      <div className="mx-auto max-w-5xl px-6 py-8 sm:py-12">
         <button
           onClick={() => router.push(`/community/${rawId}`)}
-          className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10"
+          className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10"
         >
           <ArrowLeft size={16} /> Back
         </button>
 
-        <h1 className="text-4xl font-bold tracking-tight mb-2">Upgrade Tier</h1>
-        <p className="text-gray-400 text-lg mb-10">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-1 sm:mb-2">Upgrade Tier</h1>
+        <p className="text-[13px] sm:text-lg text-gray-400 mb-4 sm:mb-10">
           Boost <span className="text-white font-medium">{community.name}</span> by
           upgrading its visibility and reducing its promotion cooldown.
         </p>
 
-        <div className="grid gap-6 md:grid-cols-3">
-          <TierCard
-            title="Normal"
-            subtitle="24h Cooldown"
-            price=""
-            gradient="bg-[#151515]"
-            border="border border-white/10 opacity-70"
-            accentText="base"
-            badgeIcon={<Clock size={14} className="text-slate-300" />}
-            perks={["Standard listing placement", "Default promotion speed", "Community support"]}
-            disabledText="Downgrade Not Allowed"
-            disabled
-            isCurrent={community.tier === "normal"}
-          />
+        {/* ======= MOBILE (phones) — ultra-compact, always shows ALL THREE at once ======= */}
+        <div className="sm:hidden">
+          <div className="grid grid-cols-1 gap-3">
+            <MobileTierCard
+              title="Normal"
+              subtitle="4h Cooldown"
+              price=""
+              gradient="bg-[#151515]"
+              border="border border-white/10 opacity-90"
+              accentText="base"
+              badgeIcon={<Clock size={12} className="text-slate-300" />}
+              perks={["Standard listing placement", "Default promotion speed", "Community support"]}
+              disabledText="Downgrade Not Allowed"
+              disabled
+              isCurrent={community.tier === "normal"}
+            />
 
-          <TierCard
-            title="Silver"
-            subtitle="12h Cooldown"
-            price="$10/mo"
-            gradient="bg-gradient-to-br from-slate-800 to-slate-900"
-            border={community.tier === "silver" ? "border border-slate-300" : "border border-slate-500"}
-            accentText=""
-            badgeIcon={<Star size={14} className="text-slate-200" />}
-            perks={["Better listing priority", "Half the cooldown time", "Early access to new features"]}
-            disabledText="Downgrade Not Allowed"
-            disabled={["silver", "gold"].includes(community.tier)}
-            isCurrent={community.tier === "silver"}
-            cta="Upgrade"
-            onClick={() => startCheckout(PAYNOW_SILVER_PRODUCT_ID, "silver")}
-            active={community.tier !== "silver"}
-          />
+            <MobileTierCard
+              title="Silver"
+              subtitle="2h Cooldown"
+              price="$10/mo"
+              gradient="bg-gradient-to-br from-slate-800 to-slate-900"
+              border={community.tier === "silver" ? "border border-slate-300" : "border border-slate-500"}
+              badgeIcon={<Star size={12} className="text-slate-200" />}
+              perks={["Better listing priority", "Half the cooldown time", "Early access to new features"]}
+              disabledText="Downgrade Not Allowed"
+              disabled={["silver", "gold"].includes(community.tier)}
+              isCurrent={community.tier === "silver"}
+              cta="Upgrade"
+              onClick={() => startCheckout(PAYNOW_SILVER_PRODUCT_ID, "silver")}
+            />
 
-          <TierCard
-            title="Gold"
-            subtitle="6h Cooldown"
-            price="$14.99/mo"
-            gradient="bg-gradient-to-br from-yellow-900 via-yellow-800 to-[#1a1a1a]"
-            border={community.tier === "gold" ? "border border-yellow-300" : "border border-yellow-400"}
-            accentText="best value"
-            badgeIcon={<Crown size={14} className="text-yellow-300" />}
-            perks={["Top listing priority", "Fastest promotion cooldown", "Priority support"]}
-            disabledText="Downgrade Not Allowed"
-            disabled={community.tier === "gold"}
-            isCurrent={community.tier === "gold"}
-            cta="Upgrade"
-            onClick={() => startCheckout(PAYNOW_GOLD_PRODUCT_ID, "gold")}
-            active={community.tier !== "gold"}
-          />
+            <MobileTierCard
+              title="Gold"
+              subtitle="1h Cooldown"
+              price="$14.99/mo"
+              gradient="bg-gradient-to-br from-yellow-900 via-yellow-800 to-[#1a1a1a]"
+              border={community.tier === "gold" ? "border border-yellow-300" : "border border-yellow-400"}
+              accentText="best value"
+              badgeIcon={<Crown size={12} className="text-yellow-300" />}
+              perks={["Top listing priority", "Fastest promotion cooldown", "Priority support"]}
+              disabledText="Downgrade Not Allowed"
+              disabled={community.tier === "gold"}
+              isCurrent={community.tier === "gold"}
+              cta="Upgrade"
+              onClick={() => startCheckout(PAYNOW_GOLD_PRODUCT_ID, "gold")}
+            />
+          </div>
+
+          <div className="mt-4 flex flex-col items-center justify-between gap-2 text-[12px] text-slate-400/90">
+            <div className="inline-flex items-center gap-2">
+              <ShieldCheck size={14} />
+              <span>Payments handled securely via Paynow</span>
+            </div>
+            <div className="inline-flex items-center gap-2">
+              <Zap size={14} />
+              <span>Cancel anytime • Renews monthly</span>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 text-sm text-slate-400/90 sm:flex-row">
-          <div className="inline-flex items-center gap-2">
-            <ShieldCheck size={16} />
-            <span>Payments handled securely via Paynow</span>
+        {/* ======= DESKTOP/TABLET ======= */}
+        <div className="hidden sm:block">
+          <div className="grid gap-6 md:grid-cols-3">
+            <TierCard
+              title="Normal"
+              subtitle="4h Cooldown"
+              price=""
+              gradient="bg-[#151515]"
+              border="border border-white/10 opacity-70"
+              accentText="base"
+              badgeIcon={<Clock size={14} className="text-slate-300" />}
+              perks={["Standard listing placement", "Default promotion speed", "Community support"]}
+              disabledText="Downgrade Not Allowed"
+              disabled
+              isCurrent={community.tier === "normal"}
+            />
+
+            <TierCard
+              title="Silver"
+              subtitle="2h Cooldown"
+              price="$10/mo"
+              gradient="bg-gradient-to-br from-slate-800 to-slate-900"
+              border={community.tier === "silver" ? "border border-slate-300" : "border border-slate-500"}
+              accentText=""
+              badgeIcon={<Star size={14} className="text-slate-200" />}
+              perks={["Better listing priority", "Half the cooldown time", "Early access to new features"]}
+              disabledText="Downgrade Not Allowed"
+              disabled={["silver", "gold"].includes(community.tier)}
+              isCurrent={community.tier === "silver"}
+              cta="Upgrade"
+              onClick={() => startCheckout(PAYNOW_SILVER_PRODUCT_ID, "silver")}
+              active={community.tier !== "silver"}
+            />
+
+            <TierCard
+              title="Gold"
+              subtitle="1h Cooldown"
+              price="$14.99/mo"
+              gradient="bg-gradient-to-br from-yellow-900 via-yellow-800 to-[#1a1a1a]"
+              border={community.tier === "gold" ? "border border-yellow-300" : "border border-yellow-400"}
+              accentText="best value"
+              badgeIcon={<Crown size={14} className="text-yellow-300" />}
+              perks={["Top listing priority", "Fastest promotion cooldown", "Priority support"]}
+              disabledText="Downgrade Not Allowed"
+              disabled={community.tier === "gold"}
+              isCurrent={community.tier === "gold"}
+              cta="Upgrade"
+              onClick={() => startCheckout(PAYNOW_GOLD_PRODUCT_ID, "gold")}
+              active={community.tier !== "gold"}
+            />
           </div>
-          <div className="inline-flex items-center gap-2">
-            <Zap size={16} />
-            <span>Cancel anytime • Renews monthly</span>
+
+          <div className="mt-10 flex flex-col items-center justify-between gap-3 text-sm text-slate-400/90 sm:flex-row">
+            <div className="inline-flex items-center gap-2">
+              <ShieldCheck size={16} />
+              <span>Payments handled securely via Paynow</span>
+            </div>
+            <div className="inline-flex items-center gap-2">
+              <Zap size={16} />
+              <span>Cancel anytime • Renews monthly</span>
+            </div>
           </div>
         </div>
       </div>
@@ -407,7 +548,10 @@ null
               <div className="w-full space-y-3 pt-2">
                 <button
                   onClick={() => {
-                    const redirect = typeof window !== "undefined" ? encodeURIComponent(window.location.pathname + window.location.search) : "%2F";
+                    const redirect =
+                      typeof window !== "undefined"
+                        ? encodeURIComponent(window.location.pathname + window.location.search)
+                        : "%2F";
                     router.push(`/signup?redirect=${redirect}`);
                   }}
                   className="w-full bg-white text-black font-medium py-3 rounded-xl transition-colors hover:bg-neutral-100 focus:ring-2 focus:ring-white/30 cursor-pointer"
