@@ -13,82 +13,20 @@ export const metadata: Metadata = {
   description:
     "Xboard – Discover & Promote X (Twitter) Communities in crypto, gaming, tech, DeFi, NFTs, and more. Connect and promote your favorites now!",
   keywords: [
-    // Core
-    "X communities",
-    "Twitter communities",
-    "community sign up",
-    "promote X communities",
-    "Discord servers",
-    "X groups",
-    "social communities",
-    "gaming communities",
-    "tech communities",
-    "Xboard sign up",
-
-    // Crypto/Web3 expanded
-    "crypto",
-    "crypto communities",
-    "crypto groups",
-    "crypto trading",
-    "crypto signals",
-    "crypto news",
-    "crypto analysis",
-    "crypto education",
-    "crypto beginners",
-    "crypto portfolio",
-    "crypto airdrops",
-    "airdrops",
-    "airdrops farming",
-    "airdrops calendar",
-    "airdrops strategy",
-    "airdrops guides",
-    "memecoins",
-    "altcoins",
-    "Bitcoin",
-    "Ethereum",
-    "Solana",
-    "BNB Chain",
-    "Base",
-    "Arbitrum",
-    "Optimism",
-    "Polygon",
-    "layer 2",
-    "L2",
-    "web3",
-    "web3 communities",
-    "web3 builders",
-    "web3 education",
-    "blockchain",
-    "blockchain communities",
-    "DeFi",
-    "DeFi communities",
-    "yield farming",
-    "staking",
-    "liquid staking",
-    "restaking",
-    "DEX",
-    "CEX",
-    "on-chain",
-    "onchain",
-    "token launches",
-    "IDO",
-    "IEO",
-    "fair launch",
-    "NFT",
-    "NFTs",
-    "NFT communities",
-    "NFT collectors",
-    "NFT trading",
-    "NFT drops",
-    "NFT artists",
-    "metaverse",
-    "GameFi",
-    "play to earn",
-    "P2E",
-    "airdrops hunters",
-    "crypto TA",
-    "technical analysis",
-    "crypto signals groups",
+    "X communities", "Twitter communities", "community sign up", "promote X communities",
+    "Discord servers", "X groups", "social communities", "gaming communities",
+    "tech communities", "Xboard sign up", "crypto", "crypto communities",
+    "crypto groups", "crypto trading", "crypto signals", "crypto news", "crypto analysis",
+    "crypto education", "crypto beginners", "crypto portfolio", "crypto airdrops",
+    "airdrops", "airdrops farming", "airdrops calendar", "airdrops strategy",
+    "airdrops guides", "memecoins", "altcoins", "Bitcoin", "Ethereum", "Solana",
+    "BNB Chain", "Base", "Arbitrum", "Optimism", "Polygon", "layer 2", "L2", "web3",
+    "web3 communities", "web3 builders", "web3 education", "blockchain",
+    "blockchain communities", "DeFi", "DeFi communities", "yield farming", "staking",
+    "liquid staking", "restaking", "DEX", "CEX", "on-chain", "onchain", "token launches",
+    "IDO", "IEO", "fair launch", "NFT", "NFTs", "NFT communities", "NFT collectors",
+    "NFT trading", "NFT drops", "NFT artists", "metaverse", "GameFi", "play to earn",
+    "P2E", "airdrops hunters", "crypto TA", "technical analysis", "crypto signals groups"
   ],
   authors: [{ name: "Xboard Team", url: "https://xboardz.com" }],
   creator: "Xboard",
@@ -103,8 +41,6 @@ export const metadata: Metadata = {
     },
   },
   formatDetection: { email: false, address: false, telephone: false },
-
-  // --- Social previews (absolute URL + PNG, 1200x600 for X compatibility) ---
   openGraph: {
     title: "Xboard – Discover & Promote X (Twitter) Communities",
     description:
@@ -128,11 +64,16 @@ export const metadata: Metadata = {
     title: "Xboard – Discover & Promote Top X (Twitter) Communities",
     description:
       "Join Xboard and explore elite X (Twitter) communities in crypto, DeFi, NFTs, gaming, and tech.",
-    images: ["https://xboardz.com/og.png?v=2"],
     creator: "@xboardz",
     site: "@xboardz",
+    images: [{
+      url: "https://xboardz.com/og.png?v=2",
+      width: 1200,
+      height: 600,
+      type: "image/png",
+      alt: "Xboard – Discover X Communities"
+    }]
   },
-
   robots: {
     index: true,
     follow: true,
@@ -156,13 +97,11 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  // WebPage JSON-LD
   const webPage = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "Xboard – Discover & Promote X (Twitter) Communities",
-    description:
-      "Xboard – Discover & Promote X (Twitter) Communities across crypto, DeFi, NFTs, gaming, and tech.",
+    name: metadata.title,
+    description: metadata.description,
     url: "https://xboardz.com/",
     inLanguage: "en",
     publisher: {
@@ -183,7 +122,6 @@ export default function Page() {
     },
   };
 
-  // WebSite JSON-LD
   const webSite = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -198,7 +136,6 @@ export default function Page() {
     },
   };
 
-  // Organization JSON-LD
   const organization = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -207,9 +144,6 @@ export default function Page() {
     logo: "https://xboardz.com/og.png?v=2",
     sameAs: [
       "https://twitter.com/xboardz",
-      // Add more official profiles when available:
-      // "https://www.linkedin.com/company/xboardz",
-      // "https://www.facebook.com/xboardz",
     ],
     contactPoint: [
       {
@@ -221,7 +155,6 @@ export default function Page() {
     ],
   };
 
-  // Breadcrumbs JSON-LD
   const breadcrumbs = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -230,7 +163,6 @@ export default function Page() {
     ],
   };
 
-  // SiteNavigationElement JSON-LD
   const nav = {
     "@context": "https://schema.org",
     "@type": "SiteNavigationElement",
@@ -243,9 +175,7 @@ export default function Page() {
       <h1 className="sr-only">
         Xboard – Discover & Promote X (Twitter) Communities across crypto, DeFi, NFTs, gaming, and tech.
       </h1>
-
       <HomeClient />
-
       <Script id="ld-website" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webSite) }} />
       <Script id="ld-webpage" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webPage) }} />
       <Script id="ld-organization" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organization) }} />
