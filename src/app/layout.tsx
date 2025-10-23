@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     description: "Find, boost, and grow X communities. Join the best groups on X.",
     images: [
       {
-        url: OG_IMAGE,
+        url: "https://xboardz.com/og.png?v=3",
         width: 1200,
         height: 600,
         type: "image/png",
