@@ -506,7 +506,7 @@ export default function CommunityDetails() {
           flexDirection: "column",
           gap: "0.5rem",
           maxWidth: "90vw",
-          width: "320px",
+          width: "min(560px, 92vw)",
           alignItems: "center",
         }}
       >
@@ -541,7 +541,12 @@ export default function CommunityDetails() {
               }}
             >
               <div
-                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem",flex: 1,
+                  minWidth: 0,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                   }}
               >
                 {toast.type === "success" && <Check size={18} />}
                 {toast.type === "error" && <AlertCircle size={18} />}
@@ -670,7 +675,7 @@ export default function CommunityDetails() {
                         margin: "6px 0 0",
                       }}
                     >
-                      Create an account to promote and discover communities.
+                      Create an account to promote and psot communities.
                     </p>
                   </div>
 

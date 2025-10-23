@@ -396,7 +396,7 @@ export default function UpgradeTierPage() {
               border="border border-white/10 opacity-90"
               accentText="base"
               badgeIcon={<Clock size={12} className="text-slate-300" />}
-              perks={["Standard listing placement", "Default promotion speed", "Community support"]}
+              perks={["Standard listing placement", "Default promotion speed", "Default listing"]}
               disabledText="Downgrade Not Allowed"
               disabled
               isCurrent={community.tier === "normal"}
@@ -409,7 +409,7 @@ export default function UpgradeTierPage() {
               gradient="bg-gradient-to-br from-slate-800 to-slate-900"
               border={community.tier === "silver" ? "border border-slate-300" : "border border-slate-500"}
               badgeIcon={<Star size={12} className="text-slate-200" />}
-              perks={["Better listing priority", "Half the cooldown time", "Early access to new features"]}
+              perks={["Better listing priority", "Half the cooldown time", "Silver highlighted listing"]}
               disabledText="Downgrade Not Allowed"
               disabled={["silver", "gold"].includes(community.tier)}
               isCurrent={community.tier === "silver"}
@@ -425,7 +425,7 @@ export default function UpgradeTierPage() {
               border={community.tier === "gold" ? "border border-yellow-300" : "border border-yellow-400"}
               accentText="best value"
               badgeIcon={<Crown size={12} className="text-yellow-300" />}
-              perks={["Top listing priority", "Fastest promotion cooldown", "Priority support"]}
+              perks={["Top listing priority", "Fastest promotion cooldown", "Gold highlighted listing"]}
               disabledText="Downgrade Not Allowed"
               disabled={community.tier === "gold"}
               isCurrent={community.tier === "gold"}
@@ -457,7 +457,7 @@ export default function UpgradeTierPage() {
               border="border border-white/10 opacity-70"
               accentText="base"
               badgeIcon={<Clock size={14} className="text-slate-300" />}
-              perks={["Standard listing placement", "Default promotion speed", "Community support"]}
+              perks={["Standard listing placement", "Default promotion speed", "Default listing"]}
               disabledText="Downgrade Not Allowed"
               disabled
               isCurrent={community.tier === "normal"}
@@ -471,7 +471,7 @@ export default function UpgradeTierPage() {
               border={community.tier === "silver" ? "border border-slate-300" : "border border-slate-500"}
               accentText=""
               badgeIcon={<Star size={14} className="text-slate-200" />}
-              perks={["Better listing priority", "Half the cooldown time", "Early access to new features"]}
+              perks={["Better listing priority", "Half the cooldown time", "Silver highlighted listing"]}
               disabledText="Downgrade Not Allowed"
               disabled={["silver", "gold"].includes(community.tier)}
               isCurrent={community.tier === "silver"}
@@ -488,7 +488,7 @@ export default function UpgradeTierPage() {
               border={community.tier === "gold" ? "border border-yellow-300" : "border border-yellow-400"}
               accentText="best value"
               badgeIcon={<Crown size={14} className="text-yellow-300" />}
-              perks={["Top listing priority", "Fastest promotion cooldown", "Priority support"]}
+              perks={["Top listing priority", "Fastest promotion cooldown", "Gold highlighted listing"]}
               disabledText="Downgrade Not Allowed"
               disabled={community.tier === "gold"}
               isCurrent={community.tier === "gold"}
