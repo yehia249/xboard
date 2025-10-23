@@ -8,7 +8,8 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 const SITE_URL = "https://xboardz.com";
-const OG_IMAGE = `${SITE_URL}/og.png`;
+// add a small query to bust caches on platforms like X
+const OG_IMAGE = `${SITE_URL}/og.png?v=2`;
 
 export const metadata: Metadata = {
   title: "Xboard",
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
     siteName: "Xboard",
     title: "Xboard – Discover & Promote Top X (Twitter) Communities",
     description: "Find, boost, and grow X communities. Join the best groups on X.",
-    // Avoid width/height so we never mismatch the real file dimensions
+    // Keep it simple; no width/height here so it never mismatches
     images: [OG_IMAGE],
   },
 

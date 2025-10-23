@@ -104,7 +104,7 @@ export const metadata: Metadata = {
   },
   formatDetection: { email: false, address: false, telephone: false },
 
-  // --- Social previews (absolute URL + PNG, 1200x630) ---
+  // --- Social previews (absolute URL + PNG, 1200x600 for X compatibility) ---
   openGraph: {
     title: "Xboard – Discover & Promote X (Twitter) Communities",
     description:
@@ -113,9 +113,9 @@ export const metadata: Metadata = {
     siteName: "Xboard",
     images: [
       {
-        url: "https://xboardz.com/og.png",
+        url: "https://xboardz.com/og.png?v=2",
         width: 1200,
-        height: 630,
+        height: 600,
         alt: "Xboard - Discover X Communities",
         type: "image/png",
       },
@@ -128,7 +128,7 @@ export const metadata: Metadata = {
     title: "Xboard – Discover & Promote Top X (Twitter) Communities",
     description:
       "Join Xboard and explore elite X (Twitter) communities in crypto, DeFi, NFTs, gaming, and tech.",
-    images: ["https://xboardz.com/og.png"],
+    images: ["https://xboardz.com/og.png?v=2"],
     creator: "@xboardz",
     site: "@xboardz",
   },
@@ -171,9 +171,9 @@ export default function Page() {
       url: "https://xboardz.com/",
       logo: {
         "@type": "ImageObject",
-        url: "https://xboardz.com/og.png",
+        url: "https://xboardz.com/og.png?v=2",
         width: 1200,
-        height: 630,
+        height: 600,
       },
     },
     potentialAction: {
@@ -204,7 +204,7 @@ export default function Page() {
     "@type": "Organization",
     name: "Xboard",
     url: "https://xboardz.com/",
-    logo: "https://xboardz.com/og.png",
+    logo: "https://xboardz.com/og.png?v=2",
     sameAs: [
       "https://twitter.com/xboardz",
       // Add more official profiles when available:
