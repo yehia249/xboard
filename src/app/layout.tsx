@@ -8,6 +8,8 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 const SITE_URL = "https://xboardz.com";
+// Bust caches on scrapers that cache aggressively
+const OG_IMAGE = `${SITE_URL}/og.png?v=2`; // 1200x600 PNG
 
 export const metadata: Metadata = {
   title: "Xboard",
@@ -23,28 +25,26 @@ export const metadata: Metadata = {
     description: "Find, boost, and grow X communities. Join the best groups on X.",
     images: [
       {
-        url: `${SITE_URL}/opengraph-image`,
-        secureUrl: `${SITE_URL}/opengraph-image`,
+        url: OG_IMAGE,
         width: 1200,
-        height: 630,
-        type: "image/jpeg",
+        height: 600,
+        type: "image/png",
         alt: "Xboard – Discover X Communities",
       },
     ],
   },
 
-  // TwitterImageDescriptor with type/width/height/secureUrl
+  // IMPORTANT: TwitterImageDescriptor with type/width/height
   twitter: {
     card: "summary_large_image",
     title: "Xboard – Discover & Promote Top X (Twitter) Communities",
     description: "Find, boost, and grow X communities. Join the best groups on X.",
     images: [
       {
-        url: `${SITE_URL}/twitter-image`,
-        secureUrl: `${SITE_URL}/twitter-image`,
+        url: OG_IMAGE,
         width: 1200,
-        height: 630,
-        type: "image/jpeg",
+        height: 600,
+        type: "image/png",
         alt: "Xboard – Discover X Communities",
       },
     ],
