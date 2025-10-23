@@ -9,7 +9,7 @@ export const viewport: Viewport = {
 };
 
 const SITE_URL = "https://xboardz.com";
-const OG_IMAGE = `${SITE_URL}/og.png?v=2`; // static 1200x600 PNG
+const OG_IMAGE = `${SITE_URL}/og.png?v=99`; // static 1200x600 PNG
 
 export const metadata: Metadata = {
   title: "Xboard – Discover & Promote Top X (Twitter) Communities",
@@ -75,7 +75,7 @@ export const metadata: Metadata = {
     site: "@xboardz",
     images: [
       {
-        url: "https://xboardz.com/og.png?v=3",
+        url: OG_IMAGE,
         width: 1200,
         height: 600,
         type: "image/png",

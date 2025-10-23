@@ -9,7 +9,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 const SITE_URL = "https://xboardz.com";
 // Bust caches on scrapers that cache aggressively
-const OG_IMAGE = `${SITE_URL}/og.png?v=2`; // 1200x600 PNG
+const OG_IMAGE = `${SITE_URL}/og.png?v=99`; // 1200x600 PNG
 
 export const metadata: Metadata = {
   title: "Xboard",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     description: "Find, boost, and grow X communities. Join the best groups on X.",
     images: [
       {
-        url: "https://xboardz.com/og.png?v=3",
+        url: OG_IMAGE,
         width: 1200,
         height: 600,
         type: "image/png",
