@@ -75,7 +75,7 @@ export const metadata: Metadata = {
     site: "@xboardz",
     images: [
       {
-        url: OG_IMAGE,
+        url: "https://xboardz.com/og.png?v=999",
         width: 1200,
         height: 600,
         type: "image/png",
