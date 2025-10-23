@@ -9,7 +9,6 @@ export const viewport: Viewport = {
 };
 
 const SITE_URL = "https://xboardz.com";
-const OG_IMAGE = `${SITE_URL}/og.png?v=2`; // static 1200x600 PNG
 
 export const metadata: Metadata = {
   title: "Xboard – Discover & Promote Top X (Twitter) Communities",
@@ -45,7 +44,6 @@ export const metadata: Metadata = {
   },
   formatDetection: { email: false, address: false, telephone: false },
 
-  // Open Graph
   openGraph: {
     title: "Xboard – Discover & Promote X (Twitter) Communities",
     description:
@@ -54,18 +52,19 @@ export const metadata: Metadata = {
     siteName: "Xboard",
     images: [
       {
-        url: OG_IMAGE,
+        url: `${SITE_URL}/opengraph-image`,
+        secureUrl: `${SITE_URL}/opengraph-image`,
         width: 1200,
-        height: 600,
+        height: 630,
         alt: "Xboard - Discover X Communities",
-        type: "image/png",
+        type: "image/jpeg",
       },
     ],
     locale: "en_US",
     type: "website",
   },
 
-  // Twitter card – use TwitterImageDescriptor (object) with type/width/height
+  // Twitter card – descriptor object
   twitter: {
     card: "summary_large_image",
     title: "Xboard – Discover & Promote Top X (Twitter) Communities",
@@ -75,10 +74,11 @@ export const metadata: Metadata = {
     site: "@xboardz",
     images: [
       {
-        url: OG_IMAGE,
+        url: `${SITE_URL}/twitter-image`,
+        secureUrl: `${SITE_URL}/twitter-image`,
         width: 1200,
-        height: 600,
-        type: "image/png",
+        height: 630,
+        type: "image/jpeg",
         alt: "Xboard – Discover X Communities",
       },
     ],
@@ -120,9 +120,9 @@ export default function Page() {
       url: `${SITE_URL}/`,
       logo: {
         "@type": "ImageObject",
-        url: OG_IMAGE,
+        url: `${SITE_URL}/opengraph-image`,
         width: 1200,
-        height: 600,
+        height: 630,
       },
     },
     potentialAction: {
@@ -151,7 +151,7 @@ export default function Page() {
     "@type": "Organization",
     name: "Xboard",
     url: `${SITE_URL}/`,
-    logo: OG_IMAGE,
+    logo: `${SITE_URL}/opengraph-image`,
     sameAs: ["https://twitter.com/xboardz"],
     contactPoint: [
       {
