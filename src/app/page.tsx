@@ -8,6 +8,9 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+const SITE_URL = "https://xboardz.com";
+const OG_IMAGE = `${SITE_URL}/og.png?v=2`; // static 1200x600 PNG
+
 export const metadata: Metadata = {
   title: "Xboard – Discover & Promote Top X (Twitter) Communities",
   description:
@@ -28,28 +31,30 @@ export const metadata: Metadata = {
     "NFT trading", "NFT drops", "NFT artists", "metaverse", "GameFi", "play to earn",
     "P2E", "airdrops hunters", "crypto TA", "technical analysis", "crypto signals groups"
   ],
-  authors: [{ name: "Xboard Team", url: "https://xboardz.com" }],
+  authors: [{ name: "Xboard Team", url: SITE_URL }],
   creator: "Xboard",
   publisher: "Xboard",
   category: "Community",
-  metadataBase: new URL("https://xboardz.com"),
+  metadataBase: new URL(SITE_URL),
   alternates: {
-    canonical: "https://xboardz.com/",
+    canonical: `${SITE_URL}/`,
     languages: {
-      en: "https://xboardz.com/",
-      "en-US": "https://xboardz.com/",
+      en: `${SITE_URL}/`,
+      "en-US": `${SITE_URL}/`,
     },
   },
   formatDetection: { email: false, address: false, telephone: false },
+
+  // Open Graph
   openGraph: {
     title: "Xboard – Discover & Promote X (Twitter) Communities",
     description:
       "Xboard – Discover & Promote X (Twitter) Communities across crypto, DeFi, NFTs, gaming, and tech.",
-    url: "https://xboardz.com/",
+    url: `${SITE_URL}/`,
     siteName: "Xboard",
     images: [
       {
-        url: "https://xboardz.com/og.png?v=2",
+        url: OG_IMAGE,
         width: 1200,
         height: 600,
         alt: "Xboard - Discover X Communities",
@@ -59,6 +64,8 @@ export const metadata: Metadata = {
     locale: "en_US",
     type: "website",
   },
+
+  // Twitter card – use TwitterImageDescriptor (object) with type/width/height
   twitter: {
     card: "summary_large_image",
     title: "Xboard – Discover & Promote Top X (Twitter) Communities",
@@ -66,14 +73,17 @@ export const metadata: Metadata = {
       "Join Xboard and explore elite X (Twitter) communities in crypto, DeFi, NFTs, gaming, and tech.",
     creator: "@xboardz",
     site: "@xboardz",
-    images: [{
-      url: "https://xboardz.com/og.png?v=2",
-      width: 1200,
-      height: 600,
-      type: "image/png",
-      alt: "Xboard – Discover X Communities"
-    }]
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 1200,
+        height: 600,
+        type: "image/png",
+        alt: "Xboard – Discover X Communities",
+      },
+    ],
   },
+
   robots: {
     index: true,
     follow: true,
@@ -102,22 +112,22 @@ export default function Page() {
     "@type": "WebPage",
     name: metadata.title,
     description: metadata.description,
-    url: "https://xboardz.com/",
+    url: `${SITE_URL}/`,
     inLanguage: "en",
     publisher: {
       "@type": "Organization",
       name: "Xboard",
-      url: "https://xboardz.com/",
+      url: `${SITE_URL}/`,
       logo: {
         "@type": "ImageObject",
-        url: "https://xboardz.com/og.png?v=2",
+        url: OG_IMAGE,
         width: 1200,
         height: 600,
       },
     },
     potentialAction: {
       "@type": "SearchAction",
-      target: "https://xboardz.com/search?q={search_term_string}",
+      target: `${SITE_URL}/search?q={search_term_string}`,
       "query-input": "required name=search_term_string",
     },
   };
@@ -127,11 +137,11 @@ export default function Page() {
     "@type": "WebSite",
     name: "Xboard",
     alternateName: ["XBoard", "Xboardz"],
-    url: "https://xboardz.com/",
+    url: `${SITE_URL}/`,
     inLanguage: "en",
     potentialAction: {
       "@type": "SearchAction",
-      target: "https://xboardz.com/search?q={search_term_string}",
+      target: `${SITE_URL}/search?q={search_term_string}`,
       "query-input": "required name=search_term_string",
     },
   };
@@ -140,11 +150,9 @@ export default function Page() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "Xboard",
-    url: "https://xboardz.com/",
-    logo: "https://xboardz.com/og.png?v=2",
-    sameAs: [
-      "https://twitter.com/xboardz",
-    ],
+    url: `${SITE_URL}/`,
+    logo: OG_IMAGE,
+    sameAs: ["https://twitter.com/xboardz"],
     contactPoint: [
       {
         "@type": "ContactPoint",
@@ -159,7 +167,7 @@ export default function Page() {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://xboardz.com/" },
+      { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
     ],
   };
 
@@ -167,7 +175,7 @@ export default function Page() {
     "@context": "https://schema.org",
     "@type": "SiteNavigationElement",
     name: ["Home", "Login", "Sign Up"],
-    url: ["https://xboardz.com/", "https://xboardz.com/login", "https://xboardz.com/signup/"],
+    url: [`${SITE_URL}/`, `${SITE_URL}/login`, `${SITE_URL}/signup/`],
   };
 
   return (

@@ -8,8 +8,8 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 const SITE_URL = "https://xboardz.com";
-// add a small query to bust caches on platforms like X
-const OG_IMAGE = `${SITE_URL}/og.png?v=2`;
+// Bust caches on scrapers that cache aggressively
+const OG_IMAGE = `${SITE_URL}/og.png?v=2`; // 1200x600 PNG
 
 export const metadata: Metadata = {
   title: "Xboard",
@@ -23,26 +23,35 @@ export const metadata: Metadata = {
     siteName: "Xboard",
     title: "Xboard – Discover & Promote Top X (Twitter) Communities",
     description: "Find, boost, and grow X communities. Join the best groups on X.",
-    // Keep it simple; no width/height here so it never mismatches
-    images: [OG_IMAGE],
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 1200,
+        height: 600,
+        type: "image/png",
+        alt: "Xboard – Discover X Communities",
+      },
+    ],
   },
 
+  // IMPORTANT: TwitterImageDescriptor with type/width/height
   twitter: {
     card: "summary_large_image",
     title: "Xboard – Discover & Promote Top X (Twitter) Communities",
     description: "Find, boost, and grow X communities. Join the best groups on X.",
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 1200,
+        height: 600,
+        type: "image/png",
+        alt: "Xboard – Discover X Communities",
+      },
+    ],
     site: "@xboardz",
     creator: "@xboardz",
-    images: [{
-      url: OG_IMAGE,
-      width: 1200,
-      height: 600,
-      type: "image/png",
-      alt: "Xboard – Discover X Communities"
-    }]
   },
 
-  // If you add a manifest file, declaring it here (and in page.tsx) keeps things consistent.
   manifest: "/site.webmanifest",
 };
 
