@@ -31,7 +31,15 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Xboard – Discover & Promote Top X (Twitter) Communities",
     description: "Find, boost, and grow X communities. Join the best groups on X.",
-    images: [OG_IMAGE],
+    site: "@xboardz",
+    creator: "@xboardz",
+    images: [{
+      url: OG_IMAGE,
+      width: 1200,
+      height: 600,
+      type: "image/png",
+      alt: "Xboard – Discover X Communities"
+    }]
   },
 
   // If you add a manifest file, declaring it here (and in page.tsx) keeps things consistent.
