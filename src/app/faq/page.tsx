@@ -170,12 +170,12 @@ export default function FAQPage() {
                     <td className="py-3 px-4 font-semibold">Silver</td>
                     <td className="py-3 px-4">Premium visibility tier.</td>
                     <td className="py-3 px-4">2 hour promotion cooldown and Higher ranking weight.
-                    .</td>
+                  </td>
                   </tr>
                   <tr className="bg-black/20">
                     <td className="py-3 px-4 font-semibold">Gold</td>
                     <td className="py-3 px-4">Top-tier promotion.</td>
-                    <td className="py-3 px-4">4 hour promotion cooldown and Priority placement.</td>
+                    <td className="py-3 px-4">1 hour promotion cooldown and Priority placement.</td>
                   </tr>
                 </tbody>
               </table>
