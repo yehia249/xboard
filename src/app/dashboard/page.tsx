@@ -1485,9 +1485,7 @@ style={{
                       >
                         {c.description}
                       </div>
-                      <div style={{ marginTop: 6, display: "flex", gap: 6, flexWrap: "wrap" }}>
 
-                      </div>
                     </div>
                     <button
   onClick={() => router.push(`/community/${c.id}/upgrade`)}
