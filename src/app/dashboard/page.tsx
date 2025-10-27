@@ -630,7 +630,8 @@ type PayNowSub = {
 
 // Dashboard content component
 function DashboardContent() {
-  const { communities, loading: communitiesLoading, error: communitiesError } = useCommunities({ perPage: 1000 });
+  const { communities, loading: communitiesLoading, error: communitiesError } =
+  useCommunities({ perPage: 1000, respectURL: false, endpoint: "communities" });
   const { user, logout, loading: authLoading } = useAuth();
   const router = useRouter();
   const [userName, setUserName] = useState("");
@@ -654,6 +655,11 @@ function DashboardContent() {
   const [upgradeResults, setUpgradeResults] = useState<Community[]>([]);
   const [upgradeLoading, setUpgradeLoading] = useState<boolean>(false);
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
+  const [upgradePage, setUpgradePage] = useState<number>(1);
+const [upgradeHasMore, setUpgradeHasMore] = useState<boolean>(false);
+const [upgradeTotal, setUpgradeTotal] = useState<number>(0);
+const UPGRADE_PER_PAGE = 10;
+
 
   // NEW: visible count for "Load more" in UPGRADE tab
   const [upgradeVisible, setUpgradeVisible] = useState<number>(5);
@@ -662,12 +668,20 @@ function DashboardContent() {
   useEffect(() => {
     if (activeTab === "upgrade") {
       setUpgradeVisible(5);
+      setUpgradePage(1);
+      setUpgradeHasMore(false);
+      setUpgradeTotal(0);
     }
   }, [activeTab]);
+  
 
   useEffect(() => {
     setUpgradeVisible(5);
+    setUpgradePage(1);
+    setUpgradeHasMore(false);
+    setUpgradeTotal(0);
   }, [upgradeQuery]);
+  
 
   // Debounced server-side fetch when typing in upgrade search
   useEffect(() => {
@@ -691,29 +705,29 @@ function DashboardContent() {
         const params = new URLSearchParams({
           q,
           page: "1",
-          perPage: "50",
+          perPage: String(UPGRADE_PER_PAGE),
         });
-
-        const resp = await fetch(`/api/communities?${params.toString()}`, {
+        
+        const resp = await fetch(`/api/communities/search?${params.toString()}`, {
           headers: { "cache-control": "no-store" },
           signal: controller.signal,
         });
-
+        
         if (!resp.ok) {
           const data = await resp.json().catch(() => ({}));
           throw new Error(data?.error || "Search failed");
         }
-
+        
         const data = await resp.json();
         const list: Community[] = Array.isArray(data?.communities) ? data.communities : [];
-
-        // Keep only normal-tier results (until API supports tier=normal server-side)
-        const normalOnly = list.filter(
-          (c) => (c.tier || "normal").toLowerCase() === "normal"
-        );
-
-        setUpgradeResults(normalOnly);
-        setUpgradeVisible(5); // ensure we start with 5 on each fresh result set
+        
+        // Server already enforces tier=normal; keep as-is
+        setUpgradeResults(list);
+        setUpgradeVisible(Math.min(5, list.length));
+        setUpgradePage(1);
+        setUpgradeTotal(Number(data?.total ?? list.length));
+        setUpgradeHasMore(list.length < Number(data?.total ?? list.length));
+        
       } catch (e: any) {
         if (e?.name !== "AbortError") {
           setUpgradeError(e?.message || "Search failed");
@@ -1034,7 +1048,7 @@ function DashboardContent() {
         }}
       >
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none", WebkitTapHighlightColor: "transparent" }}>
-          {/* Logo SVG */}
+  {/* Logo SVG */}
   <div
     style={{ width: "50px", height: "auto" }}
     dangerouslySetInnerHTML={{
@@ -1529,31 +1543,90 @@ style={{
                   </div>
                 ))}
               </div>
+{/* Load more / Show more controls */}
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 12,
+  }}
+>
+  <div style={{ color: "#9ca3af", fontSize: 12 }}>
+    Showing {Math.min(upgradeVisible, upgradeResults.length)} of {upgradeTotal || upgradeResults.length}
+  </div>
 
-              {/* Load more controls */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12 }}>
-                <div style={{ color: "#9ca3af", fontSize: 12 }}>
-                  Showing {Math.min(upgradeVisible, upgradeResults.length)} of {upgradeResults.length}
-                </div>
-                {upgradeVisible < upgradeResults.length && (
-                  <button
-                    onClick={() => setUpgradeVisible((v) => Math.min(v + 5, upgradeResults.length))}
-                    style={{
-                      background: "#0f141b",
-                      border: "1px solid #1f2a36",
-                      color: "#e5e7eb",
-                      padding: "8px 12px",
-                      borderRadius: 10,
-                      cursor: "pointer",
-                      fontSize: 13,
-                      whiteSpace: "nowrap",
-                    }}
-                    title="Load more results"
-                  >
-                    Load more
-                  </button>
-                )}
-              </div>
+  {upgradeVisible < upgradeResults.length ? (
+    // Reveal more from the already-fetched batch (edge case: e.g., 8 results fetched, only 5 visible)
+    <button
+      onClick={() =>
+        setUpgradeVisible((v) => Math.min(v + 5, upgradeResults.length))
+      }
+      style={{
+        background: "#0f141b",
+        border: "1px solid #1f2a36",
+        color: "#e5e7eb",
+        padding: "8px 12px",
+        borderRadius: 10,
+        cursor: "pointer",
+        fontSize: 13,
+        whiteSpace: "nowrap",
+      }}
+      title="Show more results"
+    >
+      Show more
+    </button>
+  ) : (
+    // Fetch next page only if the server says there are more
+    upgradeHasMore && (
+      <button
+        onClick={async () => {
+          const nextPage = upgradePage + 1;
+          try {
+            const params = new URLSearchParams({
+              q: upgradeQuery.trim(),
+              page: String(nextPage),
+              perPage: String(UPGRADE_PER_PAGE),
+            });
+            const resp = await fetch(`/api/communities/search?${params.toString()}`, {
+              headers: { "cache-control": "no-store" },
+            });
+            if (!resp.ok) {
+              const data = await resp.json().catch(() => ({}));
+              throw new Error(data?.error || "Load more failed");
+            }
+            const data = await resp.json();
+            const more: Community[] = Array.isArray(data?.communities) ? data.communities : [];
+
+            setUpgradeResults((prev) => [...prev, ...more]);
+            setUpgradeVisible((v) => v + more.length); // reveal the newly fetched items
+            setUpgradePage(nextPage);
+
+            const total = Number(data?.total ?? 0);
+            const nowCount = [...upgradeResults, ...more].length;
+            setUpgradeTotal((t) => t || total);
+            setUpgradeHasMore(nowCount < total);
+          } catch (e: any) {
+            setUpgradeError(e?.message || "Load more failed");
+          }
+        }}
+        style={{
+          background: "#0f141b",
+          border: "1px solid #1f2a36",
+          color: "#e5e7eb",
+          padding: "8px 12px",
+          borderRadius: 10,
+          cursor: "pointer",
+          fontSize: 13,
+          whiteSpace: "nowrap",
+        }}
+        title="Load more results"
+      >
+        Load more
+      </button>
+    )
+  )}
+</div>
             </>
           )}
         </div>

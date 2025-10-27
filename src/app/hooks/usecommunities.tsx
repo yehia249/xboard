@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
-// Interface for API response
+// Interface for API response (union-normalized below)
 interface CommunityResponse {
   communities: Community[];
   totalCount: number;
@@ -30,24 +30,35 @@ export function useCommunities(initialParams?: {
   tags?: string[];
   page?: number;
   perPage?: number;
+  // NEW controls:
+  respectURL?: boolean;                  // default true
+  endpoint?: "communities" | "search";   // default "communities"
 }) {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalCount, setTotalCount] = useState<number>(0);
+
   const searchParamsObj = useSearchParams();
+  const respectURL = initialParams?.respectURL ?? true;
+  const endpoint = initialParams?.endpoint ?? "communities";
 
   // Track current search parameters
   const [searchParams, setSearchParams] = useState({
     userId: initialParams?.userId || "",
-    q: initialParams?.q || searchParamsObj.get("q") || "",
-    tags:
-      initialParams?.tags ||
-      (searchParamsObj.get("tags")
-        ? searchParamsObj.get("tags")!.split(",")
-        : []),
-    page: initialParams?.page || parseInt(searchParamsObj.get("page") || "1"),
+    q: respectURL
+      ? (initialParams?.q || searchParamsObj.get("q") || "")
+      : (initialParams?.q || ""),
+    tags: respectURL
+      ? (initialParams?.tags ||
+          (searchParamsObj.get("tags")
+            ? searchParamsObj.get("tags")!.split(",")
+            : []))
+      : (initialParams?.tags || []),
+    page: respectURL
+      ? (initialParams?.page || parseInt(searchParamsObj.get("page") || "1"))
+      : (initialParams?.page || 1),
     perPage: initialParams?.perPage || 24,
   });
 
@@ -65,18 +76,20 @@ export function useCommunities(initialParams?: {
         setLoading(true);
 
         // Build the query string
-        const queryParams = new URLSearchParams();
+        const qp = new URLSearchParams();
+        if (searchParams.userId) qp.append("userId", searchParams.userId);
+        if (searchParams.q) qp.append("q", searchParams.q);
+        if (searchParams.tags.length > 0) qp.append("tags", searchParams.tags.join(","));
+        qp.append("page", searchParams.page.toString());
+        qp.append("perPage", searchParams.perPage.toString());
 
-        if (searchParams.userId) queryParams.append("userId", searchParams.userId);
-        if (searchParams.q) queryParams.append("q", searchParams.q);
-        if (searchParams.tags.length > 0)
-          queryParams.append("tags", searchParams.tags.join(","));
-        queryParams.append("page", searchParams.page.toString());
-        queryParams.append("perPage", searchParams.perPage.toString());
+        // Choose endpoint
+        const base =
+          endpoint === "search"
+            ? "/api/communities/search"
+            : "/api/communities";
 
-        const url = `/api/communities?${queryParams.toString()}`;
-
-        const response = await fetch(url, {
+        const response = await fetch(`${base}?${qp.toString()}`, {
           headers: { "cache-control": "no-store" },
         });
 
@@ -84,11 +97,29 @@ export function useCommunities(initialParams?: {
           throw new Error("Failed to fetch communities");
         }
 
-        const data: CommunityResponse = await response.json();
+        const raw: any = await response.json();
 
-        setCommunities(data.communities);
-        setTotalPages(data.totalPages);
-        setTotalCount(data.totalCount);
+        // Normalize shapes from /api/communities (totalCount/totalPages)
+        // and /api/communities/search (total/page/perPage)
+        const list: Community[] = Array.isArray(raw?.communities) ? raw.communities : [];
+        const total =
+          typeof raw?.totalCount === "number"
+            ? raw.totalCount
+            : typeof raw?.total === "number"
+            ? raw.total
+            : list.length;
+
+        const perPage =
+          typeof raw?.perPage === "number" ? raw.perPage : searchParams.perPage;
+
+        const totalPagesNorm =
+          typeof raw?.totalPages === "number"
+            ? raw.totalPages
+            : Math.max(1, Math.ceil(total / perPage));
+
+        setCommunities(list);
+        setTotalCount(total);
+        setTotalPages(totalPagesNorm);
       } catch (err: any) {
         console.error("Error fetching communities:", err);
         setError(err.message || "Failed to load communities");
@@ -98,7 +129,7 @@ export function useCommunities(initialParams?: {
     }
 
     fetchCommunities();
-  }, [searchParams]);
+  }, [searchParams, endpoint]);
 
   return {
     communities,
