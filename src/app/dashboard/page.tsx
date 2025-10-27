@@ -1486,21 +1486,7 @@ style={{
                         {c.description}
                       </div>
                       <div style={{ marginTop: 6, display: "flex", gap: 6, flexWrap: "wrap" }}>
-                        {(c.tags || []).slice(0, 4).map((t, i) => (
-                          <span
-                            key={i}
-                            style={{
-                              fontSize: 11,
-                              color: "#cbd5e1",
-                              background: "#0e141c",
-                              border: "1px solid #1f2a36",
-                              borderRadius: 999,
-                              padding: "3px 8px",
-                            }}
-                          >
-                            {t}
-                          </span>
-                        ))}
+
                       </div>
                     </div>
                     <button
