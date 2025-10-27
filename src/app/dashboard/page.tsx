@@ -630,7 +630,7 @@ type PayNowSub = {
 
 // Dashboard content component
 function DashboardContent() {
-  const { communities, loading: communitiesLoading, error: communitiesError } = useCommunities({ perPage: 500 });
+  const { communities, loading: communitiesLoading, error: communitiesError } = useCommunities({ perPage: 1000 });
   const { user, logout, loading: authLoading } = useAuth();
   const router = useRouter();
   const [userName, setUserName] = useState("");
@@ -645,6 +645,90 @@ function DashboardContent() {
 
   // Small preview / expand state
   const [subsOpen, setSubsOpen] = useState<boolean>(false);
+
+  // ======== NEW: Tab + upgrade search state ========
+  const [activeTab, setActiveTab] = useState<"post" | "upgrade">("post");
+  const [upgradeQuery, setUpgradeQuery] = useState<string>("");
+
+  // Server-side search state (debounced fetch to API)
+  const [upgradeResults, setUpgradeResults] = useState<Community[]>([]);
+  const [upgradeLoading, setUpgradeLoading] = useState<boolean>(false);
+  const [upgradeError, setUpgradeError] = useState<string | null>(null);
+
+  // NEW: visible count for "Load more" in UPGRADE tab
+  const [upgradeVisible, setUpgradeVisible] = useState<number>(5);
+
+  // Reset visible count when switching to upgrade tab or changing query
+  useEffect(() => {
+    if (activeTab === "upgrade") {
+      setUpgradeVisible(5);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    setUpgradeVisible(5);
+  }, [upgradeQuery]);
+
+  // Debounced server-side fetch when typing in upgrade search
+  useEffect(() => {
+    if (activeTab !== "upgrade") return;
+    const q = upgradeQuery.trim();
+    if (!q) {
+      setUpgradeResults([]);
+      setUpgradeError(null);
+      setUpgradeLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(async () => {
+      try {
+        setUpgradeLoading(true);
+        setUpgradeError(null);
+
+        // Reuse your existing /api/communities endpoint with q, first page only.
+        // If your API later supports tier filtering, append &tier=normal here.
+        const params = new URLSearchParams({
+          q,
+          page: "1",
+          perPage: "50",
+        });
+
+        const resp = await fetch(`/api/communities?${params.toString()}`, {
+          headers: { "cache-control": "no-store" },
+          signal: controller.signal,
+        });
+
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          throw new Error(data?.error || "Search failed");
+        }
+
+        const data = await resp.json();
+        const list: Community[] = Array.isArray(data?.communities) ? data.communities : [];
+
+        // Keep only normal-tier results (until API supports tier=normal server-side)
+        const normalOnly = list.filter(
+          (c) => (c.tier || "normal").toLowerCase() === "normal"
+        );
+
+        setUpgradeResults(normalOnly);
+        setUpgradeVisible(5); // ensure we start with 5 on each fresh result set
+      } catch (e: any) {
+        if (e?.name !== "AbortError") {
+          setUpgradeError(e?.message || "Search failed");
+          setUpgradeResults([]);
+        }
+      } finally {
+        setUpgradeLoading(false);
+      }
+    }, 300); // debounce
+
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [upgradeQuery, activeTab]);
 
   const showToast = (type: "success" | "error", title: string, description: string) => {
     setToast({ visible: true, type, title, description });
@@ -733,8 +817,7 @@ function DashboardContent() {
   const [isEditSubmitting, setIsEditSubmitting] = useState(false);
   const [editFormStep, setEditFormStep] = useState(1);
 
-  const norm = (s: string) => s.trim().toLowerCase();
-  const editHasTag = (t: string) => editTags.map(norm).includes(norm(t));
+  const editHasTag = (t: string) => editTags.map((x) => x.trim().toLowerCase()).includes(t.trim().toLowerCase());
 
   // EDIT LOGIC
   const openEditModal = (server: Community) => {
@@ -769,7 +852,7 @@ function DashboardContent() {
   };
 
   const removeEditTag = (tagToRemove: string) => {
-    setEditTags((prev) => prev.filter((tag) => norm(tag) !== norm(tagToRemove)));
+    setEditTags((prev) => prev.filter((tag) => tag.trim().toLowerCase() !== tagToRemove.trim().toLowerCase()));
   };
 
   const handleEditTagBlur = () => {
@@ -927,7 +1010,7 @@ function DashboardContent() {
   // Suggestions for EDIT form
   const editFilteredSuggestions = SUGGESTED_TAGS
     .filter((t) => !editHasTag(t))
-    .filter((t) => (editTagInput ? norm(t).includes(norm(editTagInput)) : true))
+    .filter((t) => (editTagInput ? t.trim().toLowerCase().includes(editTagInput.trim().toLowerCase()) : true))
     .slice(0, 12);
 
   return (
@@ -1190,9 +1273,256 @@ function DashboardContent() {
         </button>
       </div>
 
-      <div className="community-form-container">
-        <XCommunityForm onShowToast={showToast} />
+      {/* ======== NEW: Tabs ======== */}
+      <div
+        style={{
+          margin: "18px auto 10px",
+          width: "min(1100px, 95vw)",
+          background: "#0c0f14",
+          border: "1px solid #1f2430",
+          borderRadius: 12,
+          padding: 6,
+        }}
+      >
+        <div style={{ display: "flex", gap: 6 }}>
+          <button
+            onClick={() => setActiveTab("post")}
+            style={{
+              flex: 1,
+              padding: "10px 12px",
+              borderRadius: 8,
+              border: "1px solid " + (activeTab === "post" ? "#2b3242" : "#1b1f2a"),
+              background: activeTab === "post" ? "#12161e" : "transparent",
+              color: "#e5e7eb",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            Post Community
+          </button>
+          <button
+            onClick={() => setActiveTab("upgrade")}
+            style={{
+              flex: 1,
+              padding: "10px 12px",
+              borderRadius: 8,
+              border: "1px solid " + (activeTab === "upgrade" ? "#2b3242" : "#1b1f2a"),
+              background: activeTab === "upgrade" ? "#12161e" : "transparent",
+              color: "#e5e7eb",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            Upgrade Community
+          </button>
+        </div>
       </div>
+
+      {/* ======== POST TAB (existing form) ======== */}
+      {activeTab === "post" && (
+        <div className="community-form-container">
+          <XCommunityForm onShowToast={showToast} />
+        </div>
+      )}
+
+      {/* ======== UPGRADE TAB (SERVER-SIDE SEARCH) ======== */}
+      {activeTab === "upgrade" && (
+        <div
+          style={{
+            width: "min(1100px, 95vw)",
+            margin: "0 auto 24px",
+            background: "#0c0f14",
+            border: "1px solid #1f2430",
+            borderRadius: 12,
+            padding: "14px",
+          }}
+        >
+          {/* Search box */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 12,
+              background: "#0f141b",
+              border: "1px solid #1f2a36",
+              borderRadius: 10,
+              padding: "10px 12px",
+            }}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#9ca3af"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              value={upgradeQuery}
+              onChange={(e) => setUpgradeQuery(e.target.value)}
+              placeholder="Search any community by name"
+              style={{
+                flex: 1,
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                color: "#e5e7eb",
+                fontSize: 14,
+              }}
+            />
+          </div>
+
+          {/* Results */}
+          {upgradeQuery.trim().length === 0 ? (
+            <div style={{ color: "#8b96a8", fontSize: 14 }}>
+              Search all normal tier communities.
+            </div>
+          ) : upgradeLoading ? (
+            <div style={{ color: "#9ca3af", fontSize: 14 }}>
+              Searching…
+            </div>
+          ) : upgradeError ? (
+            <div style={{ color: "#ef4444", fontSize: 14 }}>
+              {upgradeError}
+            </div>
+          ) : upgradeResults.length === 0 ? (
+            <div style={{ color: "#9ca3af", fontSize: 14 }}>
+              No normal-tier communities match “{upgradeQuery.trim()}”.
+            </div>
+          ) : (
+            <>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr",
+                  gap: 10,
+                }}
+              >
+                {upgradeResults.slice(0, upgradeVisible).map((c) => (
+                  <div
+                    key={`${c.id}-${c.name}`}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "auto 1fr auto",
+                      alignItems: "center",
+                      gap: 12,
+                      background: "#0c1118",
+                      border: "1px solid #1e2633",
+                      borderRadius: 12,
+                      padding: "10px 12px",
+                    }}
+                  >
+                    <img
+                      src={c.image_url || "/og.png"}
+                      alt={c.name}
+                      style={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: 10,
+                        objectFit: "cover",
+                        border: "1px solid #1f2a36",
+                      }}
+                    />
+                    <div style={{ minWidth: 0 }}>
+                      <div
+                        style={{
+                          color: "#e5e7eb",
+                          fontWeight: 600,
+                          fontSize: 15,
+                          lineHeight: 1.2,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                        title={c.name}
+                      >
+                        {c.name}
+                      </div>
+                      <div
+                        style={{
+                          color: "#9ca3af",
+                          fontSize: 12,
+                          marginTop: 4,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                        title={c.description}
+                      >
+                        {c.description}
+                      </div>
+                      <div style={{ marginTop: 6, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        {(c.tags || []).slice(0, 4).map((t, i) => (
+                          <span
+                            key={i}
+                            style={{
+                              fontSize: 11,
+                              color: "#cbd5e1",
+                              background: "#0e141c",
+                              border: "1px solid #1f2a36",
+                              borderRadius: 999,
+                              padding: "3px 8px",
+                            }}
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => router.push(`/community/${c.id}/upgrade`)}
+                      style={{
+                        background: "#111827",
+                        border: "1px solid #2b3242",
+                        color: "#e5e7eb",
+                        padding: "8px 12px",
+                        borderRadius: 10,
+                        cursor: "pointer",
+                        fontSize: 13,
+                        whiteSpace: "nowrap",
+                      }}
+                      title="Go to upgrade page"
+                    >
+                      Upgrade tier
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Load more controls */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12 }}>
+                <div style={{ color: "#9ca3af", fontSize: 12 }}>
+                  Showing {Math.min(upgradeVisible, upgradeResults.length)} of {upgradeResults.length}
+                </div>
+                {upgradeVisible < upgradeResults.length && (
+                  <button
+                    onClick={() => setUpgradeVisible((v) => Math.min(v + 5, upgradeResults.length))}
+                    style={{
+                      background: "#0f141b",
+                      border: "1px solid #1f2a36",
+                      color: "#e5e7eb",
+                      padding: "8px 12px",
+                      borderRadius: 10,
+                      cursor: "pointer",
+                      fontSize: 13,
+                      whiteSpace: "nowrap",
+                    }}
+                    title="Load more results"
+                  >
+                    Load more
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="communities-section">
         <div style={{ textAlign: "center", margin: "20px 0" }}>
@@ -1377,7 +1707,7 @@ function DashboardContent() {
                         ))}
                       </div>
                     )}
-
+                  
                     <p className="input-help">Add up to {MAX_TAGS} tags per community</p>
                   </div>
 
