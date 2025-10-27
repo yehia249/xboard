@@ -40,7 +40,7 @@
 .x-community-form::before {
   content: "";
   position: absolute; inset: 0 0 auto 0; height: 3px;
-  background: linear-gradient(90deg, rgba(42,107,255,.7), rgba(0,163,255,.45));
+  background:#3861fb;
 }
 
 /* Header */
