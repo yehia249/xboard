@@ -197,12 +197,15 @@ export default function CommunityDetails() {
   // A helper function to compute the countdown timer.
   const getCountdown = (baseTimeISO: string, duration: number) => {
     const baseTime = new Date(baseTimeISO).getTime();
+    theCooldownEnd: {
+      /* label just to make intent obvious; no-op */
+    }
     const cooldownEnd = baseTime + duration;
     const remaining = cooldownEnd - now;
     if (remaining <= 0) return null;
     const seconds = Math.floor((remaining / 1000) % 60);
     const minutes = Math.floor((remaining / (1000 * 60)) % 60);
-    const hours = Math.floor((remaining / (1000 * 60 * 60)));
+    const hours = Math.floor(remaining / (1000 * 60 * 60));
     return { hours, minutes, seconds };
   };
 
@@ -479,8 +482,8 @@ export default function CommunityDetails() {
 
   // ===== Keep original sizes for the button (used in modern button's animate) =====
   const targetWidth = isMobile
-  ? (isPromoted ? "136px" : "112px") // +16px when promoted on mobile
-  : (isPromoted ? "140px" : "120px");
+    ? (isPromoted ? "136px" : "112px") // +16px when promoted on mobile
+    : (isPromoted ? "140px" : "120px");
 
   const targetHeight = isMobile ? (isPromoted ? "45px" : "50px") : "50px";
 
@@ -515,7 +518,6 @@ export default function CommunityDetails() {
             WebkitTapHighlightColor: "transparent",
           }}
         >
-
   {/* Logo SVG */}
   <div
     style={{ width: "50px", height: "auto" }}
@@ -1113,6 +1115,32 @@ export default function CommunityDetails() {
               Promotions
             </div>
 
+            {/* Subtle month-end reset note (requested) */}
+            <div
+              className="promo-reset-hint"
+              style={{
+                position: "absolute",
+                top: isMobile ? "112px" : "128px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                maxWidth: 240,
+                textAlign: "center",
+                fontSize: "10.5px",
+                lineHeight: 1.25,
+                color: "rgba(255,255,255,0.65)",
+                opacity: 0.55,
+                userSelect: "none",
+                pointerEvents: "auto",
+                padding: "4px 6px",
+                borderRadius: 8,
+                backdropFilter: "blur(0px)",
+                transition: "opacity .2s ease",
+                whiteSpace: "nowrap",
+              }}
+              title="Resets monthly to keep things fair"
+            >
+            </div>
+
             {/* ======== MODERN PROMOTE BUTTON (exact look, same size) ======== */}
             <motion.button
               className={`modern-promote-button ${buttonShaking ? "button-shake" : ""}`}
@@ -1307,8 +1335,20 @@ export default function CommunityDetails() {
             marginTop: community.tags.length === 0 ? "6rem" : "2rem",
           }}
         >
-          Join
+          Join 
         </Link>
+{/* Month-end reset note (subtle) */}
+<div
+  style={{
+    marginBottom: "-1.75rem",
+    marginTop: "0.9rem",
+    color: "#9CA3AF",       // grey
+    fontSize: "0.8rem",    // small
+    textAlign: "center",
+  }}
+>
+  ⓘ promotions refresh at the end of the month to keep the listing fair.
+</div>
 
         {/* Share section */}
         <div className="share" style={{ marginTop: "2rem" }}>
@@ -1321,7 +1361,7 @@ export default function CommunityDetails() {
           <div
             style={{
               marginTop: "-1rem",
-              fontSize: "1rem",
+              fontSize: "1.2rem",
               color: "#9CA3AF",
               marginBottom: "1rem",
             }}
@@ -1444,11 +1484,11 @@ export default function CommunityDetails() {
                 const copyText = document.getElementById("copyText");
                 const copyIcon = document.getElementById("copyIcon");
                 const checkIcon = document.getElementById("checkIcon");
-                if (copyText) copyText.innerText = "Copied";
+                if (copyText) (copyText as HTMLElement).innerText = "Copied";
                 if (copyIcon) (copyIcon as HTMLElement).style.display = "none";
                 if (checkIcon) (checkIcon as HTMLElement).style.display = "inline";
                 setTimeout(() => {
-                  if (copyText) copyText.innerText = "Copy";
+                  if (copyText) (copyText as HTMLElement).innerText = "Copy";
                   if (copyIcon) (copyIcon as HTMLElement).style.display = "inline";
                   if (checkIcon) (checkIcon as HTMLElement).style.display = "none";
                 }, 2000);
@@ -1580,6 +1620,10 @@ export default function CommunityDetails() {
 
         .button-shake {
           animation: button-shake 0.5s ease-in-out;
+        }
+
+        .promote-button-container:hover .promo-reset-hint {
+          opacity: 0.85;
         }
 
         .promote-button-container {
