@@ -30,7 +30,7 @@
 }
 
 .server-card:hover {
-  transform: translateY(-10px);
+  transform: translateY(-4px);
   box-shadow: 
     0 25px 35px -5px rgba(0, 0, 0, 0.15),
     0 15px 15px -5px rgba(0, 0, 0, 0.08);
@@ -166,20 +166,15 @@
   color: #f0f0f0;
 }
 
-/* Silver tier title - icy gradient with animation */
+/* Silver tier title - use same sweep behavior as gold */
 .silver-tier h3 {
   background: linear-gradient(135deg, #a8d8f0 0%, #d6eeff 15%, #ffffff 30%, #d6eeff 45%, #a8d8f0 60%, #d6eeff 75%, #ffffff 90%, #a8d8f0 100%);
-  background-size: 200% 200%;
+  background-size: 200% 200%;           /* match gold */
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
   filter: drop-shadow(0 1px 3px rgba(168, 216, 240, 0.3));
-  animation: silver-text-move 6s ease-in-out infinite;
-}
-
-@keyframes silver-text-move {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  animation: gold-text-move 6s ease-in-out infinite;  /* exactly like gold */
 }
 
 /* Gold tier title - rich gold gradient with animation */
@@ -254,15 +249,12 @@
 
 .normal-tier .join-link:hover {
   background-color: rgba(255, 255, 255, 0.9);
-  transform: translateY(-2px);
 }
 
 /* Silver tier button - glass morphism with shine */
 .silver-tier .join-link {
-  background: linear-gradient(135deg, #c8e6fb 0%, #e8f5ff 100%);
   color: #0a1621;
   border: 1px solid rgba(168, 216, 240, 0.3);
-  box-shadow: 0 4px 12px rgba(168, 216, 240, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .silver-tier .join-link::before {
@@ -272,7 +264,6 @@
   left: -75%;
   width: 50%;
   height: 100%;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.5) 50%, transparent 100%);
   transform: skewX(-20deg);
   transition: left 0.6s ease;
 }
@@ -280,17 +271,12 @@
 .silver-tier .join-link:hover::before { left: 125%; }
 
 .silver-tier .join-link:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(168, 216, 240, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  border-color: rgba(168, 216, 240, 0.4);
+
 }
 
 /* Gold tier button - metallic shine */
 .gold-tier .join-link {
-  background: linear-gradient(135deg, #e8c965 0%, #f5e5a8 50%, #e8c965 100%);
   color: #0a0e10;
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .gold-tier .join-link::before {
@@ -300,18 +286,11 @@
   left: -75%;
   width: 50%;
   height: 100%;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.6) 50%, transparent 100%);
   transform: skewX(-20deg);
   transition: left 0.6s ease;
 }
 
 .gold-tier .join-link:hover::before { left: 125%; }
-
-.gold-tier .join-link:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  border-color: rgba(212, 175, 55, 0.4);
-}
 
 /* Delete button styles */
 .server-card .delete-btn {
@@ -362,7 +341,6 @@
 }
 
 .silver-tier-modal h2, .silver-tier-modal h3 {
-  background: linear-gradient(135deg, #a8d8f0 0%, #d6eeff 50%, #a8d8f0 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -781,4 +759,69 @@
     width: 400px;
     margin: 0 auto;
   }
+}
+
+/* Replace the previous override with this (end of the file) */
+.server-card a.join-link:not(.skeleton-button),
+.server-card a.join-link:not(.skeleton-button):link,
+.server-card a.join-link:not(.skeleton-button):visited {
+  background: #fff !important;
+  color: #121212 !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+.server-card a.join-link:not(.skeleton-button):hover,
+.server-card a.join-link:not(.skeleton-button):active,
+.server-card a.join-link:not(.skeleton-button):focus {
+  background: #fff !important;
+  color: #121212 !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* If you added the external-link versions earlier, update them too */
+.server-card a.join-link:not(.skeleton-button)[href^="http"],
+.server-card a.join-link:not(.skeleton-button)[href^="http"]:hover,
+.server-card a.join-link:not(.skeleton-button)[href*="twitter.com"],
+.server-card a.join-link:not(.skeleton-button)[href*="twitter.com"]:hover {
+  background: #fff !important;
+  color: #121212 !important;
+}
+
+/* === SILVER -> NEUTRAL CARD (do NOT touch title) === */
+.silver-tier {
+  /* same as base card */
+  background: linear-gradient(to bottom, #1b2023, #1b2023) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow:
+    0 15px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* kill sparkle/diagonal overlays */
+.silver-tier::before,
+.silver-tier::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* DO NOT add any .silver-tier h3 overrides here.
+   Keep your existing animated gradient + keyframes elsewhere. */
+
+/* neutral join button (global white styles handle bg/color; just remove silver frame/shine) */
+.silver-tier .join-link {
+  border: none !important;
+}
+.silver-tier .join-link::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* neutralize silver-specific edit button styling */
+.silver-tier .edit-btn {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: rgba(229, 231, 235, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: none !important;
 }

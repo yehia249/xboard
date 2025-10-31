@@ -73,7 +73,6 @@
   position: relative;
   text-decoration: none;
   color: #fff;
-  background: linear-gradient(45deg, #b1b1b1, #b1b1b1);
   padding: 9.57px 25px;
   border-radius: 10px;
   left: -10px;
@@ -81,8 +80,8 @@
   margin-right: 1em;
   cursor: pointer;
   display: inline-block;
-  box-shadow: 0 4px 10px rgba(46, 49, 146, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2);
+  border: 1.5px solid rgb(252, 252, 252);
 }
 
 .logabutton span {
@@ -126,7 +125,7 @@
   position: relative;
   z-index: 1;
   font-weight: 500;
-  background: linear-gradient(45deg, #333, #555);
+  background: black;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;

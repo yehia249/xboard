@@ -1401,3 +1401,41 @@
     font-size: 1rem;
   }
 }
+/* --- JOIN BUTTON HOVER FIX (no more gray, keep original look) --- */
+
+/* 1) Kill any global grayscale/opacity on hover */
+.server-card .join-link:hover,
+.join-button:hover {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* 2) Stop global link-color overrides inside cards */
+.server-card .join-link:hover {
+  color: unset !important;     /* don't inherit random white/gray */
+  text-decoration: none !important;
+}
+
+/* 3) Keep the exact intended colors per tier on hover */
+.normal-tier .join-link:hover {
+  background-color: #ffffff !important;
+  color: #121212 !important;
+}
+
+.silver-tier .join-link:hover {
+  background: linear-gradient(135deg, #c8e6fb 0%, #e8f5ff 100%) !important;
+  color: #0a1621 !important;
+  border-color: rgba(168,216,240,0.3) !important;
+}
+
+.gold-tier .join-link:hover {
+  background: linear-gradient(135deg, #e8c965 0%, #f5e5a8 50%, #e8c965 100%) !important;
+  color: #0a0e10 !important;
+  border-color: rgba(212,175,55,0.3) !important;
+}
+
+/* 4) Community page join button: stay white bg + black text on hover */
+.join-button:hover {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
