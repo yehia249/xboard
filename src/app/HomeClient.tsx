@@ -62,6 +62,20 @@ function CommunityPageContentInner() {
   const { user, logout } = useAuth();
   const [mounted, setMounted] = useState(false);
 
+  // ====== Viewport width (for progressive scaling under 585px) ======
+  const [vw, setVw] = useState<number>(typeof window !== "undefined" ? window.innerWidth : 1024);
+  useEffect(() => {
+    const onResize = () => setVw(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  // Progressive scale: at 585px => 1; at 360px => 0.78; below 360px clamp to 0.78
+  const MIN_W = 360;
+  const MAX_W = 585;
+  const MIN_SCALE = 0.78;
+  const t = Math.max(0, Math.min(1, (vw - MIN_W) / (MAX_W - MIN_W)));
+  const promoCardScale = vw >= MAX_W ? 1 : MIN_SCALE + (1 - MIN_SCALE) * t;
+
   // State to control visibility of the promo card
   const [showPromoCard, setShowPromoCard] = useState(true);
   const FlameIcon = () => (
@@ -73,14 +87,12 @@ function CommunityPageContentInner() {
       fill="white"
       aria-hidden="true"
     >
-<path
+      <path
         fillRule="evenodd"
         d="M11.1758045,11.5299649 C11.7222481,10.7630248 11.6612694,9.95529555 11.2823626,8.50234466 C10.5329929,5.62882187 10.8313891,4.05382867 13.4147321,2.18916004 L14.6756139,1.27904986 L14.9805807,2.80388386 C15.3046861,4.42441075 15.8369398,5.42670671 17.2035766,7.35464078 C17.2578735,7.43122022 17.2578735,7.43122022 17.3124108,7.50814226 C19.2809754,10.2854144 20,11.9596204 20,15 C20,18.6883517 16.2713564,22 12,22 C7.72840879,22 4,18.6888043 4,15 C4,14.9310531 4.00007066,14.9331427 3.98838852,14.6284506 C3.89803284,12.2718054 4.33380946,10.4273676 6.09706666,8.43586022 C6.46961415,8.0150872 6.8930834,7.61067534 7.36962714,7.22370749 L8.42161802,6.36945926 L8.9276612,7.62657706 C9.30157948,8.55546878 9.73969716,9.28566491 10.2346078,9.82150804 C10.6537848,10.2753538 10.9647401,10.8460665 11.1758045,11.5299649 Z M7.59448531,9.76165711 C6.23711779,11.2947332 5.91440928,12.6606068 5.98692012,14.5518252 C6.00041903,14.9039019 6,14.8915108 6,15 C6,17.5278878 8.78360021,20 12,20 C15.2161368,20 18,17.527472 18,15 C18,12.4582072 17.4317321,11.1350292 15.6807305,8.66469725 C15.6264803,8.58818014 15.6264803,8.58818014 15.5719336,8.51124844 C14.5085442,7.0111098 13.8746802,5.96758691 13.4553336,4.8005211 C12.7704786,5.62117775 12.8107447,6.43738988 13.2176374,7.99765534 C13.9670071,10.8711781 13.6686109,12.4461713 11.0852679,14.31084 L9.61227259,15.3740546 L9.50184911,13.5607848 C9.43129723,12.4022487 9.16906461,11.6155508 8.76539217,11.178492 C8.36656566,10.7466798 8.00646835,10.2411426 7.68355027,9.66278925 C7.65342985,9.69565638 7.62374254,9.72861259 7.59448531,9.76165711 Z"
       />
-
     </svg>
   );
-  
   
   const ClockIcon = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -90,7 +102,6 @@ function CommunityPageContentInner() {
     </svg>
   );
     
-
   // Toast notifications state
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const toastIdCounter = useRef(0);
@@ -105,9 +116,7 @@ function CommunityPageContentInner() {
     setToasts(prev => {
       const existing = prev.find(t => t.type === type);
       if (existing) {
-        // Update message of existing toast of same type
         const updated = prev.map(t => t.type === type ? { ...t, message } : t);
-        // reset its timer
         if (toastTimers.current[type]) {
           window.clearTimeout(toastTimers.current[type]!);
         }
@@ -119,7 +128,6 @@ function CommunityPageContentInner() {
       } else {
         const id = toastIdCounter.current++;
         const next = [...prev, { id, type, message }];
-        // start timer for this type
         if (toastTimers.current[type]) {
           window.clearTimeout(toastTimers.current[type]!);
         }
@@ -135,16 +143,12 @@ function CommunityPageContentInner() {
   // Function to shake a button
   const shakeButton = (communityId: number) => {
     setShakingButtons(prev => ({ ...prev, [communityId]: true }));
-    
-    // Stop shaking after animation completes
     setTimeout(() => {
       setShakingButtons(prev => ({ ...prev, [communityId]: false }));
     }, 500);
   };
 
-  
-
-  // State for user promotion info: last promotion time and how many boosts used today.
+  // State for user promotion info
   const [userPromoInfo, setUserPromoInfo] = useState<{
     userLastPromotion: string | null;
     canBoostNow: boolean;
@@ -203,7 +207,6 @@ function CommunityPageContentInner() {
           secondsRemaining: typeof data.secondsRemaining === "number" ? data.secondsRemaining : derivedSecondsRemaining,
           nextEligibleAt: nextMs ? new Date(nextMs).toISOString() : null,
         });
-        
         
       } catch (err) {
         console.error("Error fetching user promotion info:", err);
@@ -334,7 +337,6 @@ function CommunityPageContentInner() {
       const data = await res.json();
   
       if (!res.ok) {
-        // If backend sent structured cooldown info
         if (res.status === 429 && data?.reason === "user_personal_cooldown") {
           setUserPromoInfo((prev) => ({
             ...prev,
@@ -483,30 +485,25 @@ function CommunityPageContentInner() {
     return null;
   }
 
-  // Calculate the user's 6-hour cooldown and the number of promotions left today.
-// Build a countdown from secondsRemaining so the UI ticks every second
-// Derive remaining seconds live from nextEligibleAt (survives refresh)
-const secondsLeft =
-  userPromoInfo.nextEligibleAt
-    ? Math.max(0, Math.floor((new Date(userPromoInfo.nextEligibleAt).getTime() - now) / 1000))
-    : Math.max(0, userPromoInfo.secondsRemaining || 0);
+  // Build a countdown from secondsRemaining so the UI ticks every second
+  const secondsLeft =
+    userPromoInfo.nextEligibleAt
+      ? Math.max(0, Math.floor((new Date(userPromoInfo.nextEligibleAt).getTime() - now) / 1000))
+      : Math.max(0, userPromoInfo.secondsRemaining || 0);
 
-const userCooldown = secondsLeft > 0
-  ? {
-      hours: Math.floor(secondsLeft / 3600),
-      minutes: Math.floor((secondsLeft % 3600) / 60),
-      seconds: secondsLeft % 60,
-    }
-  : null;
-
-
-  
+  const userCooldown = secondsLeft > 0
+    ? {
+        hours: Math.floor(secondsLeft / 3600),
+        minutes: Math.floor((secondsLeft % 3600) / 60),
+        seconds: secondsLeft % 60,
+      }
+    : null;
 
   const isMobile = window.innerWidth <= 768;
   const isDesktop = window.innerWidth > 1200;
 
   // top of file, under other consts
-const PERSONAL_COOLDOWN_MS = 60 * 60 * 1000; // 1h (use 6 * 60 * 60 * 1000 if it's 6h)
+  const PERSONAL_COOLDOWN_MS = 60 * 60 * 1000; // 1h
   
   // ---------- Skeleton Card (loading placeholder, no spinner) ----------
   const SkeletonCard = () => (
@@ -539,8 +536,8 @@ const PERSONAL_COOLDOWN_MS = 60 * 60 * 1000; // 1h (use 6 * 60 * 60 * 1000 if it
         width: "100%",
         margin: 0,
         padding: 0,
-        minHeight: "100vh",            // ✨ fill the viewport height
-        display: "flex",               // ✨ flex column layout
+        minHeight: "100vh",
+        display: "flex",
         flexDirection: "column",
       }}
     >
@@ -600,7 +597,6 @@ textOverflow: "ellipsis",
               </div>
               <button 
                 onClick={() => {
-                  // remove this toast and clear its timer (by type)
                   setToasts(prev => prev.filter(t => t.id !== toast.id));
                   if (toastTimers.current[toast.type]) {
                     window.clearTimeout(toastTimers.current[toast.type]!);
@@ -636,7 +632,6 @@ textOverflow: "ellipsis",
         }}
       >
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}>
-
   {/* Logo SVG */}
   <div
     style={{ width: "50px", height: "auto" }}
@@ -651,7 +646,6 @@ textOverflow: "ellipsis",
       __html: `<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800.11 213.36"><defs><style>.cls-1{fill:#fff;}</style></defs><path class="cls-1" d="M709.65,519V401.55c0-6.6,0-6.62,6.63-6.59,17.82.07,35.65-.44,53.44.72,26.31,1.73,46.95,19.11,49.84,45.12,1,8.9,1.11,17.57-1.32,26.17A43.91,43.91,0,0,1,804,489.34c-2.4,2-4.67,4.12-7.64,6.77,7.4,3.3,13.22,7.51,17.72,13.49,9.21,12.25,11.65,26.21,10.66,41a71.26,71.26,0,0,1-1.88,12.78c-4.84,19.05-23.53,34.9-43.39,36.92-21.93,2.23-43.92.51-65.88,1-4.16.1-3.86-2.71-3.86-5.4q0-30,0-60V519m38.62-2q0,19,0,37.94c0,13.74,0,13.74,13.89,12.7,13.38-1,20.76-6.9,23-20,2.38-14-1.52-26.24-14.79-31.35a43.08,43.08,0,0,0-17.56-3c-2.07.09-4.13,0-4.51,3.68M779.66,441c-2.52-6.06-7.18-9.46-13.48-10.63-4.07-.76-8.2-1.24-12.29-1.86s-5.69.85-5.62,5.15q.3,21,0,41.95c0,3.9,1.19,5.6,5.14,5.11,1.15-.15,2.35.1,3.49-.06,15.23-2.08,21.52-4.2,24.42-19.26A35.78,35.78,0,0,0,779.66,441Z" transform="translate(-559.45 -392.26)"/><path class="cls-1" d="M1286.89,601.35c-15.32,0-30.15-.14-45,.1-4.65.08-6.37-1.12-6.36-6.09q.26-97.5.09-195c0-4.29,1.16-5.87,5.63-5.79,14.67.23,29.34-.17,44,.15,30.42.65,52.4,14.22,64.16,42.91a133.71,133.71,0,0,1,9.88,49.06c.18,11.49.49,23-.07,34.47-.8,16.26-4.29,32-12.74,46.17-13.31,22.36-33.52,32.93-59.61,34m-11.59-42,0,5c0,2.29,1.09,3.29,3.44,3.15,19-1.11,32.75-7,38.06-30.89,3.51-15.8,2.7-31.75,2.81-47.68a113.15,113.15,0,0,0-4.21-31c-5-18.12-17.57-28.39-33.89-28.66-5.3-.08-6.33,1.88-6.31,6.7C1275.38,476.76,1275.3,517.57,1275.3,559.34Z" transform="translate(-559.45 -392.26)"/><path class="cls-1" d="M953.58,570.45c-8.8,17.54-21.17,30.54-40.89,34-25.82,4.52-48.4-3.73-62.79-26.8-8.94-14.32-13.54-30.24-16.27-46.8-2.5-15.2-2.54-30.54-1.82-45.81,1-20.35,4.47-40.33,13.59-58.85,10.06-20.43,26.15-31.95,49.29-33.69,24.56-1.85,43,7.68,55.9,28.32,7.06,11.29,10.92,23.81,13.76,36.71,4.26,19.34,4.71,39,3.81,58.57a129.66,129.66,0,0,1-14.58,54.37m-80.33-78.93c0,9.82-.4,19.67.24,29.44.69,10.73,1.46,21.54,5.51,31.74s12.45,17.3,20.84,16.82c10.48-.6,16.28-7.39,19.83-16.52a106.45,106.45,0,0,0,6.8-35c.61-17.75,1.13-35.58-1.84-53.24-1.51-9-2.81-18.11-7.5-26.17-7.79-13.38-24.74-13.69-33.18-.71a40.05,40.05,0,0,0-4.67,10.43A150.58,150.58,0,0,0,873.25,491.52Z" transform="translate(-559.45 -392.26)"/><path class="cls-1" d="M1211,601.36c-7.5,0-14.5-.2-21.49.07-3.81.15-5.61-1.2-6.8-4.81-6.93-21-14.23-41.9-21-62.94-1.63-5-4-6.85-9.29-6.47-4,.29-5.1,1.74-5.07,5.49.12,19.16,0,38.32,0,57.49,0,11.17,0,11.17-11,11.16h-21c-6.65,0-6.68,0-6.68-6.53q0-42.24,0-84.48v-109c0-6.67,0-6.69,6.48-6.7,15.5,0,31-.37,46.49.1,18.35.56,35.19,5.27,47.58,20.22,7,8.5,10.16,18.66,11.8,29.24,2.33,15.1,1.81,30.17-2.64,44.92-3.54,11.77-10.1,21.35-21,27.47-3.34,1.87-3.73,3.79-2.34,7.21,9.27,22.81,18.37,45.69,27.49,68.56,1,2.59,2.51,5,2.7,8.38-4.59,1.19-9.22.3-14.25.6m-30.94-160.83c-5.41-11.4-21.55-12.88-29.63-12.12-2.24.21-2.38,2.1-2.4,3.77-.24,19.15-.42,38.3-.66,57.45,0,2.91,1.1,4.37,4.18,4,3.63-.4,7.32-.46,10.9-1.12,9.16-1.68,16.18-6.3,18.88-15.67C1184.77,464.93,1185.11,453,1180.05,440.53Z" transform="translate(-559.45 -392.26)"/><path class="cls-1" d="M664,523.16c12.29,25.82,24.6,51.22,35.74,76.91-2,1.66-3.52,1.28-5,1.28-11.5,0-23-.09-34.49.08-3.48.05-5.33-1-6.74-4.37-7.39-17.47-15.06-34.83-22.62-52.22-.73-1.66-1.19-3.46-3.17-5.26-3.78,8.52-7.48,16.78-11.12,25.08q-7.22,16.47-14.34,33c-.8,1.85-1.41,3.73-4,3.72-12.81,0-25.61,0-38.22,0-1.2-2-.15-3.24.44-4.52,14.17-30.69,28.27-61.41,42.66-92,2-4.18,2-7.47.16-11.64-13.72-30.51-27.22-61.12-40.77-91.71-.65-1.48-1.16-3-1.63-4.3,1.13-1.83,2.58-1.48,3.84-1.5,12-.22,24-.1,36-.7,5.36-.27,7.61,1.85,9.4,6.54,5.69,14.92,11.8,29.69,17.78,44.5.74,1.83,1.64,3.6,2.64,5.77,2.44-1.8,3.06-4.27,3.94-6.48q9.21-23.21,18.28-46.46c.8-2.06,1.53-4.08,4.34-4.06,12.33.08,24.66.09,37,.17a6.22,6.22,0,0,1,1.82.59c.27,3-1.2,5.32-2.21,7.71C681,433,668,462.54,654.43,491.84c-2,4.3-2.29,7.86.14,12.14C658,510.05,660.75,516.53,664,523.16Z" transform="translate(-559.45 -392.26)"/><path class="cls-1" d="M1007.78,571.64c-1.62,8.89-3.11,17.39-4.6,25.88-.47,2.71-2,3.87-4.83,3.83q-14.75-.18-29.48,0c-3.74,0-4.45-1.53-3.72-5q9.2-43.34,18.16-86.69c7.46-35.89,15-71.76,22.25-107.69,1-4.78,2.67-6.57,7.73-6.43,12.81.38,25.64.27,38.46.05,4.06-.07,5.88,1.2,6.74,5.29,7.83,37.16,15.86,74.28,23.82,111.41q8.87,41.36,17.69,82.72c.38,1.76.6,3.56.93,5.55-2.62,1.35-5.3.77-7.87.79-8.82.07-17.65-.13-26.48.1-3.75.1-5.33-1.33-6-4.93-1.82-9.94-4.06-19.81-5.81-29.77-.59-3.4-2.18-4.44-5.34-4.42-11.83.07-23.65.1-35.48,0-6.74-.06-4.63,5.57-6.18,9.35m24.51-121.07c-1.37,0-.91,1.18-1,1.84q-4.5,24-8.91,48c-1.61,8.77-3.13,17.56-4.82,27.13,9.65,0,18.58.12,27.51-.08,2.39-.06,2.48-2,2.06-4.15C1042.2,499.21,1037.39,475.13,1032.29,450.57Z" transform="translate(-559.45 -392.26)"/></svg>`,
     }}
   />
-
         </Link>
 
         {/* "Post your Community" Button */}
@@ -777,7 +771,7 @@ textOverflow: "ellipsis",
 
 {user && (
   <>
-    {/* Floating Promo Card */}
+    {/* Floating Promo Card (progressively scales down under 585px) */}
     {(() => {
       const totalSeconds = Math.floor(PERSONAL_COOLDOWN_MS / 1000);
       const progress = userCooldown
@@ -802,8 +796,10 @@ textOverflow: "ellipsis",
             transition: "all 0.4s ease",
             opacity: showPromoCard ? 1 : 0,
             fontFamily: "Inter, ui-sans-serif, system-ui",
-            // 👇 Prevent hidden card from blocking clicks on the mini button
             pointerEvents: showPromoCard ? "auto" : "none",
+            // 👇 Progressive shrink under 585px
+            transform: `scale(${promoCardScale})`,
+            transformOrigin: "right bottom",
           }}
         >
           {/* Header */}
@@ -841,27 +837,10 @@ textOverflow: "ellipsis",
 
           {/* Status / Timer */}
           <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              background: "rgba(255,255,255,0.04)",
-              padding: "10px 12px",
-              borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.06)",
-            }}
+            style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.04)", padding: "10px 12px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.06)" }}
           >
             <div
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 10,
-                display: "grid",
-                placeItems: "center",
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                flexShrink: 0,
-              }}
+              style={{ width: 34, height: 34, borderRadius: 10, display: "grid", placeItems: "center", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}
             >
               <ClockIcon />
             </div>
@@ -871,12 +850,7 @@ textOverflow: "ellipsis",
                 {userCooldown ? "Next boost in" : "Ready to boost"}
               </div>
               <div
-                style={{
-                  fontWeight: 700,
-                  letterSpacing: 0.4,
-                  fontVariantNumeric: "tabular-nums",
-                  whiteSpace: "nowrap",
-                }}
+                style={{ fontWeight: 700, letterSpacing: 0.4, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}
               >
                 {userCooldown
                   ? `${userCooldown.hours.toString().padStart(2, "0")}:${userCooldown.minutes
@@ -924,10 +898,9 @@ textOverflow: "ellipsis",
                   borderRadius: 999,
                   background:
                     "linear-gradient(90deg, rgba(255,138,0,0.9), rgba(255,73,28,0.95))",
-                  transition: "width 0.9s linear", // smooth tick every second
+                  transition: "width 0.9s linear",
                 }}
               />
-              {/* Animated sheen while cooling down */}
               {userCooldown && (
                 <div className="cooldown-sheen" />
               )}
@@ -964,7 +937,7 @@ textOverflow: "ellipsis",
       );
     })()}
 
-    {/* Mini floating icon button */}
+    {/* Mini floating icon button (also scales a bit under 585px) */}
     {!showPromoCard && (
       <button
         onClick={() => setShowPromoCard(true)}
@@ -983,8 +956,10 @@ textOverflow: "ellipsis",
           display: "grid",
           placeItems: "center",
           cursor: "pointer",
-          zIndex: 10002,            // ⬆ above hidden card & toasts
-          pointerEvents: "auto",    // ensure it receives clicks
+          zIndex: 10002,
+          pointerEvents: "auto",
+          transform: `scale(${Math.max(0.85, promoCardScale)})`,
+          transformOrigin: "right bottom",
         }}
       >
         <FlameIcon />
@@ -1009,6 +984,8 @@ textOverflow: "ellipsis",
           zIndex: 10001,
           border: "1px solid rgba(255,255,255,0.08)",
           borderBottom: "none",
+          transform: `scale(${Math.max(0.9, promoCardScale)})`,
+          transformOrigin: "right bottom",
         }}
       >
         Show Boosts
@@ -1090,7 +1067,7 @@ textOverflow: "ellipsis",
           }}
         >
 <h1
-  style={{ display: "flex", alignItems: "center", justifyContent: "center" ,     flexWrap: "wrap", // 👈 add this line
+  style={{ display: "flex", alignItems: "center", justifyContent: "center" ,     flexWrap: "wrap",
   }}
 >
   <span style={{ fontSize: "3rem", fontWeight: "bold" }}>Discover </span>
@@ -1152,9 +1129,7 @@ textOverflow: "ellipsis",
                     damping: 30,
                     mass: 0.5,
                   }}
-                  className={`cuisine-chip ${
-                    isSelected ? "cuisine-chip-selected" : "cuisine-chip-unselected"
-                  }`}
+                  className={`cuisine-chip ${isSelected ? "cuisine-chip-selected" : "cuisine-chip-unselected"}`}
                 >
                   <motion.div
                     className="cuisine-chip-content"
@@ -1194,7 +1169,6 @@ textOverflow: "ellipsis",
         {/* Community Server List */}
         <div className="server-list" >
           {loading ? (
-            // ---------- Skeleton Grid while loading ----------
             <>
               {Array.from({ length: 9 }).map((_, i) => (
                 <SkeletonCard key={`skeleton-${i}`} />
@@ -1210,7 +1184,6 @@ textOverflow: "ellipsis",
           ) : (
             communities.map((server) => {
               // Cooldown by tier
-              // UPDATED: Community cooldown mapping -> normal: 4h, silver: 2h, gold: 1h
               let cooldownMs = 4 * 60 * 60 * 1000;
               if (server.tier === "silver") cooldownMs = 2 * 60 * 60 * 1000;
               if (server.tier === "gold") cooldownMs = 1 * 60 * 60 * 1000;
@@ -1248,7 +1221,7 @@ textOverflow: "ellipsis",
                   <div style={{ position: "relative", paddingRight: "110px", marginBottom: "8px" }}>
                     <h3 style={{ margin: 0, wordWrap: "break-word" }}>{server.name}</h3>
                     
-                    {/* Boost Button */}
+                    {/* Modern Promote Button */}
                     <div
                       style={{
                         position: "absolute",
@@ -1256,83 +1229,158 @@ textOverflow: "ellipsis",
                         right: buttonRight,
                       }}
                     >
-                      <div className="promote-button-container" style={{ position: "relative" }}>
-                        <button
-                          className={`promote-button ${isShaking ? 'button-shake' : ''} ${isPromoted ? 'promote-button-promoted' : ''}`}
-                          style={{
+                      <div className="promote-button-container" style={{ position: "relative", minHeight: "56px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                        <motion.button
+                          className={`modern-promote-button ${isShaking ? 'button-shake' : ''}`}
+                          layout
+                          initial={false}
+                          animate={{
+                            width: isPromoted ? "115px" : "95px",
+                            padding: isPromoted ? "0.45rem 1.1rem" : "0.5rem 1.2rem",
                             marginTop: isPromoted ? "0.6rem" : "1rem",
-                            marginRight: ".8rem",
-                            padding: "0.5rem 1rem",
-                            background: isPromoted ? "#333" : "white",
-                            border: isPromoted ? "1px solid rgba(180, 180, 180, 0.6)" : "none",
-                            borderRadius: "999px",
-                            cursor: "pointer",
-                            fontSize: "1rem",
-                            fontWeight: "500",
-                            width: isPromoted ? "120px" : "100px",
-                            textAlign: "center",
-                            color: isPromoted ? "white" : "black",
+                            background: isPromoted 
+                              ? "linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.25) 100%)"
+                              : "linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)",
+                            color: isPromoted ? "rgb(16, 185, 129)" : "#1a1a1a",
                             boxShadow: isPromoted 
-                              ? "0 0 8px rgba(120, 255, 150, 0.4)" 
-                              : "0px 2px 4px rgba(0, 0, 0, 0.1)",
+                              ? "0 0 20px rgba(16, 185, 129, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+                              : "0 2px 8px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)",
+                            border: isPromoted ? "1.5px solid rgba(16, 185, 129, 0.4)" : "1.5px solid transparent",
+                          }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 300,
+                            damping: 25,
+                            mass: 0.8,
+                          }}
+                          style={{
+                            marginRight: ".8rem",
+                            marginBottom: isPromoted ? "22px" : "0px",
+                            borderRadius: "14px",
+                            cursor: "pointer",
+                            fontSize: "0.875rem",
+                            fontWeight: "600",
+                            textAlign: "center",
                             position: "relative",
-                            transition: "all 0.3s ease, width 0.4s ease-in-out, background-color 0.3s, color 0.3s, box-shadow 0.4s",
                             overflow: "hidden",
-                            marginBottom: isPromoted ? "20px" : "0px"
+                            backdropFilter: isPromoted ? "blur(10px)" : "none",
+                            transformOrigin: "center center",
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
                             handlePromote(server.id);
                           }}
+                          whileHover={!isPromoted ? {
+                            scale: 1.03,
+                            boxShadow: "0 4px 16px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)",
+                          } : {}}
+                          whileTap={!isPromoted ? { scale: 0.97 } : {}}
                         >
-                          {isPromoted ? (
+                          <AnimatePresence mode="wait">
+                            {isPromoted ? (
+                              <motion.span
+                                key="promoted"
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                transition={{ duration: 0.2 }}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  position: "relative",
+                                  zIndex: 2,
+                                }}
+                              >
+                                <svg 
+                                  width="14" 
+                                  height="14" 
+                                  viewBox="0 0 24 24" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  strokeWidth="3" 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round"
+                                  style={{
+                                    filter: "drop-shadow(0 0 4px rgba(16, 185, 129, 0.5))"
+                                  }}
+                                >
+                                  <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span style={{ textShadow: "0 0 8px rgba(16, 185, 129, 0.5)" }}>
+                                  Promoted
+                                </span>
+                              </motion.span>
+                            ) : (
+                              <motion.span
+                                key="promote"
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                transition={{ duration: 0.2 }}
+                                style={{ position: "relative", zIndex: 1 }}
+                              >
+                                Promote
+                              </motion.span>
+                            )}
+                          </AnimatePresence>
+                          
+                          {isPromoted && (
                             <>
-                              <span className="promoted-text" style={{
-                                position: "relative",
-                                zIndex: 2,
-                                textShadow: "0 0 5px rgba(120, 255, 150, 0.4)"
-                              }}>
-                                Promoted
-                              </span>
-                              <div className="promote-button-glow-effect" style={{
+                              <div className="modern-promote-shimmer" style={{
                                 position: "absolute",
                                 top: 0,
                                 left: "-100%",
-                                width: "50%",
+                                width: "100%",
                                 height: "100%",
-                                background: "linear-gradient(90deg, transparent, rgba(120, 255, 150, 0.2), transparent)",
-                                animation: "promote-button-shine 3s infinite",
+                                background: "linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.3), transparent)",
+                                animation: "modern-shimmer 6s infinite",
                                 zIndex: 1
                               }}></div>
+                              <div className="modern-promote-glow" style={{
+                                position: "absolute",
+                                inset: "1px",
+                                borderRadius: "12px",
+                                background: "linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3))",
+                                filter: "blur(8px)",
+                                opacity: 0.6,
+                                zIndex: 0,
+                                animation: "modern-pulse 9s infinite",
+                              }}></div>
                             </>
-                          ) : (
-                            "Promote"
                           )}
-                        </button>
+                        </motion.button>
                         
-                        {/* Timer that appears when promoted */}
-                        {isPromoted && (
-                          <div className="promote-timer-badge" style={{
-                            position: "absolute",
-                            bottom: "5px",
-                            left: "45%",
-                            transform: "translateX(-50%)",
-                            fontSize: "0.7rem",
-                            background: "rgba(0, 0, 0, 0.7)",
-                            color: "white",
-                            padding: "1px 8px",
-                            borderRadius: "10px",
-                            whiteSpace: "nowrap",
-                            boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.3)",
-                            width: "auto",
-                            minWidth: "80px",
-                            textAlign: "center",
-                            fontWeight: "500",
-                            animation: "promote-timer-popIn 0.3s forwards"
-                          }}>
-                            {formattedCountdown}
-                          </div>
-                        )}
+                        {/* Modern Timer Badge with AnimatePresence */}
+                        <AnimatePresence>
+                          {isPromoted && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -8, scale: 0.85 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: -8, scale: 0.85 }}
+                              transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                              style={{
+                                fontSize: "0.7rem",
+                                background: "linear-gradient(135deg, rgba(20, 20, 20, 0.85) 0%, rgba(20, 20, 20, 0.9) 100%)",
+                                color: "rgb(16, 185, 129)",
+                                padding: "3px 10px",
+                                borderRadius: "8px",
+                                whiteSpace: "nowrap",
+                                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.4), 0 0 12px rgba(16, 185, 129, 0.2)",
+                                minWidth: "75px",
+                                textAlign: "center",
+                                fontWeight: "600",
+                                letterSpacing: "0.5px",
+                                fontVariantNumeric: "tabular-nums",
+                                backdropFilter: "blur(8px)",
+                                marginTop: "-29px",
+                                marginRight: "13px"
+                              }}
+                            >
+                              {formattedCountdown}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     </div>
                   </div>
@@ -1387,23 +1435,25 @@ textOverflow: "ellipsis",
           )}
         </div>
 
-        {/* Scoped animations */}
+        {/* Modern Promote Button Animations */}
         <style jsx>{`
-          @keyframes promote-button-shine {
+          @keyframes modern-shimmer {
             0% { left: -100%; }
             20% { left: 150%; }
             100% { left: 150%; }
           }
-          @keyframes promote-button-pulse {
-            0% { box-shadow: 0 0 4px rgba(120, 255, 150, 0.4); }
-            50% { box-shadow: 0 0 8px rgba(120, 255, 150, 0.7); }
-            100% { box-shadow: 0 0 4px rgba(120, 255, 150, 0.4); }
+          
+          @keyframes modern-pulse {
+            0%, 100% { 
+              opacity: 0.4;
+              transform: scale(0.98);
+            }
+            50% { 
+              opacity: 0.7;
+              transform: scale(1.02);
+            }
           }
-          @keyframes promote-timer-popIn {
-            0% { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.8); }
-            70% { transform: translateX(-50%) translateY(-2px) scale(1.05); }
-            100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-          }
+          
           @keyframes button-shake {
             0% { transform: translateX(0); }
             20% { transform: translateX(-5px); }
@@ -1412,9 +1462,16 @@ textOverflow: "ellipsis",
             80% { transform: translateX(2px); }
             100% { transform: translateX(0); }
           }
-          .button-shake { animation: button-shake 0.5s ease-in-out; }
-          .promote-button-promoted { animation: promote-button-pulse 2.5s infinite ease-in-out; }
-          .promote-button-container { display: flex; flex-direction: column; align-items: center; }
+          
+          .button-shake { 
+            animation: button-shake 0.5s ease-in-out; 
+          }
+          
+          .promote-button-container { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+          }
         `}</style>
 
         {/* Pagination UI */}
@@ -1460,7 +1517,7 @@ textOverflow: "ellipsis",
                     fontSize: "1.2rem",
                   }}
                 >
-                  &lt;
+                  {"<"}
                 </button>
               )}
               
@@ -1509,7 +1566,7 @@ textOverflow: "ellipsis",
                     fontSize: "1.2rem",
                   }}
                 >
-                  &gt;
+                  {">"}
                 </button>
               )}
             </div>

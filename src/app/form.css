@@ -1,4 +1,4 @@
-/* XCommunityForm.css — Low‑key Dark + More Blue (still clean, drop‑in) */
+/* XCommunityForm.css — Low-key Dark + More Blue (still clean, drop-in) */
 
 /* Calm base with a touch more blue so it feels alive, not loud. */
 .x-community-form {
@@ -35,6 +35,7 @@
   box-shadow: 0 12px 28px rgba(0,0,0,0.28);
   position: relative;
   overflow: clip;
+  margin-top: 2rem;
 }
 /* slightly stronger blue accent bar */
 .x-community-form::before {
@@ -56,26 +57,27 @@
 }
 .form-header h2 {
   margin: 0;
-  font-size: clamp(1.2rem, 1rem + .9vw, 1.6rem);
+  /* was clamp(1.35rem, 1rem + 1.05vw, 1.8rem) */
+  font-size: clamp(1.45rem, 1rem + 1.15vw, 1.75rem);
   font-weight: 700;
   color: var(--ink);
 }
-.form-header p { margin: 0; font-size: .94rem; color: var(--muted); }
+.form-header p { margin: 0; font-size: 1.08rem; color: var(--muted); }
 
 /* Groups */
 .form-group { margin-bottom: 1rem; }
 .form-group:last-of-type { margin-bottom: 1.25rem; }
 .form-group label {
-  display: block; margin: 0 0 .45rem 0; font-size: .93rem; font-weight: 600; color: #d7dce5;
+  display: block; margin: 0 0 .45rem 0; font-size: 1.08rem; font-weight: 600; color: #d7dce5;
 }
-.input-help { margin-top: .3rem; font-size: .82rem; color: var(--muted); }
+.input-help { margin-top: .3rem; font-size: .96rem; color: var(--muted); }
 .form-group.has-error label { color: #ffc2c2; }
-.form-group .error-text { margin-top: .3rem; font-size: .82rem; color: #ffc2c2; }
+.form-group .error-text { margin-top: .3rem; font-size: .96rem; color: #ffc2c2; }
 
 /* Inputs */
 .input-with-icon { position: relative; }
 .input-icon { position: absolute; inset: 0 auto 0 0; display: flex; align-items: center; padding-left: .7rem; }
-.input-icon svg { width: 1.05rem; height: 1.05rem; color: var(--muted); transition: color .15s ease; }
+.input-icon svg { width: 1.22rem; height: 1.22rem; color: var(--muted); transition: color .15s ease; }
 
 input[type="url"],
 input[type="text"],
@@ -87,7 +89,8 @@ textarea {
   background: linear-gradient(180deg, #171a1f, #171a1f) padding-box,
               linear-gradient(180deg, rgba(42,107,255,.12), rgba(42,107,255,0)) border-box; /* faint blue border sheen */
   color: var(--ink);
-  font-size: .95rem; line-height: 1.5;
+  /* was 1.05rem */
+  font-size: 1.12rem; line-height: 1.6;
   transition: box-shadow .15s ease, border-color .15s ease, background .15s ease;
 }
 .input-with-icon input { padding-left: 2.35rem; }
@@ -111,12 +114,12 @@ textarea { min-height: 4rem; resize: vertical; }
 .tags-container.has-tags { padding: .5rem; border: 1px solid var(--line); background: #141a23; box-shadow: inset 0 0 0 1px rgba(42,107,255,.08); }
 .tag-pill {
   display: inline-flex; align-items: center; gap: .4rem; padding: .25rem .65rem; border-radius: 9999px;
-  font-size: .8rem; color: #e6eaf1; background: #213147; border: 1px solid rgba(42,107,255,.22);
+  font-size: .96rem; color: #e6eaf1; background: #213147; border: 1px solid rgba(42,107,255,.22);
 }
 .tag-pill:hover { border-color: rgba(42,107,255,.45); }
 .tag-remove { background: none; border: 0; color: #cfd5df; cursor: pointer; }
 .tag-remove:hover { color: var(--err); }
-.tag-remove-icon { width: .86rem; height: .86rem; }
+.tag-remove-icon { width: 1.02rem; height: 1.02rem; }
 
 /* Buttons */
 .form-submit { display: flex; justify-content: flex-end; gap: 12px; margin-top: 1.25rem; }
@@ -126,7 +129,7 @@ textarea { min-height: 4rem; resize: vertical; }
 .form-submit button[type="button"] {
   background: linear-gradient(180deg, #1f2733, #1c2430);
   color: var(--ink);
-  font-size: .95rem; font-weight: 600; letter-spacing: .2px;
+  font-size: 1.12rem; font-weight: 600; letter-spacing: .2px;
   padding: .72rem 1rem; border: 1px solid rgba(42,107,255,.22); border-radius: 10px;
   cursor: pointer; transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
@@ -137,8 +140,8 @@ textarea { min-height: 4rem; resize: vertical; }
 button[type="submit"] {
   background: linear-gradient(135deg, #0a61d4, #0d74ff 115%);
   color: #ffffff;
-  font-weight: 700; font-size: .97rem;
-  padding: .82rem 1.12rem; border: 1px solid rgba(42,107,255,.38);
+  font-weight: 700; font-size: 1.16rem;
+  padding: .86rem 1.16rem; border: 1px solid rgba(42,107,255,.38);
   border-radius: 12px; cursor: pointer;
   transition: filter .12s ease, background .12s ease, box-shadow .12s ease;
 }
@@ -149,7 +152,7 @@ button[type="submit"].submitting { opacity: .9; cursor: not-allowed; }
 
 /* Loading */
 .submit-loading { display: inline-flex; align-items: center; gap: .45rem; }
-.loading-spinner { width: 1.05rem; height: 1.05rem; animation: spin 1s linear infinite; }
+.loading-spinner { width: 1.28rem; height: 1.28rem; animation: spin 1s linear infinite; }
 .spinner-track { opacity: .3; }
 .spinner-path { opacity: .9; }
 
@@ -158,22 +161,23 @@ button[type="submit"].submitting { opacity: .9; cursor: not-allowed; }
 .submit-result.success { background: #0f2e27; color: #d1fae5; border-left-color: var(--ok); }
 .submit-result.error   { background: #2a1717; color: #fee2e2; border-left-color: var(--err); }
 
-/* Responsive tweaks */
+/* Responsive tweaks (kept from your original) */
 @media (max-width: 480px) {
   .x-community-form { padding: 1rem; }
   .form-header { margin-bottom: .9rem; }
-  .form-header h2 { font-size: 1.25rem; }
+  .form-header h2 { font-size: 1.42rem; }
   .form-group { margin-bottom: .9rem; }
-  input[type="url"], input[type="text"], textarea { padding: .6rem .72rem; }
+  input[type="url"], input[type="text"], textarea { padding: .6rem .72rem; font-size: 1.08rem; }
   .input-with-icon input { padding-left: 2.2rem; }
-  button[type="submit"] { padding: .72rem .98rem; font-size: .94rem; }
-  .tag-pill { padding: .18rem .5rem; font-size: .76rem; }
+  button[type="submit"] { padding: .74rem 1rem; font-size: 1.1rem; }
+  .tag-pill { padding: .18rem .5rem; font-size: .9rem; }
+  .form-header p { font-size: .98rem; }
 }
 
 @media (max-width: 340px) {
   .x-community-form { padding: .85rem; border-radius: 10px; }
-  .form-header h2 { font-size: 1.15rem; }
-  .form-header p { font-size: .86rem; }
+  .form-header h2 { font-size: 1.22rem; }
+  .form-header p { font-size: .94rem; }
 }
 
 /* Motion */

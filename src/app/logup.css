@@ -2,23 +2,26 @@
   position: relative;
   text-decoration: none;
   color: #fff;
-  background: linear-gradient(45deg, #FF416C, #FF4B2B); /* More vibrant gradient */
-  padding: 15px 28px; /* Slightly larger padding */
-  border-radius: 12px; /* Slightly larger border radius */
-  font-size: 1.3rem; /* Slightly larger font */
-  font-weight: 600; /* Make text bolder */
+  background: linear-gradient(45deg, #FF416C, #FF4B2B);
+  padding: 15px 28px;
+  border-radius: 12px;
+  font-size: 1.3rem;
+  font-weight: 600;
   cursor: pointer;
-  width: auto; /* Adjust based on your layout needs */
+  width: auto;
   display: inline-block;
-  box-shadow: 0 6px 12px rgba(255, 65, 108, 0.3); /* Add distinctive shadow */
-  transform: translateY(0); /* For hover animation */
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  z-index: 10; /* Higher z-index to stand out */
+  box-shadow: 0 6px 12px rgba(255, 65, 108, 0.3);
+  /* remove transform baseline (no need) */
+  /* transform: translateY(0); */
+  /* don’t transition transform anymore */
+  transition: box-shadow 0.3s ease;
+  z-index: 10;
 }
 
 .postabutton:hover {
-  transform: translateY(-3px); /* Slight lift effect on hover */
-  box-shadow: 0 8px 15px rgba(255, 65, 108, 0.4); /* Enhanced shadow on hover */
+  /* no lift on hover */
+  /* transform: translateY(-3px); */
+  box-shadow: 0 8px 15px rgba(255, 65, 108, 0.4);
 }
 
 .postabutton span {
@@ -31,12 +34,12 @@
   position: absolute;
   inset: 1px;
   background: #1a1a1a;
-  border-radius: 11px; /* Adjust to match the outer radius */
+  border-radius: 11px;
   transition: 0.5s;
 }
 
 .postabutton:hover::before {
-  opacity: 0.5; /* More dramatic hover effect */
+  opacity: 0.5;
 }
 
 .postabutton::after {
@@ -47,14 +50,14 @@
   border-radius: 11px;
   transition: 0.5s;
   opacity: 0;
-  filter: blur(20px); /* Stronger glow effect */
+  filter: blur(20px);
 }
 
-.postabutton:hover:after {
-  opacity: 1; /* More dramatic hover effect */
+.postabutton:hover::after {
+  opacity: 1;
 }
 
-/* You could also add a subtle animation */
+/* subtle pulse stays */
 @keyframes pulse {
   0% { box-shadow: 0 6px 12px rgba(255, 65, 108, 0.3); }
   50% { box-shadow: 0 6px 15px rgba(255, 65, 108, 0.5); }
@@ -62,9 +65,9 @@
 }
 
 .postabutton {
-  /* Add this to the existing postabutton class */
   animation: pulse 2s infinite;
 }
+
 
 .logabutton {
   position: relative;
