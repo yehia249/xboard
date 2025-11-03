@@ -20,7 +20,7 @@ export default function UpgradeTierPage() {
       : String(params?.id ?? "");
 
   // ====== Paynow product IDs ======
-  const PAYNOW_GOLD_PRODUCT_ID = "476427054443663360";
+  const PAYNOW_GOLD_PRODUCT_ID = "478332020456427520";
   const PAYNOW_SILVER_PRODUCT_ID = "476429842842124288";
   // ================================
 
@@ -374,7 +374,7 @@ export default function UpgradeTierPage() {
       <div className="mx-auto max-w-5xl px-6 py-8 sm:py-12">
         <button
           onClick={() => router.push(`/community/${rawId}`)}
-          className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10"
+          className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-gray-300 hover:bg-white/10 cursor-pointer"
         >
           <ArrowLeft size={16} /> Back
         </button>

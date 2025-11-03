@@ -1,6 +1,7 @@
 // src/app/api/promote/route.ts
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin"; // <-- add this
 import { adminAuth } from "@/lib/firebaseAdmin";
 
 export const runtime = "nodejs";
@@ -11,7 +12,7 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({}));
     const { community_id } = body;
 
-    // Auth header
+    // 1) Firebase auth
     const authHeader = req.headers.get("Authorization") ?? "";
     if (!authHeader.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Missing Firebase token" }, { status: 401 });
@@ -21,7 +22,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing Firebase token" }, { status: 401 });
     }
 
-    // Verify token
     let user_id: string;
     try {
       const decoded = await adminAuth.verifyIdToken(token);
@@ -34,10 +34,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing user or community ID" }, { status: 400 });
     }
 
-    // ✅ Personal cooldown: UNLIMITED boosts, but 1 hour between any two boosts by the same user
+    // 2) personal cooldown (reads can stay on public client)
     const ONE_HOUR_MS = 60 * 60 * 1000;
 
-    const { data: lastPromotion, error: lastUserErr } = await supabase
+    const { data: lastPromotion } = await supabase
       .from("promotions")
       .select("promoted_at")
       .eq("user_id", user_id)
@@ -45,18 +45,16 @@ export async function POST(req: Request) {
       .limit(1)
       .maybeSingle();
 
-    if (!lastUserErr && lastPromotion?.promoted_at) {
+    if (lastPromotion?.promoted_at) {
       const lastTime = new Date(lastPromotion.promoted_at).getTime();
       const nowTs = Date.now();
-      const elapsed = nowTs - lastTime;
-
-      if (elapsed < ONE_HOUR_MS) {
-        const remainingSec = Math.ceil((ONE_HOUR_MS - elapsed) / 1000);
+      if (nowTs - lastTime < ONE_HOUR_MS) {
+        const remainingSec = Math.ceil((ONE_HOUR_MS - (nowTs - lastTime)) / 1000);
         return NextResponse.json(
           {
             error: "Cooldown active. Please wait before boosting again.",
             secondsRemaining: remainingSec,
-            nextEligibleAt: new Date(nowTs + (ONE_HOUR_MS - elapsed)).toISOString(),
+            nextEligibleAt: new Date(nowTs + (ONE_HOUR_MS - (nowTs - lastTime))).toISOString(),
             reason: "user_personal_cooldown",
           },
           { status: 429 }
@@ -64,7 +62,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // ✅ Community tier → community-level cooldown
+    // 3) community tier & community cooldown (reads -> public client ok)
     const { data: serverTier, error: tierErr } = await supabase
       .from("servers")
       .select("tier")
@@ -75,13 +73,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Community not found" }, { status: 404 });
     }
 
-    // normal: 4h, silver: 2h, gold: 1h
     let cooldownMs = 4 * 60 * 60 * 1000; // normal
     if (serverTier.tier === "silver") cooldownMs = 2 * 60 * 60 * 1000;
     if (serverTier.tier === "gold") cooldownMs = 1 * 60 * 60 * 1000;
 
-    // ✅ Community cooldown check (site-wide)
-    const { data: lastBoost, error: lastCommErr } = await supabase
+    const { data: lastBoost } = await supabase
       .from("promotions")
       .select("promoted_at")
       .eq("community_id", community_id)
@@ -89,18 +85,15 @@ export async function POST(req: Request) {
       .limit(1)
       .maybeSingle();
 
-    if (!lastCommErr && lastBoost?.promoted_at) {
+    if (lastBoost?.promoted_at) {
       const last = new Date(lastBoost.promoted_at).getTime();
       const nowTs = Date.now();
-      const elapsed = nowTs - last;
-
-      if (elapsed < cooldownMs) {
-        const remainingMs = cooldownMs - elapsed;
-        const remainingSec = Math.ceil(remainingMs / 1000);
+      if (nowTs - last < cooldownMs) {
+        const remainingMs = cooldownMs - (nowTs - last);
         return NextResponse.json(
           {
             error: "This community was already promoted recently.",
-            secondsRemaining: remainingSec,
+            secondsRemaining: Math.ceil(remainingMs / 1000),
             nextEligibleAt: new Date(nowTs + remainingMs).toISOString(),
             reason: "community_cooldown",
           },
@@ -109,12 +102,12 @@ export async function POST(req: Request) {
       }
     }
 
-    // ✅ Insert promotion
-    const { error: insertError } = await supabase.from("promotions").insert([
+    // 4) INSERT with ADMIN client (bypasses RLS)
+    const { error: insertError } = await supabaseAdmin.from("promotions").insert([
       {
         user_id,
         community_id,
-        // If your DB doesn't default promoted_at to now(), uncomment the next line:
+        // if the column is NOT default now(), uncomment:
         // promoted_at: new Date().toISOString(),
       },
     ]);
@@ -123,7 +116,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
 
-    // Increment promote_count (non-critical if this fails)
+    // 5) increment promote_count (also with admin to avoid RLS issues)
     const { data: serverData } = await supabase
       .from("servers")
       .select("promote_count")
@@ -131,7 +124,7 @@ export async function POST(req: Request) {
       .single();
 
     const currentCount = serverData?.promote_count ?? 0;
-    await supabase
+    await supabaseAdmin
       .from("servers")
       .update({ promote_count: currentCount + 1 })
       .eq("id", community_id);
