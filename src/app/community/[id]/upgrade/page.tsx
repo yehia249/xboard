@@ -28,6 +28,9 @@ export default function UpgradeTierPage() {
   const [loading, setLoading] = useState(true);
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
 
+  // we’ll mark when the PayNow.js script is actually loaded on window
+  const [paynowReady, setPaynowReady] = useState(false);
+
   /**
    * Seed a stable guest UID (for testing without auth) BUT DO NOT seed an email.
    * Email should come from Firebase when the user signs in.
@@ -41,6 +44,35 @@ export default function UpgradeTierPage() {
       localStorage.setItem("uid", guestId);
       console.info("[upgrade] seeded guest uid:", guestId);
     }
+  }, []);
+
+  /**
+   * Load PayNow.js from CDN (since their docs show CDN usage)
+   * This makes window.PayNow available.
+   */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // if already present (maybe added globally), just mark ready
+    if ((window as any).PayNow?.checkout) {
+      setPaynowReady(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://cdn.paynow.gg/paynow-js/bundle.js";
+    script.defer = true;
+    script.onload = () => {
+      // slight guard
+      if ((window as any).PayNow?.checkout) {
+        setPaynowReady(true);
+      }
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      // we don't remove it, it's fine to keep for the page life
+    };
   }, []);
 
   /**
@@ -103,7 +135,6 @@ export default function UpgradeTierPage() {
 
   /** Ensure a PayNow customer exists for this user, return customerId */
   async function upsertAndGetCustomerId(userUid: string, email: string) {
-    // IMPORTANT: path must match your folder name below
     const r = await fetch("/api/paynow/upsert-customer", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -122,7 +153,11 @@ export default function UpgradeTierPage() {
     return data?.customerId || "";
   }
 
-  /** MAIN: start checkout flow for a given tier/product */
+  /**
+   * MAIN: start checkout flow for a given tier/product
+   * OLD: we used to redirect to payload.url
+   * NEW: we call PayNow.js iframe with payload.token
+   */
   async function startCheckout(productId: string, tier: "gold" | "silver") {
     const serverId = Number(rawId);
 
@@ -158,12 +193,40 @@ export default function UpgradeTierPage() {
       });
 
       const payload = await r.json();
-      if (!r.ok || !payload?.url) {
+      // IMPORTANT: we now expect the backend to return { token: "..." }
+      if (!r.ok || !payload?.token) {
         console.error("Checkout failed:", payload);
         alert("Checkout failed. See console for details.");
         return;
       }
-      window.location.href = payload.url; // PayNow hosted checkout
+
+      // make sure PayNow is actually there
+      if (!(window as any).PayNow?.checkout) {
+        console.error("PayNow.js not ready yet");
+        alert("Payment popup is still loading. Please try again in a second.");
+        return;
+      }
+
+      // OPTIONAL: attach listeners here (you can move to useEffect if you want global)
+      const paynow = (window as any).PayNow;
+
+      // you can register once but here is a quick inline pattern
+      paynow.checkout.on("completed", (event: any) => {
+        console.log("Order completed! ID:", event.orderId);
+        // close overlay
+        paynow.checkout.close();
+        // you can also refresh or route to success
+        router.push(`/community/${rawId}?upgraded=${tier}`);
+      });
+
+      paynow.checkout.on("closed", () => {
+        console.log("Checkout was closed");
+      });
+
+      // finally open checkout overlay with token
+      paynow.checkout.open({
+        token: payload.token,
+      });
     } catch (e) {
       console.error(e);
       alert("Network error starting checkout.");
@@ -289,7 +352,7 @@ export default function UpgradeTierPage() {
     border,
     accentText,
     badgeIcon,
-    perks, // we’ll still show 3 but with tighter line-height
+    perks,
     disabledText,
     cta,
     onClick,
@@ -381,8 +444,8 @@ export default function UpgradeTierPage() {
 
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-1 sm:mb-2">Upgrade Tier</h1>
         <p className="text-[13px] sm:text-lg text-gray-400 mb-4 sm:mb-10">
-          Boost <span className="text-white font-medium">{community.name}</span> by
-          upgrading its visibility and reducing its promotion cooldown.
+          Boost <span className="text-white font-medium">{community.name}</span> by upgrading its
+          visibility and reducing its promotion cooldown.
         </p>
 
         {/* ======= MOBILE (phones) — ultra-compact, always shows ALL THREE at once ======= */}
@@ -574,12 +637,20 @@ export default function UpgradeTierPage() {
       {/* Keyframes for modal animation (for the arbitrary animate-[...] classes) */}
       <style jsx global>{`
         @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
         @keyframes scaleIn {
-          0% { transform: scale(0.98); }
-          100% { transform: scale(1); }
+          0% {
+            transform: scale(0.98);
+          }
+          100% {
+            transform: scale(1);
+          }
         }
       `}</style>
     </div>

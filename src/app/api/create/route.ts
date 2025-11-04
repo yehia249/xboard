@@ -1,3 +1,4 @@
+// app/api/create/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -12,10 +13,13 @@ export async function POST(req: NextRequest) {
     const { productId, tier, serverId, userUid, customerId } = await req.json();
 
     // ---- env checks
-    if (!process.env.PAYNOW_API_KEY) {
+    const PAYNOW_API_KEY = process.env.PAYNOW_API_KEY;
+    const PAYNOW_STORE_ID = process.env.PAYNOW_STORE_ID;
+
+    if (!PAYNOW_API_KEY) {
       return NextResponse.json({ error: "Missing PAYNOW_API_KEY" }, { status: 500 });
     }
-    if (!process.env.PAYNOW_STORE_ID) {
+    if (!PAYNOW_STORE_ID) {
       return NextResponse.json({ error: "Missing PAYNOW_STORE_ID" }, { status: 500 });
     }
     if (!productId || !tier || !serverId || !userUid || !customerId) {
@@ -23,26 +27,26 @@ export async function POST(req: NextRequest) {
     }
 
     // ---- build dynamic return/cancel URLs
-    // Prefer an explicit base URL from env; fall back to request origin; final fallback is prod domain.
     const origin =
       process.env.NEXT_PUBLIC_BASE_URL ||
       req.headers.get("origin") ||
       "https://xboardz.com";
 
-    const returnUrl = `${origin}/community/${serverId}`; // success redirect
-    const cancelUrl = `${origin}/community/${serverId}/upgrade`;   // cancel redirect
+    const returnUrl = `${origin}/community/${serverId}`;
+    const cancelUrl = `${origin}/community/${serverId}/upgrade`;
 
     const reference = `srv=${serverId}|uid=${userUid}`;
-    const url = `https://api.paynow.gg/v1/stores/${process.env.PAYNOW_STORE_ID}/checkouts`;
+    const url = `https://api.paynow.gg/v1/stores/${PAYNOW_STORE_ID}/checkouts`;
 
-    // ONE-TIME product for quick test (Gold) → not a subscription
+    // if you really have a one-time product you want to treat differently, keep this
     const ONE_TIME_GOLD_ID = "478332020456427520";
     const isSubscription = productId !== ONE_TIME_GOLD_ID;
 
     const resp = await fetch(url, {
       method: "POST",
       headers: {
-        Authorization: process.env.PAYNOW_API_KEY!, // management key (use Bearer if your key format requires it)
+        // most endpoints expect Bearer
+        Authorization: `Bearer ${PAYNOW_API_KEY}`,
         "Content-Type": "application/json",
         Accept: "application/json",
       },
@@ -55,25 +59,47 @@ export async function POST(req: NextRequest) {
             metadata: { tier },
           },
         ],
-        // Key part: send them back to the specific community page (success) or upgrade page (cancel)
         return_url: returnUrl,
         cancel_url: cancelUrl,
-        auto_redirect: true,
+        // IMPORTANT: for iframe flow we do NOT auto redirect
+        auto_redirect: false,
         metadata: { reference },
-        customer_id: customerId, // REQUIRED
+        customer_id: customerId,
       }),
     });
 
     const responseText = await resp.text();
     if (!resp.ok) {
       return NextResponse.json(
-        { error: "Paynow error", detail: responseText, status: resp.status },
+        { error: "PayNow error", detail: responseText, status: resp.status },
         { status: 502 }
       );
     }
 
     const data = JSON.parse(responseText);
-    return NextResponse.json({ url: data.url }, { status: 200 });
+    // PayNow.js wants a "checkout token"
+    // we return both just in case the response has url too
+    const token =
+      data.token ||
+      data.checkout_token ||
+      data.id || // fallback if their API names it differently
+      null;
+
+    if (!token) {
+      // last resort: send whole payload to debug
+      return NextResponse.json(
+        { error: "No checkout token in response", raw: data },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        token,
+        url: data.url ?? null, // not used by iframe, but nice to have
+      },
+      { status: 200 }
+    );
   } catch (e: any) {
     return NextResponse.json({ error: e.message ?? "failed" }, { status: 500 });
   }
