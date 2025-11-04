@@ -12,7 +12,6 @@ export async function POST(req: NextRequest) {
   try {
     const { productId, tier, serverId, userUid, customerId } = await req.json();
 
-    // ---- env checks
     const PAYNOW_API_KEY = process.env.PAYNOW_API_KEY;
     const PAYNOW_STORE_ID = process.env.PAYNOW_STORE_ID;
 
@@ -26,7 +25,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    // ---- build dynamic return/cancel URLs
     const origin =
       process.env.NEXT_PUBLIC_BASE_URL ||
       req.headers.get("origin") ||
@@ -38,15 +36,16 @@ export async function POST(req: NextRequest) {
     const reference = `srv=${serverId}|uid=${userUid}`;
     const url = `https://api.paynow.gg/v1/stores/${PAYNOW_STORE_ID}/checkouts`;
 
-    // if you really have a one-time product you want to treat differently, keep this
+    // your special case
     const ONE_TIME_GOLD_ID = "478332020456427520";
     const isSubscription = productId !== ONE_TIME_GOLD_ID;
 
     const resp = await fetch(url, {
       method: "POST",
       headers: {
-        // most endpoints expect Bearer
-        Authorization: `Bearer ${PAYNOW_API_KEY}`,
+        // IMPORTANT: your error said "Malformed authentication header"
+        // so we send the key as-is (like your original working code)
+        Authorization: PAYNOW_API_KEY,
         "Content-Type": "application/json",
         Accept: "application/json",
       },
@@ -61,8 +60,7 @@ export async function POST(req: NextRequest) {
         ],
         return_url: returnUrl,
         cancel_url: cancelUrl,
-        // IMPORTANT: for iframe flow we do NOT auto redirect
-        auto_redirect: false,
+        auto_redirect: false, // we’re using the iframe
         metadata: { reference },
         customer_id: customerId,
       }),
@@ -77,16 +75,15 @@ export async function POST(req: NextRequest) {
     }
 
     const data = JSON.parse(responseText);
-    // PayNow.js wants a "checkout token"
-    // we return both just in case the response has url too
+
+    // try all likely keys
     const token =
       data.token ||
       data.checkout_token ||
-      data.id || // fallback if their API names it differently
+      data.id ||
       null;
 
     if (!token) {
-      // last resort: send whole payload to debug
       return NextResponse.json(
         { error: "No checkout token in response", raw: data },
         { status: 500 }
@@ -96,7 +93,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         token,
-        url: data.url ?? null, // not used by iframe, but nice to have
+        url: data.url ?? null, // optional
       },
       { status: 200 }
     );
