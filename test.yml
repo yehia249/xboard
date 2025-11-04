@@ -1,0 +1,43 @@
+config:
+  target: "https://xboardz.com"
+  phases:
+    # warmup: should definitely pass
+    - duration: 30
+      arrivalRate: 20
+    # medium load
+    - duration: 30
+      arrivalRate: 60
+    # push it a bit
+    - duration: 30
+      arrivalRate: 120
+  defaults:
+    headers:
+      # add auth headers here if your API needs them
+      # Authorization: "Bearer YOUR_TOKEN"
+      User-Agent: "artillery-load-test"
+scenarios:
+  - name: "Homepage"
+    weight: 3
+    flow:
+      - get:
+          url: "/"
+
+  - name: "Communities list"
+    weight: 5
+    flow:
+      - get:
+          # change this to your real endpoint
+          url: "/api/communities?q=gaming"
+
+  # uncomment this if you want to test a POST later
+  # - name: "Create community"
+  #   weight: 1
+  #   flow:
+  #     - post:
+  #         url: "/api/communities"
+  #         json:
+  #           name: "LoadTest Comm"
+  #           description: "created by artillery"
+  #           invite_link: "https://x.com/i/..."
+  #         expect:
+  #           - statusCode: 200

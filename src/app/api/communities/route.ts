@@ -1,5 +1,7 @@
+// src/app/api/communities/route.ts
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin"; // 👈 admin client for writes
 
 export async function GET(req: Request) {
   try {
@@ -21,16 +23,15 @@ export async function GET(req: Request) {
     let serverIdsForSelectedTags: number[] | null = null;
 
     if (selectedTags.length > 0) {
-// AFTER (case-insensitive, exact match)
-const orFilters = selectedTags
-  .map(t => `name.ilike.${t.trim()}`)
-  .join(",");
+      // case-insensitive exact-ish match
+      const orFilters = selectedTags
+        .map((t) => `name.ilike.${t.trim()}`)
+        .join(",");
 
-const { data: tagRows, error: tagErr } = await supabase
-  .from("tags")
-  .select("id,name")
-  .or(orFilters);
-
+      const { data: tagRows, error: tagErr } = await supabase
+        .from("tags")
+        .select("id,name")
+        .or(orFilters);
 
       if (tagErr) throw tagErr;
 
@@ -68,7 +69,6 @@ const { data: tagRows, error: tagErr } = await supabase
 
     // ----------------------------------------
     // 2) If searchTerm exists, also include servers that match tag NAMES via q
-    //    Search behavior: name ILIKE q  OR  id IN (servers with tag name ILIKE q)
     // ----------------------------------------
     let serverIdsFromSearchTags: number[] = [];
     if (searchTerm) {
@@ -122,7 +122,9 @@ const { data: tagRows, error: tagErr } = await supabase
     }
 
     // Sort (keep your existing order)
-    serversQuery = serversQuery.order("tier", { ascending: true }).order("promote_count", { ascending: false });
+    serversQuery = serversQuery
+      .order("tier", { ascending: true })
+      .order("promote_count", { ascending: false });
 
     // Pagination AFTER all filters are in place
     const from = (page - 1) * perPage;
@@ -192,23 +194,23 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1. Check duplicate invite_link
+    // 1. Check duplicate invite_link (public client is fine for reads)
     const { data: existing, error: existingError } = await supabase
       .from("servers")
       .select("id")
       .eq("invite_link", communityURL)
       .maybeSingle();
 
+    if (existingError) throw existingError;
     if (existing) {
       return NextResponse.json(
         { error: "This community already exists." },
         { status: 409 }
       );
     }
-    if (existingError) throw existingError;
 
-    // 2. Insert server
-    const { data: insertData, error: insertError } = await supabase
+    // 2. Insert server with ADMIN client (bypass RLS)
+    const { data: insertData, error: insertError } = await supabaseAdmin
       .from("servers")
       .insert([
         {
@@ -228,25 +230,27 @@ export async function POST(req: Request) {
 
     const serverId = insertData.id;
 
-    // 3. Upsert + link tags
+    // 3. Upsert + link tags (also with admin, because server_tags has RLS)
     if (tags && Array.isArray(tags)) {
       for (const raw of tags) {
         const tagName = String(raw || "").trim();
         if (!tagName) continue;
 
-        const { data: tagUpsert, error: tagErr } = await supabase
+        const { data: tagUpsert, error: tagErr } = await supabaseAdmin
           .from("tags")
           .upsert([{ name: tagName }], { onConflict: "name" })
           .select()
           .single();
         if (tagErr) throw tagErr;
 
-        const { error: stErr } = await supabase.from("server_tags").insert([
-          {
-            server_id: serverId,
-            tag_id: tagUpsert.id,
-          },
-        ]);
+        const { error: stErr } = await supabaseAdmin
+          .from("server_tags")
+          .insert([
+            {
+              server_id: serverId,
+              tag_id: tagUpsert.id,
+            },
+          ]);
         if (stErr) throw stErr;
       }
     }
