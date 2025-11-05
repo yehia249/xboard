@@ -46,14 +46,7 @@ export default function UpgradeTierPage() {
   const [checkoutMessage, setCheckoutMessage] = useState("");
   const [checkoutOrderId, setCheckoutOrderId] = useState("");
 
-  // NEW: preloaded checkout tokens so mobile can open instantly
-  const [silverToken, setSilverToken] = useState<string | null>(null);
-  const [goldToken, setGoldToken] = useState<string | null>(null);
-  const [readyForCheckout, setReadyForCheckout] = useState(false);
-
-  // =========================================================
-  // seed guest id
-  // =========================================================
+  // seed guest
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!localStorage.getItem("uid")) {
@@ -65,9 +58,7 @@ export default function UpgradeTierPage() {
     }
   }, []);
 
-  // =========================================================
-  // load PayNow.js from CDN
-  // =========================================================
+  // load PayNow.js
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -87,9 +78,6 @@ export default function UpgradeTierPage() {
     document.body.appendChild(script);
   }, []);
 
-  // =========================================================
-  // identity helper
-  // =========================================================
   async function getUserIdentity(): Promise<{ uid: string; email: string }> {
     let uid = "";
     let email = "";
@@ -104,10 +92,8 @@ export default function UpgradeTierPage() {
         if (uid) localStorage.setItem("firebase_uid", uid);
         if (email) localStorage.setItem("user_email", email);
       } else {
-        // clear stale
         localStorage.removeItem("firebase_uid");
         localStorage.removeItem("user_email");
-
         onAuthStateChanged(auth, (u) => {
           if (u) {
             const freshUid = u.uid;
@@ -118,7 +104,7 @@ export default function UpgradeTierPage() {
         });
       }
     } catch {
-      // firebase not present
+      // ignore
     }
 
     if (!uid) {
@@ -135,9 +121,6 @@ export default function UpgradeTierPage() {
     return { uid, email };
   }
 
-  // =========================================================
-  // upsert customer
-  // =========================================================
   async function upsertAndGetCustomerId(userUid: string, email: string) {
     const r = await fetch("/api/paynow/upsert-customer", {
       method: "POST",
@@ -154,109 +137,11 @@ export default function UpgradeTierPage() {
     return data?.customerId || "";
   }
 
-  // =========================================================
-  // PRE-CREATE CHECKOUTS (critical for mobile)
-  // we do both silver & gold once we know the user and customer
-  // =========================================================
-  useEffect(() => {
-    (async () => {
-      // don’t run if we don’t even have page id
-      if (!rawId) return;
-
-      const { uid, email } = await getUserIdentity();
-      if (!uid || !email) {
-        return; // user is not signed in yet, we’ll show modal later
-      }
-
-      const customerId = await upsertAndGetCustomerId(uid, email);
-      if (!customerId) return;
-
-      // create SILVER checkout
-      try {
-        const res = await fetch("/api/create", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            productId: PAYNOW_SILVER_PRODUCT_ID,
-            tier: "silver",
-            serverId: Number(rawId),
-            userUid: uid,
-            customerId,
-          }),
-        });
-        const data = await res.json();
-        if (res.ok && data?.token) {
-          setSilverToken(data.token);
-        }
-      } catch (e) {
-        console.warn("precreate silver failed", e);
-      }
-
-      // create GOLD checkout
-      try {
-        const res = await fetch("/api/create", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            productId: PAYNOW_GOLD_PRODUCT_ID,
-            tier: "gold",
-            serverId: Number(rawId),
-            userUid: uid,
-            customerId,
-          }),
-        });
-        const data = await res.json();
-        if (res.ok && data?.token) {
-          setGoldToken(data.token);
-        }
-      } catch (e) {
-        console.warn("precreate gold failed", e);
-      }
-
-      setReadyForCheckout(true);
-    })();
-  }, [rawId]);
-
-  // =========================================================
-  // main checkout action (now uses preloaded token first)
-  // =========================================================
   async function startCheckout(productId: string, tier: "gold" | "silver") {
-    // show overlay card
-    setCheckoutPhase("loading");
-    setCheckoutMessage("Opening secure checkout…");
-
-    // figure out which pre-token to use
-    const preToken =
-      tier === "silver" ? silverToken : tier === "gold" ? goldToken : null;
-
-    // if we already have token + PayNow is loaded → open immediately (mobile-friendly)
-    if (preToken && (window as any).PayNow?.checkout) {
-      const paynow = (window as any).PayNow;
-
-      // register listeners
-      paynow.checkout.on("completed", (event: any) => {
-        setCheckoutOrderId(event?.orderId || "");
-        setCheckoutPhase("success");
-        setCheckoutMessage(`Successfully upgraded to ${tier} tier! Redirecting…`);
-        paynow.checkout.close();
-        setTimeout(() => {
-          router.push(`/community/${rawId}`);
-        }, 1500);
-      });
-
-      paynow.checkout.on("closed", () => {
-        setTimeout(() => {
-          setCheckoutPhase((prev) => (prev === "loading" ? "error" : prev));
-          setCheckoutMessage("Checkout was closed.");
-        }, 200);
-      });
-
-      paynow.checkout.open({ token: preToken });
-      return;
-    }
-
-    // fallback path (same as before) – if precreate failed for some reason
     const serverId = Number(rawId);
+
+    setCheckoutPhase("loading");
+    setCheckoutMessage("Preparing secure checkout…");
 
     const { uid, email } = await getUserIdentity();
 
@@ -313,6 +198,7 @@ export default function UpgradeTierPage() {
           `Successfully upgraded to ${tier} tier! Redirecting…`
         );
         paynow.checkout.close();
+        // ⬇️ redirect to the community that just got upgraded
         setTimeout(() => {
           router.push(`/community/${rawId}`);
         }, 1500);
@@ -321,7 +207,9 @@ export default function UpgradeTierPage() {
       paynow.checkout.on("closed", () => {
         setTimeout(() => {
           setCheckoutPhase((prev) => (prev === "loading" ? "error" : prev));
-          setCheckoutMessage("Checkout was closed.");
+          if (checkoutPhase === "error") {
+            setCheckoutMessage("Checkout was closed.");
+          }
         }, 200);
       });
 
@@ -336,9 +224,7 @@ export default function UpgradeTierPage() {
     }
   }
 
-  // =========================================================
-  // refresh behavior (your original)
-  // =========================================================
+  // refresh behavior
   useLayoutEffect(() => {
     const key = "refreshed-login-page";
     if (!sessionStorage.getItem(key)) {
@@ -348,9 +234,7 @@ export default function UpgradeTierPage() {
     return () => sessionStorage.removeItem(key);
   }, []);
 
-  // =========================================================
-  // load community data
-  // =========================================================
+  // load community
   useEffect(() => {
     const fetchCommunity = async () => {
       const res = await fetch(`/api/communities/${rawId}`, { cache: "no-store" });
@@ -363,10 +247,6 @@ export default function UpgradeTierPage() {
 
   if (loading) return null;
   if (!community) return <div className="text-white p-10">Community not found.</div>;
-
-  // =========================================================
-  // shared card components
-  // =========================================================
 
   const TierCard = ({
     title,
@@ -536,12 +416,8 @@ export default function UpgradeTierPage() {
     </div>
   );
 
-  // =========================================================
-  // render
-  // =========================================================
   return (
     <div className="relative min-h-screen bg-[#0b0b0c] text-white font-sans">
-      {/* background */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute -top-24 -left-24 h-80 w-80 rounded-full blur-3xl opacity-20 bg-gradient-to-br from-white/10 to-slate-500/10" />
         <div className="absolute -bottom-24 -right-24 h-80 w-80 rounded-full blur-3xl opacity-20 bg-gradient-to-tr from-slate-400/10 to-white/10" />
@@ -562,7 +438,8 @@ export default function UpgradeTierPage() {
               {checkoutPhase === "loading" && (
                 <>
                   <Loader2 className="mx-auto mb-3 animate-spin text-slate-200" size={36} />
-                  <h2 className="text-xl font-semibold">Processing payment…</h2>
+                  {/* 👇 changed this line */}
+                  <h2 className="text-xl font-semibold">Preparing checkout…</h2>
                   <p className="mt-1 text-sm text-gray-400">{checkoutMessage}</p>
                 </>
               )}
@@ -593,7 +470,6 @@ export default function UpgradeTierPage() {
           </div>
         )}
 
-        {/* MAIN TIER UI */}
         {checkoutPhase === "idle" && (
           <>
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-1 sm:mb-2">
@@ -632,7 +508,7 @@ export default function UpgradeTierPage() {
                   disabledText="Downgrade Not Allowed"
                   disabled={["silver", "gold"].includes(community.tier)}
                   isCurrent={community.tier === "silver"}
-                  cta={readyForCheckout ? "Upgrade" : "Preparing…"}
+                  cta="Upgrade"
                   onClick={() => startCheckout(PAYNOW_SILVER_PRODUCT_ID, "silver")}
                 />
 
@@ -648,7 +524,7 @@ export default function UpgradeTierPage() {
                   disabledText="Downgrade Not Allowed"
                   disabled={community.tier === "gold"}
                   isCurrent={community.tier === "gold"}
-                  cta={readyForCheckout ? "Upgrade" : "Preparing…"}
+                  cta="Upgrade"
                   onClick={() => startCheckout(PAYNOW_GOLD_PRODUCT_ID, "gold")}
                 />
               </div>
@@ -694,7 +570,7 @@ export default function UpgradeTierPage() {
                   disabledText="Downgrade Not Allowed"
                   disabled={["silver", "gold"].includes(community.tier)}
                   isCurrent={community.tier === "silver"}
-                  cta={readyForCheckout ? "Upgrade" : "Preparing…"}
+                  cta="Upgrade"
                   onClick={() => startCheckout(PAYNOW_SILVER_PRODUCT_ID, "silver")}
                   active={community.tier !== "silver"}
                 />
@@ -711,7 +587,7 @@ export default function UpgradeTierPage() {
                   disabledText="Downgrade Not Allowed"
                   disabled={community.tier === "gold"}
                   isCurrent={community.tier === "gold"}
-                  cta={readyForCheckout ? "Upgrade" : "Preparing…"}
+                  cta="Upgrade"
                   onClick={() => startCheckout(PAYNOW_GOLD_PRODUCT_ID, "gold")}
                   active={community.tier !== "gold"}
                 />
@@ -735,16 +611,12 @@ export default function UpgradeTierPage() {
       {/* Signup Prompt Modal */}
       {showSignupPrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/70 backdrop-blur-md transition-opacity"
             onClick={() => setShowSignupPrompt(false)}
           />
-
-          {/* Modal */}
           <div className="relative w-full max-w-md rounded-2xl bg-neutral-950/95 border border-neutral-800 shadow-[0_8px_32px_rgba(0,0,0,0.6)] p-6 z-10">
             <div className="flex flex-col items-center space-y-6">
-              {/* Icon Circle */}
               <div className="flex items-center justify-center w-14 h-14 rounded-full bg-neutral-900 border border-neutral-800 shadow-inner mt-6">
                 <svg
                   className="h-6 w-6 text-neutral-300"
@@ -756,16 +628,12 @@ export default function UpgradeTierPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
               </div>
-
-              {/* Content */}
               <div className="text-center space-y-2 mt-2">
                 <h2 className="text-white text-2xl font-semibold">Sign up to continue</h2>
                 <p className="text-neutral-400 text-sm">
                   Create an account to promote and discover communities.
                 </p>
               </div>
-
-              {/* Buttons */}
               <div className="w-full space-y-3 pt-2">
                 <button
                   onClick={() => {
@@ -781,7 +649,6 @@ export default function UpgradeTierPage() {
                 >
                   Sign Up
                 </button>
-
                 <button
                   onClick={() => setShowSignupPrompt(false)}
                   className="w-full bg-neutral-900 text-neutral-300 font-medium py-3 rounded-xl border border-neutral-800 transition-colors hover:bg-neutral-800 focus:ring-2 focus:ring-neutral-700 cursor-pointer"
@@ -794,7 +661,6 @@ export default function UpgradeTierPage() {
         </div>
       )}
 
-      {/* global anims */}
       <style jsx global>{`
         @keyframes fadeIn {
           from {
