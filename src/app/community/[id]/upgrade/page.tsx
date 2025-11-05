@@ -46,6 +46,16 @@ export default function UpgradeTierPage() {
   const [checkoutMessage, setCheckoutMessage] = useState("");
   const [checkoutOrderId, setCheckoutOrderId] = useState("");
 
+    // A useLayoutEffect to force a one-time page refresh on the first load.
+    useLayoutEffect(() => {
+      const key = "refreshed-login-page";
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, "true");
+        window.location.replace(window.location.href);
+      }
+      return () => sessionStorage.removeItem(key);
+    }, []);
+
   // seed guest
   useEffect(() => {
     if (typeof window === "undefined") return;
