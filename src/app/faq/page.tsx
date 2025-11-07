@@ -81,8 +81,7 @@ export default function FAQPage() {
             WebkitTapHighlightColor: "transparent",
           }}
         >
-          {/* logo */}
-            {/* Logo SVG */}
+  {/* Logo SVG */}
   <div
     style={{ width: "50px", height: "auto" }}
     dangerouslySetInnerHTML={{
@@ -111,7 +110,9 @@ export default function FAQPage() {
       {/* MAIN */}
       <main
         className="mx-auto max-w-4xl px-6 sm:px-8 py-12 sm:py-16 text-white"
-        style={{           paddingLeft: isNarrow ? 30 : undefined, paddingRight: isNarrow ? 30 : undefined,
+        style={{
+          paddingLeft: isNarrow ? 30 : undefined,
+          paddingRight: isNarrow ? 30 : undefined,
         }}
       >
         {/* Page header */}
@@ -293,27 +294,38 @@ export default function FAQPage() {
             </ul>
           </section>
 
-          {/* 8 */}
+          {/* 8 - NEW subscriptions section */}
           <section className="space-y-4">
-            <h2 className="text-2xl font-bold">8. How do I upgrade my tier?</h2>
+            <h2 className="text-2xl font-bold">8. Can I cancel my subscription?</h2>
+            <p className="text-gray-300 leading-8">
+              Yes. If you upgraded a community to a paid tier using our checkout, you can manage it directly from your{" "}
+              <strong>Dashboard</strong>. Go to your billing/subscriptions area and you will see the active subscription tied
+              to that community. You can cancel it at any time — the tier will stay active until the end of the current paid
+              period, then the community will return to <strong>Normal</strong>.
+            </p>
+          </section>
+
+          {/* 9 */}
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold">9. How do I upgrade my tier?</h2>
             <p className="text-gray-300 leading-8">
               Open your community page and click <strong>&quot;Upgrade Tier&quot;</strong>. Choose <strong>Silver</strong> or{" "}
               <strong>Gold</strong>, complete payment securely, and your benefits apply instantly.
             </p>
           </section>
 
-          {/* 9 */}
+          {/* 10 */}
           <section className="space-y-4">
-            <h2 className="text-2xl font-bold">9. What happens when a paid tier expires?</h2>
+            <h2 className="text-2xl font-bold">10. What happens when a paid tier expires?</h2>
             <p className="text-gray-300 leading-8">
               When a tier term ends, the community reverts to <strong>Normal</strong>. Your listing remains active, and you can
               re-upgrade at any time.
             </p>
           </section>
 
-          {/* 10 */}
+          {/* 11 */}
           <section className="space-y-4">
-            <h2 className="text-2xl font-bold">10. Best practices for growth</h2>
+            <h2 className="text-2xl font-bold">11. Best practices for growth</h2>
             <ul className="list-disc pl-6 text-gray-300 leading-8 space-y-2">
               <li>Keep titles, descriptions, and tags accurate and up to date.</li>
               <li>Use boosts strategically during peak hours.</li>
@@ -322,26 +334,26 @@ export default function FAQPage() {
             </ul>
           </section>
 
-          {/* 11 */}
+          {/* 12 */}
           <section className="space-y-4">
-            <h2 className="text-2xl font-bold">11. Is the system fair?</h2>
+            <h2 className="text-2xl font-bold">12. Is the system fair?</h2>
             <p className="text-gray-300 leading-8">
               Yes. Personal and per-community cooldowns, plus monthly resets, are designed to preserve fairness while allowing
               active communities to compete on equal terms.
             </p>
           </section>
 
-          {/* 12 */}
+          {/* 13 */}
           <section className="space-y-4">
-            <h2 className="text-2xl font-bold">12. Can I edit or delete my listing?</h2>
+            <h2 className="text-2xl font-bold">13. Can I edit or delete my listing?</h2>
             <p className="text-gray-300 leading-8">
               Yes. Manage any listing directly from the Dashboard—edit details or delete the community whenever needed.
             </p>
           </section>
 
-          {/* 13 */}
+          {/* 14 */}
           <section className="space-y-4">
-            <h2 className="text-2xl font-bold">13. What information is public?</h2>
+            <h2 className="text-2xl font-bold">14. What information is public?</h2>
             <p className="text-gray-300 leading-8">
               Only listing content (name, image, description, tags) is public. Personal account information remains private and
               secured. For data practices, see the Privacy Policy.

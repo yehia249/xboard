@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import "@/app/all.css";
 
 export default function Footer() {
@@ -38,12 +38,15 @@ export default function Footer() {
           <a href="/faq">FAQ</a>
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
+          <a href="/contact">Contact</a>
         </nav>
 
         {/* Legal disclaimer */}
         <div className="text-center mt-6 text-sm text-gray-500 max-w-md px-4 text-wrap text-balance leading-relaxed">
           <p>
-            XBoard is an independent platform and is not affiliated with X Corp. (formerly known as Twitter). All trademarks are the property of their respective owners.
+            XBoard is an independent platform and is not affiliated with X Corp.
+            (formerly known as Twitter). All trademarks are the property of
+            their respective owners.
           </p>
         </div>
 
@@ -56,16 +59,16 @@ export default function Footer() {
       {/* Scoped hard reset so links never appear blue or underlined */}
       <style jsx>{`
         .footer-nav a {
-          color: #d1d5db;            /* gray-300 */
+          color: #d1d5db; /* gray-300 */
           text-decoration: none;
           transition: color 150ms ease;
         }
         .footer-nav a:visited {
-          color: #d1d5db;            /* prevent purple visited */
+          color: #d1d5db; /* prevent purple visited */
         }
         .footer-nav a:hover,
         .footer-nav a:focus {
-          color: #f5f5f5;            /* near-white on hover */
+          color: #f5f5f5; /* near-white on hover */
           text-decoration: none;
           outline: none;
         }

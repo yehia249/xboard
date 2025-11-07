@@ -30,7 +30,7 @@ export default function UpgradeTierPage() {
       : String(params?.id ?? "");
 
   // ====== Paynow product IDs ======
-  const PAYNOW_GOLD_PRODUCT_ID = "478332020456427520";
+  const PAYNOW_GOLD_PRODUCT_ID = "476427054443663360";
   const PAYNOW_SILVER_PRODUCT_ID = "476429842842124288";
   // ================================
 
