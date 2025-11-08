@@ -122,7 +122,7 @@ export default function ContactPage() {
         <div className="space-y-4">
 {/* Discord */}
 <a
-  href="https://discord.gg/jCpdZUZgmG"
+  href="https://discord.gg/WPHtCAu9qW"
   target="_blank"
   rel="noreferrer"
   style={{
@@ -142,13 +142,13 @@ export default function ContactPage() {
     Join our Discord →
   </p>
   <p style={{ fontSize: "1.1rem", color: "white", marginTop: "0.4rem", wordBreak: "break-all" }}>
-    https://discord.gg/jCpdZUZgmG
+  https://discord.gg/WPHtCAu9qW
   </p>
 </a>
 
 {/* X / Twitter */}
 <a
-  href="https://x.com/xboardz"
+  href="https://x.com/xboardzcom1"
   target="_blank"
   rel="noreferrer"
   style={{
@@ -165,10 +165,10 @@ export default function ContactPage() {
     X / Twitter
   </p>
   <p style={{ fontSize: "1.5rem", fontWeight: 700, color: "white" }}>
-    @xboardz
+    @xboardzcom1
   </p>
   <p style={{ fontSize: "1.1rem", color: "white", marginTop: "0.4rem", wordBreak: "break-all" }}>
-    https://x.com/xboardz
+    https://x.com/xboardzcom1
   </p>
 </a>
 
