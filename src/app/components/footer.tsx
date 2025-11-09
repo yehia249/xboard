@@ -36,9 +36,9 @@ export default function Footer() {
         >
           <a href="/guidelines">Guidelines</a>
           <a href="/faq">FAQ</a>
-          <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
-          <a href="/contact">Contact</a>
+
+          <a href="/privacy">Privacy</a>
           <a
             href="https://paynow.gg/terms-of-use"
             target="_blank"
@@ -46,10 +46,14 @@ export default function Footer() {
           >
             PayNow Terms of Service
           </a>
+          <a href="/contact">Contact</a>
         </nav>
 
         {/* Legal disclaimer */}
-        <div className="text-center mt-6 text-sm text-gray-500 max-w-md px-4 text-wrap text-balance leading-relaxed">
+        <div
+          className="text-center text-sm text-gray-500 max-w-md px-4 text-wrap text-balance leading-relaxed"
+          style={{ marginTop: "1rem" }}
+        >
           <p>
             XBoard is an independent platform and is not affiliated with X Corp.
             (formerly known as Twitter). All trademarks are the property of
