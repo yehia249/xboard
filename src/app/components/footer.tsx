@@ -39,6 +39,13 @@ export default function Footer() {
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
           <a href="/contact">Contact</a>
+          <a
+            href="https://paynow.gg/terms-of-use"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            PayNow Terms of Service
+          </a>
         </nav>
 
         {/* Legal disclaimer */}
