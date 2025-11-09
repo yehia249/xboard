@@ -29,7 +29,7 @@ interface ToastMessage {
 }
 
 const cuisines: Cuisine[] = [
-  "Crypto","Memes","Fitness","Hangout","Gaming","Education","Football","Politics","Tech","Sports","Celebrities","AI","Finance","Art","Dating","Anime","NSFW", "Music","Social","Lifestyle",
+  "Crypto","Memes","Fitness","Hangout","Gaming","Education","Football","Politics","Tech","Sports","Celebrities","AI","Finance","Art","Animals","Anime","NSFW", "Music","Social","Lifestyle",
 ];
 
 function CommunityPageContentInner() {
