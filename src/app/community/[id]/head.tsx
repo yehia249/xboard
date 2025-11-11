@@ -1,8 +1,13 @@
 // app/community/[id]/head.tsx
 const SITE_URL = "https://xboardz.com";
 
-export default function Head({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default async function Head({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  // 👇 match your layout typing
+  const { id } = await params;
 
   const ogImageUrl = `${SITE_URL}/community/${id}/opengraph-image`;
 
@@ -14,7 +19,7 @@ export default function Head({ params }: { params: { id: string } }) {
         content="Discover and promote X (Twitter) communities on XBoard."
       />
 
-      {/* Open Graph / Discord / WhatsApp */}
+      {/* OG */}
       <meta property="og:title" content={`XBoard Community #${id}`} />
       <meta
         property="og:description"
@@ -24,7 +29,7 @@ export default function Head({ params }: { params: { id: string } }) {
       <meta property="og:url" content={`${SITE_URL}/community/${id}`} />
       <meta property="og:type" content="website" />
 
-      {/* Twitter/X */}
+      {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={`XBoard Community #${id}`} />
       <meta

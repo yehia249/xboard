@@ -1,10 +1,8 @@
 // app/community/[id]/opengraph-image.tsx
 import { ImageResponse } from "next/og";
 
-// important so it's fast
 export const runtime = "edge";
 
-// standard OG size
 export const size = {
   width: 1200,
   height: 630,
@@ -17,45 +15,38 @@ const SITE_URL = "https://xboardz.com";
 export default async function Image({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const communityId = params.id;
+  // 👇 your setup expects a Promise
+  const { id: communityId } = await params;
 
-  // 1) fetch community data from your API
   const communityRes = await fetch(
     `${SITE_URL}/api/communities/${communityId}`,
-    {
-      // avoids Next caching too aggressively for OG
-      cache: "no-store",
-    }
+    { cache: "no-store" }
   );
 
   if (!communityRes.ok) {
-    // fallback if community not found
     return new ImageResponse(
-      (
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            background: "linear-gradient(135deg, #020617 0%, #0f172a 60%, #020617 100%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "white",
-            fontSize: 48,
-            fontWeight: 700,
-          }}
-        >
-          XBoard Community
-        </div>
-      ),
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          background: "black",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "white",
+          fontSize: 48,
+          fontWeight: 700,
+        }}
+      >
+        XBoard Community
+      </div>,
       size
     );
   }
 
   const community = await communityRes.json();
-
   const communityName = community?.name ?? "XBoard Community";
   const communityImage: string | null =
     community?.image_url && typeof community.image_url === "string"
@@ -64,10 +55,6 @@ export default async function Image({
 
   const baseOg = `${SITE_URL}/og.png`;
 
-  // we render 3 layers:
-  // - base OG as background
-  // - dark gradient overlay
-  // - community image on the right as a card
   return new ImageResponse(
     (
       <div
@@ -76,13 +63,13 @@ export default async function Image({
           height: "630px",
           position: "relative",
           display: "flex",
-          flexDirection: "row",
           backgroundColor: "#0f172a",
-          fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           overflow: "hidden",
+          fontFamily:
+            "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         }}
       >
-        {/* base OG background */}
+        {/* base OG */}
         <img
           src={baseOg}
           alt="XBoard"
@@ -95,7 +82,7 @@ export default async function Image({
           }}
         />
 
-        {/* dark gradient so the 2 images blend cleanly */}
+        {/* dark gradient so 2 images blend */}
         <div
           style={{
             position: "absolute",
@@ -105,7 +92,7 @@ export default async function Image({
           }}
         />
 
-        {/* left text block */}
+        {/* left text */}
         <div
           style={{
             position: "relative",
@@ -133,7 +120,6 @@ export default async function Image({
               lineHeight: 1.05,
               fontWeight: 700,
               color: "white",
-              textOverflow: "ellipsis",
               overflow: "hidden",
               display: "-webkit-box",
               WebkitLineClamp: 2,
@@ -147,7 +133,7 @@ export default async function Image({
           </div>
         </div>
 
-        {/* right side community image preview */}
+        {/* right: designated community image */}
         {communityImage ? (
           <div
             style={{
@@ -168,13 +154,8 @@ export default async function Image({
             <img
               src={communityImage}
               alt={communityName}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
-            {/* subtle top gradient to match your dark theme */}
             <div
               style={{
                 position: "absolute",
@@ -186,7 +167,7 @@ export default async function Image({
           </div>
         ) : null}
 
-        {/* tiny corner badge */}
+        {/* badge */}
         <div
           style={{
             position: "absolute",
@@ -214,8 +195,6 @@ export default async function Image({
         </div>
       </div>
     ),
-    {
-      ...size,
-    }
+    { ...size }
   );
 }
