@@ -1,54 +1,30 @@
 // app/community/[id]/head.tsx
 
-async function getCommunity(id: string) {
-    try {
-      const res = await fetch(`https://xboardz.com/api/community/${id}`, {
-        cache: "no-store",
-      });
-      if (!res.ok) return null;
-      return await res.json();
-    } catch (err) {
-      return null;
-    }
-  }
+export default async function Head({ params }: { params: { id: string } }) {
+    const id = params.id;
   
-  export default async function Head({
-    params,
-  }: {
-    params: { id: string };
-  }) {
-    const community = await getCommunity(params.id);
-  
-    const title = community?.name
-      ? `${community.name} | XBoard`
-      : "XBoard Community";
-  
-    const description =
-      community?.description ||
-      "Discover, list, and boost X (Twitter) communities on XBoard.";
-  
-    // this points to the OG route we just made above
-    const ogImage = `https://xboardz.com/community/${params.id}/opengraph-image`;
-  
-    const url = `https://xboardz.com/community/${params.id}`;
-  
+    // optional: you can also fetch the community here to set <title>
     return (
       <>
-        <title>{title}</title>
-        <meta name="description" content={description} />
+        <title>Community {id} · XBoard</title>
+        <meta name="description" content="Discover, post and promote your X community on XBoard." />
   
-        {/* Open Graph / Facebook / Discord */}
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={description} />
-        <meta property="og:image" content={ogImage} />
-        <meta property="og:url" content={url} />
+        {/* OG / Twitter */}
+        <meta property="og:title" content={`Community ${id} · XBoard`} />
+        <meta
+          property="og:image"
+          content={`https://xboardz.com/community/${id}/opengraph-image`}
+        />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:type" content="website" />
+        <meta property="og:url" content={`https://xboardz.com/community/${id}`} />
   
-        {/* Twitter / X */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={title} />
-        <meta name="twitter:description" content={description} />
-        <meta name="twitter:image" content={ogImage} />
+        <meta
+          name="twitter:image"
+          content={`https://xboardz.com/community/${id}/opengraph-image`}
+        />
       </>
     );
   }
