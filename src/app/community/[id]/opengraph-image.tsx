@@ -10,17 +10,17 @@ export const size = {
 
 export const contentType = "image/png";
 
+// helper to fetch the community data
 async function getCommunity(id: string) {
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://xboardz.com";
   try {
-    const base =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://xboardz.com";
     const res = await fetch(`${base}/api/communities/${id}`, {
-      // make sure it works on edge
       cache: "no-store",
     });
     if (!res.ok) return null;
     return await res.json();
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -32,12 +32,16 @@ export default async function OpenGraphImage({
 }) {
   const community = await getCommunity(params.id);
 
+  const siteBase =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://xboardz.com";
+
+  // your global OG
+  const globalOg = `${siteBase}/og.png`;
+
   const name = community?.name || "XBoard Community";
-  const imageUrl =
+  const communityImage =
     community?.image_url ||
-    (process.env.NEXT_PUBLIC_SITE_URL
-      ? `${process.env.NEXT_PUBLIC_SITE_URL}/og.png`
-      : "https://xboardz.com/og.png");
+    `${siteBase}/og.png`; // fallback if comm has no image
 
   return new ImageResponse(
     (
@@ -46,138 +50,177 @@ export default async function OpenGraphImage({
           width: "100%",
           height: "100%",
           display: "flex",
-          background:
-            "radial-gradient(circle at top, #10131a 0%, #020617 45%, #000 100%)",
           position: "relative",
-          fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+          fontFamily:
+            "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif",
+          backgroundColor: "#020617",
+          overflow: "hidden",
         }}
       >
-        {/* background image with soft opacity */}
+        {/* 1) your global og.png as the base */}
         <img
-          src={imageUrl}
-          alt={name}
+          src={globalOg}
+          alt="XBoard"
           style={{
             position: "absolute",
             inset: 0,
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            opacity: 0.55,
-            filter: "blur(1.5px)",
+            opacity: 1,
           }}
         />
 
-        {/* gradient overlay to make text readable */}
+        {/* 2) dark gradient overlay to make text readable */}
         <div
           style={{
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(110deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0) 80%)",
+              "linear-gradient(110deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.65) 45%, rgba(0,0,0,0) 85%)",
           }}
         />
 
-        {/* main content */}
+        {/* 3) content area */}
         <div
           style={{
             zIndex: 10,
             display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            gap: 24,
-            padding: "60px 70px",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
             width: "100%",
+            height: "100%",
+            padding: "56px 64px",
+            gap: 32,
           }}
         >
-          {/* mini top label */}
+          {/* LEFT: text */}
           <div
             style={{
-              display: "inline-flex",
-              gap: 8,
-              alignItems: "center",
-              background: "rgba(0,0,0,0.35)",
-              border: "1px solid rgba(255,255,255,0.15)",
-              borderRadius: 999,
-              padding: "6px 16px",
-              width: "fit-content",
+              display: "flex",
+              flexDirection: "column",
+              gap: 18,
+              maxWidth: 560,
             }}
           >
-            <span style={{ fontSize: 20, color: "white" }}>XBoard</span>
-            <span style={{ fontSize: 16, color: "rgba(255,255,255,0.6)" }}>
-              Community Listing
-            </span>
-          </div>
+            <div
+              style={{
+                display: "inline-flex",
+                gap: 10,
+                alignItems: "center",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 999,
+                padding: "6px 16px",
+                width: "fit-content",
+              }}
+            >
+              <span style={{ color: "#fff", fontSize: 20, fontWeight: 600 }}>
+                XBoard
+              </span>
+              <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 16 }}>
+                Community Listing
+              </span>
+            </div>
 
-          {/* title */}
-          <div style={{ maxWidth: 720 }}>
             <h1
               style={{
-                fontSize: 56,
-                lineHeight: 1.05,
+                fontSize: 58,
+                lineHeight: 1.03,
                 margin: 0,
-                color: "white",
+                color: "#fff",
+                letterSpacing: "-0.02em",
               }}
             >
               {name}
             </h1>
-          </div>
 
-          <p
-            style={{
-              fontSize: 24,
-              color: "rgba(255,255,255,0.75)",
-              maxWidth: 540,
-            }}
-          >
-            Discover & promote your X community on XBoard.
-          </p>
-
-          {/* bottom small */}
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <div
+            <p
               style={{
-                width: 42,
-                height: 42,
-                borderRadius: 14,
-                background: "rgba(0,0,0,0.3)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                display: "grid",
-                placeItems: "center",
+                fontSize: 22,
+                color: "rgba(255,255,255,0.65)",
+                maxWidth: 500,
               }}
             >
-              <span style={{ fontSize: 20, color: "white" }}>★</span>
-            </div>
-            <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 18 }}>
+              Promote, boost, and get seen by X users.
+            </p>
+
+            <p
+              style={{
+                fontSize: 16,
+                color: "rgba(255,255,255,0.35)",
+              }}
+            >
               xboardz.com
-            </span>
+            </p>
+          </div>
+
+          {/* RIGHT: the designated community image in a glass card */}
+          <div
+            style={{
+              width: 320,
+              height: 320,
+              borderRadius: 28,
+              overflow: "hidden",
+              background:
+                "linear-gradient(160deg, rgba(2,6,23,0.1), rgba(255,255,255,0))",
+              border: "1px solid rgba(255,255,255,0.18)",
+              boxShadow: "0 18px 44px rgba(0,0,0,0.35)",
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {/* background gradient from global OG to comm image */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: `linear-gradient(145deg, rgba(3,7,18,0.9) 0%, rgba(3,7,18,0) 40%), url(${communityImage})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                filter: "saturate(1.15)",
+              }}
+            />
+
+            {/* small label on top right */}
+            <div
+              style={{
+                position: "absolute",
+                top: 16,
+                right: 16,
+                background: "rgba(0,0,0,0.4)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 999,
+                padding: "4px 12px",
+              }}
+            >
+              <span
+                style={{
+                  color: "#fff",
+                  fontSize: 14,
+                }}
+              >
+                Designated image
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* right side actual avatar/banner */}
+        {/* extra edge fade so it looks clean in preview */}
         <div
           style={{
             position: "absolute",
-            right: 56,
-            top: 56,
-            width: 220,
-            height: 220,
-            borderRadius: 32,
-            overflow: "hidden",
-            border: "2px solid rgba(255,255,255,0.28)",
+            right: 0,
+            top: 0,
+            width: 120,
+            height: "100%",
             background:
-              "linear-gradient(140deg, rgba(0,0,0,0.15), rgba(255,255,255,0))",
+              "linear-gradient(90deg, rgba(2,6,23,0) 0%, rgba(2,6,23,1) 100%)",
           }}
-        >
-          <img
-            src={imageUrl}
-            alt={name}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
-          />
-        </div>
+        />
       </div>
     ),
     {
