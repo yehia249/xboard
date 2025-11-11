@@ -1,23 +1,22 @@
 // app/community/[id]/opengraph-image.tsx
 import { ImageResponse } from "next/og";
 
-export const runtime = "edge"; // faster for OG
+export const runtime = "edge";
+export const dynamic = "force-dynamic"; // make sure each /community/[id] is generated
+export const contentType = "image/png";
 export const size = {
   width: 1200,
   height: 630,
 };
-export const contentType = "image/png";
 
 async function getCommunity(id: string) {
   try {
     const res = await fetch(`https://xboardz.com/api/community/${id}`, {
-      // we always want fresh data for previews
       cache: "no-store",
     });
-
     if (!res.ok) return null;
     return await res.json();
-  } catch (err) {
+  } catch (e) {
     return null;
   }
 }
@@ -30,17 +29,19 @@ export default async function OpengraphImage({
   const community = await getCommunity(params.id);
 
   const name =
-    community?.name && typeof community.name === "string"
+    typeof community?.name === "string" && community.name.trim().length > 0
       ? community.name
       : "XBoard Community";
 
   const description =
-    community?.description && typeof community.description === "string"
+    typeof community?.description === "string" &&
+    community.description.trim().length > 0
       ? community.description.slice(0, 140)
       : "Discover, list, and boost X (Twitter) communities on XBoard.";
 
   const communityImage =
-    community?.image_url && typeof community.image_url === "string"
+    typeof community?.image_url === "string" &&
+    community.image_url.trim().length > 0
       ? community.image_url
       : null;
 
@@ -52,12 +53,12 @@ export default async function OpengraphImage({
           height: "100%",
           display: "flex",
           position: "relative",
-          backgroundColor: "#020617",
+          background: "#020617",
           fontFamily:
             'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
         }}
       >
-        {/* 1) Global background (your public/og.png) */}
+        {/* base layer: your global OG */}
         <img
           src="https://xboardz.com/og.png"
           style={{
@@ -70,7 +71,7 @@ export default async function OpengraphImage({
           }}
         />
 
-        {/* 2) Community image on the right, with dark overlay so it blends */}
+        {/* optional community image on the right */}
         {communityImage ? (
           <div
             style={{
@@ -90,29 +91,28 @@ export default async function OpengraphImage({
                 width: "100%",
                 height: "100%",
                 objectFit: "cover",
-                transform: "scale(1.02)",
               }}
             />
-            {/* gradient to blend into the main background */}
+            {/* dark gradient to blend into the base */}
             <div
               style={{
                 position: "absolute",
                 inset: 0,
                 background:
-                  "linear-gradient(90deg, rgba(2, 6, 23, 0) 0%, rgba(2, 6, 23, 0.55) 60%, #020617 100%)",
+                  "linear-gradient(90deg, rgba(2,6,23,0) 0%, rgba(2,6,23,0.4) 50%, #020617 100%)",
               }}
             />
           </div>
         ) : null}
 
-        {/* foreground text block */}
+        {/* text content */}
         <div
           style={{
             position: "relative",
             zIndex: 10,
             display: "flex",
             flexDirection: "column",
-            gap: 16,
+            gap: 14,
             height: "100%",
             padding: "54px 56px",
             maxWidth: "56%",
@@ -148,8 +148,6 @@ export default async function OpengraphImage({
           >
             {description}
           </div>
-
-          {/* small badge to show it's XBoard themed */}
           <div
             style={{
               marginTop: 18,
@@ -178,7 +176,7 @@ export default async function OpengraphImage({
           </div>
         </div>
 
-        {/* left fade so text pops on top of global OG */}
+        {/* left vignette so text is readable even if remote imgs fail */}
         <div
           style={{
             position: "absolute",
