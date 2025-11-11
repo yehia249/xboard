@@ -12,11 +12,56 @@ import { Check, AlertCircle, X } from "lucide-react";
 import "@/app/all.css";
 import ReactDOM from "react-dom";
 
+// Add at the top of the file, before the component
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const { id } = params;
+  
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/communities/${id}`, {
+      cache: 'no-store',
+    });
+    const community = await res.json();
+
+    const ogImageUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/og-image?image=${encodeURIComponent(community.image_url)}&name=${encodeURIComponent(community.name)}`;
+
+    return {
+      title: community.name,
+      description: community.description || community.long_description,
+      openGraph: {
+        title: community.name,
+        description: community.description || community.long_description,
+        images: [
+          {
+            url: ogImageUrl,
+            width: 1200,
+            height: 630,
+            alt: community.name,
+          },
+        ],
+        type: 'website',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: community.name,
+        description: community.description || community.long_description,
+        images: [ogImageUrl],
+      },
+    };
+  } catch (error) {
+    return {
+      title: 'Community',
+      description: 'Discover this community',
+    };
+  }
+}
+
 export default function CommunityDetails() {
   const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
 
+
+  
   // ===== Hooks MUST be inside the component and before they're used =====
   const modalHostRef = useRef<HTMLDivElement | null>(null);
   const [shadowRootEl, setShadowRootEl] = useState<ShadowRoot | null>(null);
