@@ -3,7 +3,7 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 
-// helper to convert ArrayBuffer -> base64 in edge runtime
+// edge-safe ArrayBuffer -> base64
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   let binary = "";
   const bytes = new Uint8Array(buffer);
@@ -11,18 +11,14 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   for (let i = 0; i < len; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
-  // btoa is available on the edge runtime
   return btoa(binary);
 }
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: Request, context: any) {
   try {
-    const communityId = params.id;
+    const communityId = context?.params?.id as string;
 
-    // fetch community data from your API
+    // 1) fetch community data
     const communityRes = await fetch(
       `https://xboardz.com/api/community/${communityId}`,
       { cache: "no-store" }
@@ -34,12 +30,12 @@ export async function GET(
 
     const community = await communityRes.json();
 
-    // base OG image
+    // 2) base og.png
     const baseImageRes = await fetch("https://xboardz.com/og.png");
     const baseImageBuffer = await baseImageRes.arrayBuffer();
     const baseImageBase64 = arrayBufferToBase64(baseImageBuffer);
 
-    // community image (optional)
+    // 3) optional community image
     let communityImageBase64 = "";
     if (community.image_url) {
       try {
@@ -47,7 +43,6 @@ export async function GET(
         const communityImageBuffer = await communityImageRes.arrayBuffer();
         communityImageBase64 = arrayBufferToBase64(communityImageBuffer);
       } catch (err) {
-        // if the comm image fails we just skip it
         console.error("Failed to fetch community image:", err);
       }
     }
@@ -75,7 +70,7 @@ export async function GET(
             }}
           />
 
-          {/* Community image with gradient blend */}
+          {/* Community image blend */}
           {communityImageBase64 ? (
             <div
               style={{
@@ -103,7 +98,7 @@ export async function GET(
             </div>
           ) : null}
 
-          {/* Content overlay */}
+          {/* Text overlay */}
           <div
             style={{
               position: "absolute",
@@ -156,7 +151,7 @@ export async function GET(
   } catch (error) {
     console.error("Error generating OG image:", error);
 
-    // if something goes wrong, return the base image as png
+    // fallback: return base PNG
     const baseImageRes = await fetch("https://xboardz.com/og.png");
     const baseImageBuffer = await baseImageRes.arrayBuffer();
 
