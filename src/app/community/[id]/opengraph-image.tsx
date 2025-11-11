@@ -1,59 +1,91 @@
 // app/community/[id]/opengraph-image.tsx
 import { ImageResponse } from "next/og";
 
+// important so it's fast
 export const runtime = "edge";
-export const contentType = "image/png";
+
+// standard OG size
 export const size = {
   width: 1200,
   height: 630,
 };
 
-export default async function OpengraphImage({
+export const contentType = "image/png";
+
+const SITE_URL = "https://xboardz.com";
+
+export default async function Image({
   params,
 }: {
   params: { id: string };
 }) {
-  const id = params.id;
+  const communityId = params.id;
 
-  // 1) get community data from YOUR api
-  // you used /api/communities/[id] in your client file, so I’ll use that
-  let community: any = null;
-  try {
-    const res = await fetch(`https://xboardz.com/api/communities/${id}`, {
-      // let it revalidate every minute
-      next: { revalidate: 60 },
-    });
-
-    if (res.ok) {
-      community = await res.json();
+  // 1) fetch community data from your API
+  const communityRes = await fetch(
+    `${SITE_URL}/api/communities/${communityId}`,
+    {
+      // avoids Next caching too aggressively for OG
+      cache: "no-store",
     }
-  } catch (e) {
-    // ignore, we’ll just fallback
+  );
+
+  if (!communityRes.ok) {
+    // fallback if community not found
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            background: "linear-gradient(135deg, #020617 0%, #0f172a 60%, #020617 100%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white",
+            fontSize: 48,
+            fontWeight: 700,
+          }}
+        >
+          XBoard Community
+        </div>
+      ),
+      size
+    );
   }
 
-  const communityName =
-    community?.name?.toString()?.slice(0, 60) || `Community #${id}`;
-  const communityImage = community?.image_url || null;
+  const community = await communityRes.json();
 
-  // your global OG
-  const baseBg = "https://xboardz.com/og.png";
+  const communityName = community?.name ?? "XBoard Community";
+  const communityImage: string | null =
+    community?.image_url && typeof community.image_url === "string"
+      ? community.image_url
+      : null;
 
+  const baseOg = `${SITE_URL}/og.png`;
+
+  // we render 3 layers:
+  // - base OG as background
+  // - dark gradient overlay
+  // - community image on the right as a card
   return new ImageResponse(
     (
       <div
         style={{
           width: "1200px",
           height: "630px",
-          display: "flex",
           position: "relative",
-          backgroundColor: "#000",
+          display: "flex",
+          flexDirection: "row",
+          backgroundColor: "#0f172a",
           fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          overflow: "hidden",
         }}
       >
-        {/* layer 1: your global og.png */}
+        {/* base OG background */}
         <img
-          src={baseBg}
-          alt="XBoard background"
+          src={baseOg}
+          alt="XBoard"
           style={{
             position: "absolute",
             inset: 0,
@@ -63,112 +95,122 @@ export default async function OpengraphImage({
           }}
         />
 
-        {/* layer 2: community image on the right (if exists) */}
-        {communityImage ? (
-          <img
-            src={communityImage}
-            alt={communityName}
-            style={{
-              position: "absolute",
-              right: 0,
-              top: 0,
-              width: "54%",
-              height: "100%",
-              objectFit: "cover",
-            }}
-          />
-        ) : null}
-
-        {/* gradient to blend between the two */}
+        {/* dark gradient so the 2 images blend cleanly */}
         <div
           style={{
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.35) 48%, rgba(0,0,0,0) 65%)",
+              "linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 55%, rgba(0,0,0,0) 90%)",
           }}
         />
 
-        {/* content on left */}
+        {/* left text block */}
         <div
           style={{
             position: "relative",
             zIndex: 10,
             display: "flex",
             flexDirection: "column",
-            gap: 18,
-            padding: "48px 54px",
-            width: "56%",
+            gap: "16px",
+            padding: "60px",
+            width: "60%",
           }}
         >
           <div
             style={{
-              display: "inline-flex",
-              gap: 10,
-              alignItems: "center",
-              background: "rgba(99,102,241,0.14)",
-              border: "1px solid rgba(99,102,241,0.35)",
-              padding: "6px 14px",
-              borderRadius: 999,
-              color: "#fff",
-              fontSize: 16,
+              fontSize: 18,
+              color: "rgba(255,255,255,0.6)",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
             }}
           >
-            <div
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: "999px",
-                background: "#22c55e",
-              }}
-            />
-            XBoard · X Communities
+            xboardz.com/community/{communityId}
           </div>
-
-          <h1
+          <div
             style={{
-              fontSize: 58,
-              lineHeight: 1,
-              color: "#fff",
-              letterSpacing: "-0.03em",
-              maxWidth: "95%",
+              fontSize: 56,
+              lineHeight: 1.05,
+              fontWeight: 700,
+              color: "white",
+              textOverflow: "ellipsis",
+              overflow: "hidden",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
             }}
           >
             {communityName}
-          </h1>
+          </div>
+          <div style={{ fontSize: 22, color: "rgba(255,255,255,0.75)" }}>
+            Discover & promote top X (Twitter) communities.
+          </div>
+        </div>
 
-          <p
-            style={{
-              fontSize: 24,
-              color: "rgba(255,255,255,0.7)",
-              maxWidth: "95%",
-            }}
-          >
-            Discover, post and promote your X community.
-          </p>
-
-          {/* little footer */}
+        {/* right side community image preview */}
+        {communityImage ? (
           <div
             style={{
-              marginTop: "auto",
-              fontSize: 18,
-              color: "rgba(255,255,255,0.5)",
-              display: "flex",
-              gap: 12,
-              alignItems: "center",
+              position: "absolute",
+              right: "48px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              width: "360px",
+              height: "360px",
+              borderRadius: "28px",
+              overflow: "hidden",
+              border: "2px solid rgba(255,255,255,0.18)",
+              background:
+                "radial-gradient(circle at top, rgba(15,23,42,0.5), rgba(15,23,42,0))",
+              boxShadow: "0 20px 45px rgba(0,0,0,0.35)",
             }}
           >
-            <div
+            <img
+              src={communityImage}
+              alt={communityName}
               style={{
-                width: 8,
-                height: 44,
-                background:
-                  "linear-gradient(180deg, #6366F1 0%, rgba(99,102,241,0) 100%)",
-                borderRadius: 99,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
               }}
             />
-            xboardz.com/community/{id}
+            {/* subtle top gradient to match your dark theme */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background:
+                  "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 30%)",
+              }}
+            />
           </div>
+        ) : null}
+
+        {/* tiny corner badge */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 28,
+            left: 60,
+            padding: "8px 14px",
+            borderRadius: 999,
+            background: "rgba(0,0,0,0.4)",
+            color: "white",
+            fontSize: 16,
+            display: "flex",
+            gap: 6,
+            alignItems: "center",
+          }}
+        >
+          <div
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: "999px",
+              background: "#22c55e",
+            }}
+          />
+          XBoard — Promote your community
         </div>
       </div>
     ),

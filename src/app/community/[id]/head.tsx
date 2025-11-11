@@ -1,31 +1,37 @@
 // app/community/[id]/head.tsx
+const SITE_URL = "https://xboardz.com";
 
-export default async function Head({ params }: { params: { id: string } }) {
-    const id = params.id;
-  
-    // optional: you can also fetch the community here to set <title>
-    return (
-      <>
-        <title>Community {id} · XBoard</title>
-        <meta name="description" content="Discover, post and promote your X community on XBoard." />
-  
-        {/* OG / Twitter */}
-        <meta property="og:title" content={`Community ${id} · XBoard`} />
-        <meta
-          property="og:image"
-          content={`https://xboardz.com/community/${id}/opengraph-image`}
-        />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={`https://xboardz.com/community/${id}`} />
-  
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta
-          name="twitter:image"
-          content={`https://xboardz.com/community/${id}/opengraph-image`}
-        />
-      </>
-    );
-  }
-  
+export default function Head({ params }: { params: { id: string } }) {
+  const { id } = params;
+
+  const ogImageUrl = `${SITE_URL}/community/${id}/opengraph-image`;
+
+  return (
+    <>
+      <title>XBoard Community #{id}</title>
+      <meta
+        name="description"
+        content="Discover and promote X (Twitter) communities on XBoard."
+      />
+
+      {/* Open Graph / Discord / WhatsApp */}
+      <meta property="og:title" content={`XBoard Community #${id}`} />
+      <meta
+        property="og:description"
+        content="Promote your community, get visibility, and join top X communities."
+      />
+      <meta property="og:image" content={ogImageUrl} />
+      <meta property="og:url" content={`${SITE_URL}/community/${id}`} />
+      <meta property="og:type" content="website" />
+
+      {/* Twitter/X */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={`XBoard Community #${id}`} />
+      <meta
+        name="twitter:description"
+        content="Promote your community, get visibility, and join top X communities."
+      />
+      <meta name="twitter:image" content={ogImageUrl} />
+    </>
+  );
+}
